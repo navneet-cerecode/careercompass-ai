@@ -48,11 +48,28 @@ jobs:
             requirements-db.txt
             requirements-dev.txt
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements-db.txt
           python -m pip install -r requirements-dev.txt
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Verify generated API contract
+        working-directory: frontend
+        run: |
+          npm run contract:generate
+          git diff --exit-code -- src/lib/api/openapi.json src/lib/api/schema.d.ts
 
       - name: Lint current Python boundary
         run: >-
@@ -101,6 +118,7 @@ jobs:
           services/recommendation/signals/semantic_signal.py
           services/recommendation/signals/skill_signal.py
           services/resume/parser_service.py
+          scripts/export_openapi.py
           scripts/test_env.py
           scripts/test_registry.py
           ui/components/resume_upload.py
@@ -154,11 +172,21 @@ jobs:
           services/recommendation/signals/semantic_signal.py
           services/recommendation/signals/skill_signal.py
           services/resume/parser_service.py
+          scripts/export_openapi.py
           scripts/test_env.py
           scripts/test_registry.py
           ui/components/resume_upload.py
           ui/app.py
           tests
+
+      - name: Check frontend quality
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+          npm audit --audit-level=high
 
       - name: Run offline tests
         run: python -m pytest -m "not postgres"

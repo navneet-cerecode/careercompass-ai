@@ -88,6 +88,39 @@ Phase 2 product routes include:
 
 Streamlit remains operational and calls the same underlying application services.
 
+## Run the Next.js frontend
+
+Phase 4 introduces an additive Next.js App Router frontend under `frontend/`. Streamlit remains
+the production-parity fallback until the browser experience reaches the agreed feature gate.
+
+Install and run the frontend:
+
+```powershell
+Set-Location frontend
+npm.cmd install
+Copy-Item .env.example .env.local
+npm.cmd run dev
+```
+
+The frontend uses the server-only `CAREERCOMPASS_API_URL` setting to reach FastAPI. No API keys
+or database credentials are exposed through browser-prefixed environment variables.
+
+FastAPI remains the source of truth for HTTP contracts. Regenerate the committed OpenAPI document
+and TypeScript declarations after changing an API schema:
+
+```powershell
+npm.cmd run contract:generate
+```
+
+Frontend verification:
+
+```powershell
+npm.cmd run lint
+npm.cmd run typecheck
+npm.cmd run test
+npm.cmd run build
+```
+
 ## Database migrations
 
 Persistence uses SQLAlchemy, Psycopg, and Alembic. Install the database dependency layer:
