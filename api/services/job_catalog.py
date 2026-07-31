@@ -1,31 +1,24 @@
-"""Bounded transitional job catalog used until PostgreSQL is introduced."""
+"""Persistence-backed job catalog adapter."""
 
-from threading import Lock
 from uuid import UUID
 
+from database.repositories.jobs import JobRepository
+from database.session import Database
 from models.job import Job
 
 
-class InMemoryJobCatalog:
-    def __init__(self, max_entries: int) -> None:
-        self.max_entries = max_entries
-        self._jobs: dict[UUID, Job] = {}
-        self._lock = Lock()
+class JobCatalog:
+    def __init__(self, database: Database) -> None:
+        self.database = database
 
-    def add_many(self, jobs: tuple[Job, ...]) -> None:
-        with self._lock:
-            for job in jobs:
-                self._jobs[job.id] = job
-            while len(self._jobs) > self.max_entries:
-                oldest_id = next(iter(self._jobs))
-                del self._jobs[oldest_id]
+    def add_many(self, jobs: tuple[Job, ...]) -> tuple[Job, ...]:
+        with self.database.session() as session:
+            return JobRepository(session).upsert_many(jobs)
 
     def get(self, job_id: UUID) -> Job | None:
-        with self._lock:
-            return self._jobs.get(job_id)
+        with self.database.session() as session:
+            return JobRepository(session).get(job_id)
 
     def get_many(self, job_ids: tuple[UUID, ...]) -> tuple[Job, ...] | None:
-        with self._lock:
-            if any(job_id not in self._jobs for job_id in job_ids):
-                return None
-            return tuple(self._jobs[job_id] for job_id in job_ids)
+        with self.database.session() as session:
+            return JobRepository(session).get_many(job_ids)

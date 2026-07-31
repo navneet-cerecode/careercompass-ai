@@ -88,6 +88,27 @@ Phase 2 product routes include:
 
 Streamlit remains operational and calls the same underlying application services.
 
+## Database migrations
+
+Persistence uses SQLAlchemy, Psycopg, and Alembic. Install the database dependency layer:
+
+```powershell
+python -m pip install -r requirements-db.txt
+```
+
+Set `DATABASE_URL` locally, then apply migrations:
+
+```powershell
+alembic upgrade head
+```
+
+Database construction is lazy, so Streamlit and FastAPI can still start without database
+credentials until a persistence-backed operation is used.
+
+Job search now upserts canonical jobs and separate provider-source records. Search responses use
+durable database IDs, allowing job-detail and recommendation requests to survive process restarts
+and work across API workers.
+
 ## Verification
 
 Run the offline test suite:
@@ -104,6 +125,8 @@ ruff format --check tests
 ```
 
 The CI workflow contains the authoritative expanded boundary for migrated production modules.
+It also starts a disposable PostgreSQL 16 service and runs the migration and persistence
+integration gate separately from offline tests.
 
 The automated suite must not call live job providers, Groq, or embedding-model download
 endpoints. Provider and workflow behavior is tested with fixtures and mocks.

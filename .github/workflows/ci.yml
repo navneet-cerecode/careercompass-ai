@@ -12,9 +12,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: careercompass_test
+          POSTGRES_USER: careercompass
+          POSTGRES_PASSWORD: careercompass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U careercompass -d careercompass_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       GROQ_API_KEY: test-groq-key
       RAPIDAPI_KEY: test-rapidapi-key
+      TEST_DATABASE_URL: postgresql+psycopg://careercompass:careercompass@localhost:5432/careercompass_test
       PYTHONDONTWRITEBYTECODE: "1"
 
     steps:
@@ -29,12 +45,13 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             requirements-api.txt
+            requirements-db.txt
             requirements-dev.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-api.txt
+          python -m pip install -r requirements-db.txt
           python -m pip install -r requirements-dev.txt
 
       - name: Lint current Python boundary
@@ -44,11 +61,14 @@ jobs:
           agents/candidate_evaluation_agent.py
           core/config.py
           core/career_compass.py
+          database
           graph/nodes.py
           graph/state.py
           graph/workflow.py
           app.py
+          models/application.py
           models/enums.py
+          models/job.py
           models/job_recommendation.py
           models/match.py
           models/match_assessment.py
@@ -58,6 +78,8 @@ jobs:
           models/skill.py
           services/formatters/resume_formatter.py
           services/job_discovery/discovery_service.py
+          services/job_discovery/fingerprint.py
+          services/job_discovery/pipeline
           services/job_discovery/providers/__init__.py
           services/job_discovery/providers/api_provider.py
           services/job_discovery/providers/base_provider.py
@@ -92,11 +114,14 @@ jobs:
           agents/candidate_evaluation_agent.py
           core/config.py
           core/career_compass.py
+          database
           graph/nodes.py
           graph/state.py
           graph/workflow.py
           app.py
+          models/application.py
           models/enums.py
+          models/job.py
           models/job_recommendation.py
           models/match.py
           models/match_assessment.py
@@ -106,6 +131,8 @@ jobs:
           models/skill.py
           services/formatters/resume_formatter.py
           services/job_discovery/discovery_service.py
+          services/job_discovery/fingerprint.py
+          services/job_discovery/pipeline
           services/job_discovery/providers/__init__.py
           services/job_discovery/providers/api_provider.py
           services/job_discovery/providers/base_provider.py
@@ -134,4 +161,7 @@ jobs:
           tests
 
       - name: Run offline tests
-        run: python -m pytest
+        run: python -m pytest -m "not postgres"
+
+      - name: Run PostgreSQL persistence gate
+        run: python -m pytest -m postgres

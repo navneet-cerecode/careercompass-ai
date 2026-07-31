@@ -28,49 +28,39 @@ class Job(BaseModel):
     Represents a normalized job posting.
     """
 
-    id: UUID = Field(
-        default_factory=uuid4,
-        description="Unique internal identifier for the job."
-    )
+    id: UUID = Field(default_factory=uuid4, description="Unique internal identifier for the job.")
 
-    title: str = Field(
-        ...,
-        description="Job title."
-    )
+    title: str = Field(..., description="Job title.")
 
-    company: str = Field(
-        ...,
-        description="Company offering the job."
-    )
+    company: str = Field(..., description="Company offering the job.")
 
-    location: str = Field(
-        ...,
-        description="Job location."
-    )
+    location: str = Field(..., description="Job location.")
 
-    description: str = Field(
-        ...,
-        description="Complete job description."
-    )
+    description: str = Field(..., description="Complete job description.")
 
     required_skills: list[Skill] = Field(
-        default_factory=list,
-        description="Skills required for this position."
+        default_factory=list, description="Skills required for this position."
     )
 
-    experience_level: ExperienceLevel = Field(
-        default=ExperienceLevel.ENTRY
+    experience_level: ExperienceLevel = Field(default=ExperienceLevel.ENTRY)
+
+    employment_type: EmploymentType = Field(default=EmploymentType.FULL_TIME)
+
+    source: JobSource = Field(default=JobSource.OTHER)
+
+    source_name: str | None = Field(
+        default=None,
+        description="Provider-specific source identifier.",
     )
 
-    employment_type: EmploymentType = Field(
-        default=EmploymentType.FULL_TIME
+    external_id: str | None = Field(
+        default=None,
+        description="Provider-owned stable job identifier.",
     )
 
-    source: JobSource = Field(
-        default=JobSource.OTHER
+    source_url: AnyHttpUrl | None = Field(
+        default=None,
+        description="Original provider listing URL.",
     )
 
-    url: AnyHttpUrl = Field(
-        ...,
-        description="Application URL."
-    )
+    url: AnyHttpUrl = Field(..., description="Application URL.")

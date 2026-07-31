@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 from api.application import create_app
 from api.dependencies import get_job_discovery_service
 from core.config import Settings
+from database.base import Base
+from database.session import Database
 from models.job import Job
 from services.job_discovery.discovery_service import (
     JobDiscoveryResult,
@@ -28,6 +30,9 @@ def make_client(result: JobDiscoveryResult) -> TestClient:
             return result
 
     application = create_app(Settings(_env_file=None))
+    database = Database("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(database.engine)
+    application.state.database = database
     application.dependency_overrides[get_job_discovery_service] = StubDiscoveryService
     return TestClient(application)
 
@@ -92,3 +97,44 @@ def test_job_details_returns_stable_not_found_error():
         "code": "job_not_found",
         "message": "The requested job was not found.",
     }
+
+
+def test_job_details_survive_api_process_recreation(tmp_path):
+    job = make_job()
+    result = JobDiscoveryResult(
+        jobs=(job,),
+        failures=(),
+        providers_attempted=1,
+        providers_succeeded=1,
+    )
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'persistent.db'}"
+    database = Database(database_url)
+    Base.metadata.create_all(database.engine)
+
+    class StubDiscoveryService:
+        def discover_jobs_with_status(self, query):
+            return result
+
+    settings = Settings(database_url=database_url, _env_file=None)
+    first_application = create_app(settings)
+    first_application.dependency_overrides[get_job_discovery_service] = StubDiscoveryService
+    search_response = TestClient(first_application).post(
+        "/api/v1/jobs/search",
+        json={"role": "Data Engineer", "location": "India"},
+    )
+    persisted_id = search_response.json()["jobs"][0]["id"]
+
+    second_application = create_app(settings)
+    detail_response = TestClient(second_application).get(f"/api/v1/jobs/{persisted_id}")
+
+    assert detail_response.status_code == 200
+    assert detail_response.json()["id"] == persisted_id
+
+
+def test_database_backed_route_fails_cleanly_without_configuration():
+    application = create_app(Settings(_env_file=None))
+
+    response = TestClient(application).get("/api/v1/jobs/00000000-0000-0000-0000-000000000000")
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "database_not_configured"

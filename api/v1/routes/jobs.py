@@ -16,7 +16,7 @@ from api.schemas.job_search import (
     ProviderFailureResponse,
 )
 from api.schemas.jobs import JobResponse
-from api.services.job_catalog import InMemoryJobCatalog
+from api.services.job_catalog import JobCatalog
 from services.job_discovery.discovery_service import JobDiscoveryService
 from services.job_discovery.providers.contracts import JobSearchQuery
 
@@ -25,7 +25,7 @@ DiscoveryDependency = Annotated[
     JobDiscoveryService,
     Depends(get_job_discovery_service),
 ]
-CatalogDependency = Annotated[InMemoryJobCatalog, Depends(get_job_catalog)]
+CatalogDependency = Annotated[JobCatalog, Depends(get_job_catalog)]
 
 
 @router.post(
@@ -49,7 +49,7 @@ async def search_jobs(
         date_posted=request.date_posted,
     )
     result = await run_in_threadpool(discovery.discover_jobs_with_status, query)
-    catalog.add_many(result.jobs)
+    persisted_jobs = await run_in_threadpool(catalog.add_many, result.jobs)
 
     if result.failures and result.providers_succeeded:
         status = JobSearchStatus.PARTIAL
@@ -60,7 +60,7 @@ async def search_jobs(
 
     return JobSearchResponse(
         status=status,
-        jobs=tuple(map_job(job) for job in result.jobs),
+        jobs=tuple(map_job(job) for job in persisted_jobs),
         provider_failures=tuple(
             ProviderFailureResponse(provider_name=failure.provider_name)
             for failure in result.failures

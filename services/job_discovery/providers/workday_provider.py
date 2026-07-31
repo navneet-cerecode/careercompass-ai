@@ -81,5 +81,8 @@ class WorkdayProvider(BaseProvider):
             experience_level=ExperienceLevel.ENTRY,
             employment_type=EmploymentType.FULL_TIME,
             source=JobSource.WORKDAY,
+            source_name=self.provider_name,
+            external_id=external_path,
+            source_url=f"{base_url}/{external_path}",
             url=f"{base_url}/{external_path}",
         )

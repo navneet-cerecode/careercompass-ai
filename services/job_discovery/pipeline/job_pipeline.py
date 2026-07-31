@@ -31,9 +31,6 @@ class JobPipeline:
         result = jobs
 
         for stage in self.stages:
-
-            result = stage.process(
-                result
-            )
+            result = stage.process(result)
 
         return result

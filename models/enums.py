@@ -45,3 +45,18 @@ class JobSource(str, Enum):
     LEVER = "Lever"
     COMPANY = "Company"
     OTHER = "Other"
+
+
+class ApplicationStatus(str, Enum):
+    """User-visible stages in the assisted application workflow."""
+
+    DISCOVERED = "Discovered"
+    SAVED = "Saved"
+    PREPARING = "Preparing"
+    READY_TO_APPLY = "Ready to apply"
+    APPLIED = "Applied"
+    ASSESSMENT = "Assessment"
+    INTERVIEW = "Interview"
+    OFFER = "Offer"
+    REJECTED = "Rejected"
+    WITHDRAWN = "Withdrawn"

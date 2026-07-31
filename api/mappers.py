@@ -32,6 +32,9 @@ def map_job(job: Job) -> JobResponse:
         experience_level=job.experience_level,
         employment_type=job.employment_type,
         source=job.source,
+        source_name=job.source_name,
+        external_id=job.external_id,
+        source_url=job.source_url,
         url=job.url,
     )
 

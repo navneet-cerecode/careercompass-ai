@@ -4,7 +4,10 @@ from fastapi.testclient import TestClient
 
 from api.application import create_app
 from api.dependencies import get_recommendation_service
+from api.services.job_catalog import JobCatalog
 from core.config import Settings
+from database.base import Base
+from database.session import Database
 from models.job import Job
 from models.match_assessment import MatchAssessment
 from services.recommendation.recommendation_service import RecommendationService
@@ -38,7 +41,10 @@ def make_client() -> tuple[TestClient, list[Job]]:
             )
 
     application = create_app(Settings(_env_file=None))
-    application.state.job_catalog.add_many((lower, higher))
+    database = Database("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(database.engine)
+    application.state.database = database
+    JobCatalog(database).add_many((lower, higher))
     application.dependency_overrides[get_recommendation_service] = lambda: RecommendationService(
         engine=StubEngine()
     )

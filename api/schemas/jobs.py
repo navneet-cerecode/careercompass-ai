@@ -18,4 +18,7 @@ class JobResponse(APIModel):
     experience_level: ExperienceLevel
     employment_type: EmploymentType
     source: JobSource
+    source_name: str | None = None
+    external_id: str | None = None
+    source_url: AnyHttpUrl | None = None
     url: AnyHttpUrl

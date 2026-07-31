@@ -12,7 +12,7 @@ from api.schemas.recommendations import (
     RecommendationBatchResponse,
     RecommendationRequest,
 )
-from api.services.job_catalog import InMemoryJobCatalog
+from api.services.job_catalog import JobCatalog
 from services.recommendation.recommendation_service import RecommendationService
 
 router = APIRouter()
@@ -20,7 +20,7 @@ RecommendationDependency = Annotated[
     RecommendationService,
     Depends(get_recommendation_service),
 ]
-CatalogDependency = Annotated[InMemoryJobCatalog, Depends(get_job_catalog)]
+CatalogDependency = Annotated[JobCatalog, Depends(get_job_catalog)]
 
 
 @router.post(
@@ -37,7 +37,7 @@ async def recommend_jobs(
     service: RecommendationDependency,
     catalog: CatalogDependency,
 ) -> RecommendationBatchResponse:
-    jobs = catalog.get_many(request.job_ids)
+    jobs = await run_in_threadpool(catalog.get_many, request.job_ids)
     if jobs is None:
         raise APIError(
             404,

@@ -84,6 +84,20 @@ class Settings(BaseSettings):
 
     database_path: Path = Path("database/jobs.db")
 
+    database_url: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("DATABASE_URL", "database_url"),
+    )
+
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+
+    database_pool_timeout_seconds: int = Field(default=10, ge=1, le=120)
+
+    def require_database_url(self) -> str:
+        if self.database_url is None:
+            raise ValueError("DATABASE_URL is required for persistence.")
+        return self.database_url.get_secret_value()
+
     # ==========================
     # Logging
     # ==========================

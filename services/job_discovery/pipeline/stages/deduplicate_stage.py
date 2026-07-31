@@ -8,7 +8,6 @@ from models.job import Job
 
 
 class DeduplicateStage:
-
     def process(
         self,
         jobs: list[Job],
@@ -19,7 +18,6 @@ class DeduplicateStage:
         unique_jobs = []
 
         for job in jobs:
-
             key = (
                 job.company.lower(),
                 job.title.lower(),

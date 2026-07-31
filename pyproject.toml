@@ -6,6 +6,9 @@ addopts = [
 ]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "postgres: requires the TEST_DATABASE_URL PostgreSQL integration database",
+]
 
 [tool.ruff]
 exclude = [

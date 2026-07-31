@@ -114,5 +114,8 @@ class JSearchProvider(BaseProvider):
             experience_level=ExperienceLevel.ENTRY,
             employment_type=EmploymentType.FULL_TIME,
             source=JobSource.JSEARCH,
+            source_name=self.provider_name,
+            external_id=raw_job.get("job_id"),
+            source_url=raw_job.get("job_google_link") or apply_url,
             url=apply_url,
         )

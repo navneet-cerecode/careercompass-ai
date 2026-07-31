@@ -61,12 +61,11 @@ def test_validation_errors_use_stable_contract_without_echoing_input():
     sensitive_value = "private resume content"
 
     response = client.post(
-        "/api/v1/jobs/search",
-        json={"role": sensitive_value, "location": ""},
+        f"/api/v1/resumes/parse?context={sensitive_value}",
     )
 
     assert response.status_code == 422
     payload = response.json()
     assert payload["code"] == "request_validation_failed"
-    assert payload["details"][0]["location"] == ["body", "location"]
+    assert payload["details"][0]["location"] == ["body", "file"]
     assert sensitive_value not in response.text
