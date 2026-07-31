@@ -1,4 +1,4 @@
-import { ConnectionStatus } from "@/components/connection-status";
+import { SiteHeader } from "@/components/site-header";
 import { getApiConnection } from "@/lib/api/client";
 
 export const dynamic = "force-dynamic";
@@ -34,23 +34,7 @@ export default async function Home() {
       </a>
 
       <div className="site-shell">
-        <header className="site-header">
-          <a className="brand" href="#" aria-label="CareerCompass AI home">
-            <span className="brand-mark" aria-hidden="true">
-              <span />
-            </span>
-            <span>CareerCompass</span>
-            <span className="brand-ai">AI</span>
-          </a>
-
-          <nav className="main-nav" aria-label="Primary navigation">
-            <a href="#approach">How it works</a>
-            <a href="#workspace">Workspace</a>
-            <a href="#trust">Trust</a>
-          </nav>
-
-          <ConnectionStatus connection={connection} />
-        </header>
+        <SiteHeader connection={connection} />
 
         <main id="main-content">
           <section className="hero" aria-labelledby="hero-title">
@@ -70,7 +54,7 @@ export default async function Home() {
               </p>
 
               <div className="hero-actions">
-                <a className="button button-primary" href="#workspace">
+                <a className="button button-primary" href="/workspace">
                   Open your workspace
                   <span aria-hidden="true">↗</span>
                 </a>

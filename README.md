@@ -105,6 +105,10 @@ npm.cmd run dev
 The frontend uses the server-only `CAREERCOMPASS_API_URL` setting to reach FastAPI. No API keys
 or database credentials are exposed through browser-prefixed environment variables.
 
+The `/workspace` route provides the Phase 4B resume-onboarding flow. It accepts PDF, DOCX, and
+plain-text resumes up to 5 MB, forwards them through a narrow Next.js server route, and renders
+the parser output for factual review without saving it.
+
 FastAPI remains the source of truth for HTTP contracts. Regenerate the committed OpenAPI document
 and TypeScript declarations after changing an API schema:
 
