@@ -5,17 +5,16 @@ Runs every recommendation signal and
 produces a ranked job recommendation.
 """
 
-from models.job_recommendation import JobRecommendation
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from models.match_assessment import MatchAssessment
 
 from services.recommendation.fusion import ScoreFusion
 
-from services.recommendation.signals.skill_signal import (
-    SkillSignal,
-)
-
-from services.recommendation.signals.semantic_signal import (
-    SemanticSignal,
-)
+if TYPE_CHECKING:
+    from services.recommendation.signals.base_signal import BaseSignal
 
 
 class RecommendationEngine:
@@ -23,15 +22,21 @@ class RecommendationEngine:
     Main recommendation engine.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        signals: list[BaseSignal] | None = None,
+    ):
 
-        self.signals = [
+        if signals is None:
+            from services.recommendation.signals.semantic_signal import SemanticSignal
+            from services.recommendation.signals.skill_signal import SkillSignal
 
-            SkillSignal(),
+            signals = [
+                SkillSignal(),
+                SemanticSignal(),
+            ]
 
-            SemanticSignal(),
-
-        ]
+        self.signals = signals
 
         self.fusion = ScoreFusion()
 
@@ -39,7 +44,7 @@ class RecommendationEngine:
         self,
         resume,
         job,
-    ) -> JobRecommendation:
+    ) -> MatchAssessment:
 
         signal_results = []
 
@@ -48,7 +53,6 @@ class RecommendationEngine:
         missing_skills = []
 
         for signal in self.signals:
-
             result = signal.evaluate(
                 resume,
                 job,
@@ -56,28 +60,17 @@ class RecommendationEngine:
 
             signal_results.append(result)
 
-            matched_skills.extend(
-                result.matched_skills
-            )
+            matched_skills.extend(result.matched_skills)
 
-            missing_skills.extend(
-                result.missing_skills
-            )
+            missing_skills.extend(result.missing_skills)
 
-        score = self.fusion.combine(
-            signal_results
-        )
+        score = self.fusion.combine(signal_results)
 
-        return JobRecommendation(
-
+        return MatchAssessment(
             job=job,
-
             score=score,
-
             matched_skills=matched_skills,
-
             missing_skills=missing_skills,
-
-            signal_results=signal_results,
-
+            components=signal_results,
+            algorithm_version="hybrid-v1",
         )

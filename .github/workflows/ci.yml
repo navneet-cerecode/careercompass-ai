@@ -1,0 +1,134 @@
+name: Python CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      GROQ_API_KEY: test-groq-key
+      RAPIDAPI_KEY: test-rapidapi-key
+      PYTHONDONTWRITEBYTECODE: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+
+      - name: Lint current Python boundary
+        run: >-
+          ruff check
+          agents/candidate_evaluation_agent.py
+          core/config.py
+          core/career_compass.py
+          graph/nodes.py
+          graph/state.py
+          graph/workflow.py
+          app.py
+          models/enums.py
+          models/job_recommendation.py
+          models/match.py
+          models/match_assessment.py
+          models/recommendation_result.py
+          models/resume.py
+          models/score_component.py
+          models/skill.py
+          services/formatters/resume_formatter.py
+          services/job_discovery/discovery_service.py
+          services/job_discovery/providers/__init__.py
+          services/job_discovery/providers/api_provider.py
+          services/job_discovery/providers/base_provider.py
+          services/job_discovery/providers/companies.py
+          services/job_discovery/providers/contracts.py
+          services/job_discovery/providers/dummy_provider.py
+          services/job_discovery/providers/errors.py
+          services/job_discovery/providers/jsearch_provider.py
+          services/job_discovery/providers/provider_factory.py
+          services/job_discovery/providers/workday_provider.py
+          services/jobs/providers/base_provider.py
+          services/llm/evaluator.py
+          services/llm/groq_client.py
+          services/recommendation/fusion.py
+          services/recommendation/models/signal_result.py
+          services/recommendation/recommendation_engine.py
+          services/recommendation/recommendation_service.py
+          services/recommendation/signals/base_signal.py
+          services/recommendation/signals/semantic_signal.py
+          services/recommendation/signals/skill_signal.py
+          services/resume/parser_service.py
+          scripts/test_env.py
+          scripts/test_registry.py
+          ui/components/resume_upload.py
+          ui/app.py
+          tests
+
+      - name: Check current Python formatting
+        run: >-
+          ruff format --check
+          agents/candidate_evaluation_agent.py
+          core/config.py
+          core/career_compass.py
+          graph/nodes.py
+          graph/state.py
+          graph/workflow.py
+          app.py
+          models/enums.py
+          models/job_recommendation.py
+          models/match.py
+          models/match_assessment.py
+          models/recommendation_result.py
+          models/resume.py
+          models/score_component.py
+          models/skill.py
+          services/formatters/resume_formatter.py
+          services/job_discovery/discovery_service.py
+          services/job_discovery/providers/__init__.py
+          services/job_discovery/providers/api_provider.py
+          services/job_discovery/providers/base_provider.py
+          services/job_discovery/providers/companies.py
+          services/job_discovery/providers/contracts.py
+          services/job_discovery/providers/dummy_provider.py
+          services/job_discovery/providers/errors.py
+          services/job_discovery/providers/jsearch_provider.py
+          services/job_discovery/providers/provider_factory.py
+          services/job_discovery/providers/workday_provider.py
+          services/jobs/providers/base_provider.py
+          services/llm/evaluator.py
+          services/llm/groq_client.py
+          services/recommendation/fusion.py
+          services/recommendation/models/signal_result.py
+          services/recommendation/recommendation_engine.py
+          services/recommendation/recommendation_service.py
+          services/recommendation/signals/base_signal.py
+          services/recommendation/signals/semantic_signal.py
+          services/recommendation/signals/skill_signal.py
+          services/resume/parser_service.py
+          scripts/test_env.py
+          scripts/test_registry.py
+          ui/components/resume_upload.py
+          ui/app.py
+          tests
+
+      - name: Run offline tests
+        run: python -m pytest

@@ -5,7 +5,7 @@ Evaluates how well the candidate's skills
 match the required job skills.
 """
 
-from services.recommendation.models.signal_result import SignalResult
+from models.score_component import ScoreComponent
 from services.recommendation.signals.base_signal import BaseSignal
 
 
@@ -18,12 +18,9 @@ class SkillSignal(BaseSignal):
         self,
         resume,
         job,
-    ) -> SignalResult:
+    ) -> ScoreComponent:
 
-        resume_skills = {
-            skill.name.lower()
-            for skill in resume.skills
-        }
+        resume_skills = {skill.name.lower() for skill in resume.skills}
 
         job_skills = job.required_skills
 
@@ -32,35 +29,24 @@ class SkillSignal(BaseSignal):
         missing = []
 
         for skill in job_skills:
-
             if skill.name.lower() in resume_skills:
-
                 matched.append(skill)
 
             else:
-
                 missing.append(skill)
 
         if len(job_skills) == 0:
-
             score = 50.0
 
         else:
+            score = (len(matched) / len(job_skills)) * 100
 
-            score = (
-                len(matched)
-                / len(job_skills)
-            ) * 100
+        reason = f"Matched {len(matched)} out of {len(job_skills)} required skills."
 
-        reason = (
-            f"Matched {len(matched)} "
-            f"out of {len(job_skills)} required skills."
-        )
-
-        return SignalResult(
-            signal_name="Skill Signal",
+        return ScoreComponent(
+            name="Skill Signal",
             score=score,
-            reason=reason,
+            explanation=reason,
             matched_skills=matched,
             missing_skills=missing,
         )

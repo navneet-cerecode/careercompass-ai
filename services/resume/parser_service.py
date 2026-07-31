@@ -13,7 +13,6 @@ from services.resume.txt_parser import TXTParser
 
 
 class ResumeParserService:
-
     def __init__(self):
 
         self.parsers = {
@@ -35,8 +34,11 @@ class ResumeParserService:
         parser = self.parsers.get(extension)
 
         if parser is None:
-            raise ValueError(
-                f"Unsupported file type: {extension}"
-            )
+            raise ValueError(f"Unsupported file type: {extension}")
 
-        return parser.parse(file_path)
+        text = parser.parse(file_path)
+
+        if not text.strip():
+            raise ValueError("No text could be extracted from the resume.")
+
+        return text

@@ -11,7 +11,7 @@ and returns the modified state.
 from typing_extensions import TypedDict
 
 from models.job import Job
-from models.match import MatchResult
+from models.match_assessment import MatchAssessment
 from models.resume import Resume
 
 
@@ -27,4 +27,4 @@ class GraphState(TypedDict):
 
     jobs: list[Job]
 
-    match_results: list[MatchResult]
+    match_results: list[MatchAssessment]

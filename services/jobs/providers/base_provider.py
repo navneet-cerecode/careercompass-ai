@@ -1,34 +1,17 @@
-"""
-Base Job Provider.
+"""Backward-compatible import for the canonical provider contract."""
 
-Every job provider must implement this interface.
-"""
+from services.job_discovery.providers.base_provider import BaseProvider
+from services.job_discovery.providers.contracts import (
+    JobSearchQuery,
+    ProviderCapabilities,
+    ProviderHealth,
+    ProviderHealthStatus,
+)
 
-from abc import ABC, abstractmethod
-
-from models.job import Job
-
-
-class BaseProvider(ABC):
-    """
-    Abstract job provider.
-    """
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """
-        Provider name.
-        """
-        pass
-
-    @abstractmethod
-    def search(
-        self,
-        role: str,
-        location: str,
-    ) -> list[Job]:
-        """
-        Search for jobs.
-        """
-        pass
+__all__ = [
+    "BaseProvider",
+    "JobSearchQuery",
+    "ProviderCapabilities",
+    "ProviderHealth",
+    "ProviderHealthStatus",
+]

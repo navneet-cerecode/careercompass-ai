@@ -1,27 +1,7 @@
-"""
-Represents the output of a recommendation signal.
-"""
+"""Backward-compatible import for the canonical score component."""
 
-from pydantic import BaseModel, Field
+from models.score_component import ScoreComponent
 
-from models.skill import Skill
+SignalResult = ScoreComponent
 
-
-class SignalResult(BaseModel):
-    """
-    Output produced by one recommendation signal.
-    """
-
-    signal_name: str
-
-    score: float
-
-    reason: str
-
-    matched_skills: list[Skill] = Field(
-        default_factory=list
-    )
-
-    missing_skills: list[Skill] = Field(
-        default_factory=list
-    )
+__all__ = ["SignalResult"]

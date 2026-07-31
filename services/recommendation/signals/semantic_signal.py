@@ -14,9 +14,7 @@ from services.embeddings.embedding_service import (
 from services.formatters.job_formatter import JobFormatter
 from services.formatters.resume_formatter import ResumeFormatter
 
-from services.recommendation.models.signal_result import (
-    SignalResult,
-)
+from models.score_component import ScoreComponent
 
 from services.recommendation.signals.base_signal import (
     BaseSignal,
@@ -40,31 +38,21 @@ class SemanticSignal(BaseSignal):
         self,
         resume,
         job,
-    ) -> SignalResult:
+    ) -> ScoreComponent:
 
-        resume_text = self.resume_formatter.to_text(
-            resume
-        )
+        resume_text = self.resume_formatter.to_text(resume)
 
-        job_text = self.job_formatter.to_text(
-            job
-        )
+        job_text = self.job_formatter.to_text(job)
 
-        resume_embedding = self.embedding_service.encode(
-            resume_text
-        )
+        resume_embedding = self.embedding_service.encode(resume_text)
 
-        job_embedding = self.embedding_service.encode(
-            job_text
-        )
+        job_embedding = self.embedding_service.encode(job_text)
 
         similarity = float(
-
             cos_sim(
                 resume_embedding,
                 job_embedding,
             )
-
         )
 
         score = max(
@@ -75,12 +63,8 @@ class SemanticSignal(BaseSignal):
             ),
         )
 
-        return SignalResult(
-
-            signal_name="Semantic Signal",
-
+        return ScoreComponent(
+            name="Semantic Signal",
             score=round(score, 2),
-
-            reason=f"Semantic similarity: {round(score,2)}%",
-
+            explanation=f"Semantic similarity: {round(score, 2)}%",
         )

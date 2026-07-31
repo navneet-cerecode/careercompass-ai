@@ -12,7 +12,7 @@ Author: Navneet Prakash Yadav
 
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,25 +23,42 @@ class Settings(BaseSettings):
 
     # ==========================
     # API Keys
-     # ==========================
+    # ==========================
 
-    groq_api_key: str = Field(
-    ...,
-    alias="GROQ_API_KEY",
+    groq_api_key: SecretStr | None = Field(
+        default=None,
+        alias="GROQ_API_KEY",
     )
 
-# ==========================
-# LLM Configuration
-# ==========================
+    rapidapi_key: SecretStr | None = Field(
+        default=None,
+        alias="RAPIDAPI_KEY",
+    )
+
+    # ==========================
+    # LLM Configuration
+    # ==========================
 
     groq_model: str = Field(
-    "llama-3.3-70b-versatile",
-    alias="GROQ_MODEL",
+        "llama-3.3-70b-versatile",
+        alias="GROQ_MODEL",
     )
 
-    temperature: float = 0.2
+    temperature: float = Field(
+        default=0.2,
+        validation_alias=AliasChoices(
+            "GROQ_TEMPERATURE",
+            "TEMPERATURE",
+        ),
+    )
 
-    max_tokens: int = 1024
+    max_tokens: int = Field(
+        default=1024,
+        validation_alias=AliasChoices(
+            "GROQ_MAX_TOKENS",
+            "MAX_TOKENS",
+        ),
+    )
 
     # ==========================
     # Application

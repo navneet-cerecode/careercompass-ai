@@ -34,10 +34,14 @@ class EmploymentType(str, Enum):
 class JobSource(str, Enum):
     """Supported job providers."""
 
+    JSEARCH = "JSearch"
+    ADZUNA = "Adzuna"
+    ARBEITNOW = "Arbeitnow"
+    THE_MUSE = "The Muse"
+    WORKDAY = "Workday"
     GREENHOUSE = "Greenhouse"
-
+    SMARTRECRUITERS = "SmartRecruiters"
+    ASHBY = "Ashby"
     LEVER = "Lever"
-
     COMPANY = "Company"
-
     OTHER = "Other"

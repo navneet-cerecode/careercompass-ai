@@ -1,21 +1,7 @@
-"""
-Recommendation Result Model.
-"""
+"""Backward-compatible import for the canonical match assessment."""
 
-from pydantic import BaseModel
+from models.match_assessment import MatchAssessment
 
-from models.job import Job
-from services.recommendation.models.signal_result import SignalResult
+RecommendationResult = MatchAssessment
 
-
-class RecommendationResult(BaseModel):
-    """
-    Final recommendation produced by the
-    recommendation engine.
-    """
-
-    job: Job
-
-    score: float
-
-    signal_results: list[SignalResult]
+__all__ = ["RecommendationResult"]

@@ -5,7 +5,7 @@ Combines multiple recommendation signals
 into one final recommendation score.
 """
 
-from services.recommendation.models.signal_result import SignalResult
+from models.score_component import ScoreComponent
 
 
 class ScoreFusion:
@@ -14,16 +14,13 @@ class ScoreFusion:
     """
 
     DEFAULT_WEIGHTS = {
-
-    "Skill Signal": 0.4,
-
-    "Semantic Signal": 0.6,
-
+        "Skill Signal": 0.4,
+        "Semantic Signal": 0.6,
     }
 
     def combine(
         self,
-        signals: list[SignalResult],
+        signals: list[ScoreComponent],
     ) -> float:
         """
         Compute the weighted average score.
@@ -36,9 +33,8 @@ class ScoreFusion:
         total_weight = 0.0
 
         for signal in signals:
-
             weight = self.DEFAULT_WEIGHTS.get(
-                signal.signal_name,
+                signal.name,
                 1.0,
             )
 

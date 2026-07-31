@@ -1,9 +1,7 @@
 import os
 import sys
 
-PROJECT_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..")
-)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -48,7 +46,13 @@ if "selected_result" not in st.session_state:
 # Backend
 # ======================================================
 
-compass = CareerCompass()
+
+@st.cache_resource
+def get_career_compass() -> CareerCompass:
+    return CareerCompass()
+
+
+compass = get_career_compass()
 
 # ======================================================
 # Header
@@ -72,10 +76,7 @@ if resume is not None:
     st.session_state.resume = resume
 
 if st.session_state.resume is not None:
-
-    st.success(
-        f"✅ Resume Loaded: {st.session_state.resume.name}"
-    )
+    st.success(f"✅ Resume Loaded: {st.session_state.resume.name}")
 
 st.divider()
 
@@ -84,40 +85,19 @@ st.divider()
 # ======================================================
 
 if search:
-
     if st.session_state.resume is None:
-
-        st.warning(
-            "Please upload your resume before searching."
-        )
+        st.warning("Please upload your resume before searching.")
 
     else:
-
-        with st.spinner(
-            "Searching and ranking jobs..."
-        ):
-
+        with st.spinner("Searching and ranking jobs..."):
             jobs = compass.search_jobs(
                 role,
                 location,
             )
 
-            recommendations = []
-
-            for job in jobs:
-
-                recommendation = compass.recommend_job(
-                    st.session_state.resume,
-                    job,
-                )
-
-                recommendations.append(
-                    recommendation
-                )
-
-            recommendations.sort(
-                key=lambda recommendation: recommendation.score,
-                reverse=True,
+            recommendations = compass.recommend_jobs(
+                st.session_state.resume,
+                jobs,
             )
 
             st.session_state.recommendations = recommendations
@@ -140,29 +120,18 @@ jobs_col, inspector_col = st.columns(
 # ======================================================
 
 with jobs_col:
-
     if st.session_state.searched:
-
         st.subheader("🎯 Recommended Jobs")
 
-        st.write(
-
-            f"Showing **{len(st.session_state.recommendations)}** ranked jobs."
-
-        )
+        st.write(f"Showing **{len(st.session_state.recommendations)}** ranked jobs.")
 
         st.divider()
 
         for recommendation in st.session_state.recommendations:
-
             render_job_card(
-
                 recommendation,
-
                 st.session_state.resume,
-
                 compass,
-
             )
 
 # ======================================================
@@ -170,7 +139,4 @@ with jobs_col:
 # ======================================================
 
 with inspector_col:
-
-    render_analysis_panel(
-        st.session_state.selected_result
-    )
+    render_analysis_panel(st.session_state.selected_result)

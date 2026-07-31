@@ -4,7 +4,7 @@ Base class for recommendation signals.
 
 from abc import ABC, abstractmethod
 
-from services.recommendation.models.signal_result import SignalResult
+from models.score_component import ScoreComponent
 
 
 class BaseSignal(ABC):
@@ -17,7 +17,7 @@ class BaseSignal(ABC):
         self,
         resume,
         job,
-    ) -> SignalResult:
+    ) -> ScoreComponent:
         """
         Evaluate one recommendation signal.
         """

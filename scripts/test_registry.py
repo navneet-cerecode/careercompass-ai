@@ -4,5 +4,9 @@ print("Supported Companies:\n")
 
 for company in COMPANIES:
     print(company["name"])
-    print(company["careers_url"])
+    print("Platform:", company["platform"])
+
+    if careers_url := company.get("careers_url"):
+        print(careers_url)
+
     print()

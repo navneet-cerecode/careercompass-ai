@@ -1,53 +1,74 @@
-"""
-Job Recommendation Model.
-
-Represents a recommended job together with
-its recommendation score and optional AI insights.
-"""
+"""User-facing ranked recommendation backed by a match assessment."""
 
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from models.job import Job
+from models.match_assessment import MatchAssessment
+from models.score_component import ScoreComponent
 from models.skill import Skill
-
-from services.recommendation.models.signal_result import (
-    SignalResult,
-)
 
 
 class JobRecommendation(BaseModel):
-    """
-    Represents a ranked job recommendation.
-    """
+    """Ranked presentation record that references one canonical assessment."""
 
     model_config = ConfigDict(
-        validate_assignment=True
+        validate_assignment=True,
     )
 
-    id: UUID = Field(
-        default_factory=uuid4,
-    )
+    id: UUID = Field(default_factory=uuid4)
+    assessment: MatchAssessment
+    rank: int | None = Field(default=None, ge=1)
 
-    job: Job
+    @model_validator(mode="before")
+    @classmethod
+    def adapt_legacy_shape(cls, value):
+        """Accept the former flat constructor during the migration window."""
+        if not isinstance(value, dict) or "assessment" in value:
+            return value
 
-    score: float
+        if "job" not in value or "score" not in value:
+            return value
 
-    matched_skills: list[Skill] = Field(
-        default_factory=list,
-    )
+        data = dict(value)
+        assessment_fields = {
+            "job": data.pop("job"),
+            "score": data.pop("score"),
+            "components": data.pop("signal_results", []),
+            "matched_skills": data.pop("matched_skills", []),
+            "missing_skills": data.pop("missing_skills", []),
+            "recruiter_summary": data.pop("recruiter_summary", None),
+            "recommendations": data.pop("recommendations", []),
+            "algorithm_version": data.pop("algorithm_version", "legacy"),
+        }
+        data["assessment"] = assessment_fields
+        return data
 
-    missing_skills: list[Skill] = Field(
-        default_factory=list,
-    )
+    @property
+    def job(self) -> Job:
+        return self.assessment.job
 
-    signal_results: list[SignalResult] = Field(
-        default_factory=list,
-    )
+    @property
+    def score(self) -> float:
+        return self.assessment.score
 
-    recruiter_summary: str | None = None
+    @property
+    def matched_skills(self) -> list[Skill]:
+        return self.assessment.matched_skills
 
-    recommendations: list[str] = Field(
-        default_factory=list,
-    )
+    @property
+    def missing_skills(self) -> list[Skill]:
+        return self.assessment.missing_skills
+
+    @property
+    def signal_results(self) -> list[ScoreComponent]:
+        return self.assessment.components
+
+    @property
+    def recruiter_summary(self) -> str | None:
+        return self.assessment.recruiter_summary
+
+    @property
+    def recommendations(self) -> list[str]:
+        return self.assessment.recommendations

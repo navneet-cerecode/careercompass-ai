@@ -4,20 +4,26 @@ CareerCompass Facade.
 Acts as the bridge between the UI and all backend services.
 """
 
+from __future__ import annotations
+
+from functools import cached_property
+from typing import TYPE_CHECKING
+
 from graph.workflow import build_workflow
+from models.job import Job
+from models.job_recommendation import JobRecommendation
+from models.resume import Resume
 
-from services.resume.parser_service import ResumeParserService
 from services.resume.extractor import ResumeExtractor
+from services.resume.parser_service import ResumeParserService
 
-from services.llm.evaluator import ResumeEvaluator
-
-from services.recommendation.recommendation_engine import (
-    RecommendationEngine,
-)
+if TYPE_CHECKING:
+    from services.llm.evaluator import ResumeEvaluator
+    from services.recommendation.recommendation_engine import RecommendationEngine
+    from services.recommendation.recommendation_service import RecommendationService
 
 
 class CareerCompass:
-
     def __init__(self):
 
         self.workflow = build_workflow()
@@ -26,9 +32,34 @@ class CareerCompass:
 
         self.extractor = ResumeExtractor()
 
-        self.evaluator = ResumeEvaluator()
+    @cached_property
+    def evaluator(self) -> ResumeEvaluator:
+        """
+        Construct the Groq-backed evaluator only for AI analysis.
+        """
+        from services.llm.evaluator import ResumeEvaluator
 
-        self.recommendation_engine = RecommendationEngine()
+        return ResumeEvaluator()
+
+    @cached_property
+    def recommendation_engine(self) -> RecommendationEngine:
+        """
+        Load the embedding-backed engine only when ranking begins.
+        """
+        from services.recommendation.recommendation_engine import RecommendationEngine
+
+        return RecommendationEngine()
+
+    @cached_property
+    def recommendation_service(self) -> RecommendationService:
+        """Construct batch recommendation orchestration only when requested."""
+        from services.recommendation.recommendation_service import (
+            RecommendationService,
+        )
+
+        return RecommendationService(
+            engine=self.recommendation_engine,
+        )
 
     # ---------------------------------------------------------
     # Job Search
@@ -38,7 +69,7 @@ class CareerCompass:
         self,
         role: str,
         location: str,
-    ):
+    ) -> list[Job]:
 
         state = {
             "role": role,
@@ -59,15 +90,11 @@ class CareerCompass:
     def load_resume(
         self,
         resume_path: str,
-    ):
+    ) -> Resume:
 
-        text = self.parser.parse(
-            resume_path
-        )
+        text = self.parser.parse(resume_path)
 
-        return self.extractor.extract(
-            text
-        )
+        return self.extractor.extract(text)
 
     # ---------------------------------------------------------
     # Recommendation Engine
@@ -75,63 +102,54 @@ class CareerCompass:
 
     def recommend_job(
         self,
-        resume,
-        job,
-    ):
+        resume: Resume,
+        job: Job,
+    ) -> JobRecommendation:
 
-        return self.recommendation_engine.evaluate(
+        return self.recommendation_service.recommend_job(
             resume,
             job,
         )
 
-    # ---------------------------------------------------------
-    # AI Explanation
-    # ---------------------------------------------------------
+    def recommend_jobs(
+        self,
+        resume: Resume,
+        jobs: list[Job],
+    ) -> list[JobRecommendation]:
+        return self.recommendation_service.recommend_jobs(
+            resume,
+            jobs,
+        )
 
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
     # AI Explanation
     # ---------------------------------------------------------
 
     def analyze_resume(
         self,
-        resume,
-        job,
-    ):
+        resume: Resume,
+        job: Job,
+    ) -> JobRecommendation:
 
-        match = self.evaluator.evaluate(
+        ai_assessment = self.evaluator.evaluate(
             resume,
             job,
         )
 
-        print("\n================ MATCH FROM GROQ ================")
-        print(match)
-        print("=================================================\n")
-
-        recommendation = self.recommendation_engine.evaluate(
+        base_assessment = self.recommendation_service.assess_job(
             resume,
             job,
         )
 
-        print("\n================ BEFORE MERGE ===================")
-        print(recommendation.matched_skills)
-        print(recommendation.missing_skills)
-        print("=================================================\n")
-
-        recommendation.matched_skills = match.matched_skills
-
-        recommendation.missing_skills = match.missing_skills
-
-        recommendation.recruiter_summary = (
-            match.recruiter_summary
+        enriched_assessment = base_assessment.model_copy(
+            update={
+                "matched_skills": ai_assessment.matched_skills,
+                "missing_skills": ai_assessment.missing_skills,
+                "recruiter_summary": ai_assessment.recruiter_summary,
+                "recommendations": ai_assessment.recommendations,
+            }
         )
 
-        recommendation.recommendations = (
-            match.recommendations
+        return JobRecommendation(
+            assessment=enriched_assessment,
         )
-
-        print("\n================ AFTER MERGE ====================")
-        print(recommendation.matched_skills)
-        print(recommendation.missing_skills)
-        print("=================================================\n")
-
-        return recommendation

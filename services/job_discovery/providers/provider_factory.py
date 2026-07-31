@@ -1,48 +1,30 @@
-"""
-Provider Factory.
+"""Create provider instances from registry configuration."""
 
-Creates provider instances from
-company configurations.
-"""
-
-from .workday_provider import WorkdayProvider
-from services.job_discovery.providers.api_provider import (
-    APIProvider,
-)
-
+from services.job_discovery.providers.base_provider import BaseProvider
+from services.job_discovery.providers.contracts import ProviderConfig
+from services.job_discovery.providers.errors import ProviderConfigurationError
+from services.job_discovery.providers.jsearch_provider import JSearchProvider
+from services.job_discovery.providers.workday_provider import WorkdayProvider
 
 
 class ProviderFactory:
-    """
-    Creates providers based on platform.
-    """
+    """Create canonical providers based on platform."""
 
     PROVIDERS = {
-
         "workday": WorkdayProvider,
-
-        "api": APIProvider,
-
+        "jsearch": JSearchProvider,
+        "api": JSearchProvider,
     }
 
     @classmethod
     def create(
         cls,
-        company: dict,
-    ):
-
+        company: ProviderConfig,
+    ) -> BaseProvider:
         platform = company["platform"]
-
-        provider_class = cls.PROVIDERS.get(
-            platform
-        )
+        provider_class = cls.PROVIDERS.get(platform)
 
         if provider_class is None:
+            raise ProviderConfigurationError(f"Unsupported platform: {platform}")
 
-            raise ValueError(
-                f"Unsupported platform: {platform}"
-            )
-
-        return provider_class(
-            company
-        )
+        return provider_class(company)

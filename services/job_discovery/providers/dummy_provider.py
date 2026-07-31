@@ -1,46 +1,63 @@
-"""
-Dummy job provider.
+"""Deterministic development job provider."""
 
-Used during development until real providers
-(JobSpy, Playwright) are integrated.
-"""
+from collections.abc import Mapping
+from typing import Any
 
-from models.enums import (
-    EmploymentType,
-    ExperienceLevel,
-    JobSource,
-)
+from models.enums import EmploymentType, ExperienceLevel, JobSource
 from models.job import Job
 from models.skill import Skill
 
-from .base_provider import BaseProvider
+from services.job_discovery.providers.base_provider import BaseProvider
+from services.job_discovery.providers.contracts import (
+    JobSearchQuery,
+    ProviderCapabilities,
+)
 
 
 class DummyProvider(BaseProvider):
-    """
-    Returns hardcoded jobs for development.
-    """
+    """Return deterministic jobs for development and contract tests."""
 
-    def search(
+    CAPABILITIES = ProviderCapabilities(
+        location_filter=True,
+    )
+
+    @property
+    def provider_name(self) -> str:
+        return "dummy"
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return self.CAPABILITIES
+
+    def search_jobs(
         self,
-        role: str,
-        location: str,
+        query: JobSearchQuery,
     ) -> list[Job]:
-
         return [
-            Job(
-                title=role,
-                company="Google",
-                location=location,
-                description="Python, SQL and Machine Learning",
-                required_skills=[
-                    Skill(name="Python"),
-                    Skill(name="SQL"),
-                    Skill(name="Machine Learning"),
-                ],
-                experience_level=ExperienceLevel.ENTRY,
-                employment_type=EmploymentType.FULL_TIME,
-                source=JobSource.OTHER,
-                url="https://careers.google.com/",
+            self.normalize_job(
+                {
+                    "title": query.role,
+                    "location": query.location,
+                }
             )
         ]
+
+    def normalize_job(
+        self,
+        raw_job: Mapping[str, Any],
+    ) -> Job:
+        return Job(
+            title=str(raw_job["title"]),
+            company="Google",
+            location=str(raw_job["location"]),
+            description="Python, SQL and Machine Learning",
+            required_skills=[
+                Skill(name="Python"),
+                Skill(name="SQL"),
+                Skill(name="Machine Learning"),
+            ],
+            experience_level=ExperienceLevel.ENTRY,
+            employment_type=EmploymentType.FULL_TIME,
+            source=JobSource.OTHER,
+            url="https://careers.google.com/",
+        )

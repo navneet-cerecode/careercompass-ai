@@ -2,13 +2,10 @@
 Resume domain model.
 """
 
-from uuid import uuid4
 from uuid import UUID
+from uuid import uuid4
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
-from pydantic import Field
-from pydantic import EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from models.skill import Skill
 
@@ -34,16 +31,31 @@ class Resume(BaseModel):
 
     github: str | None = None
 
-    education: list[str] = []
+    education: list[str] = Field(default_factory=list)
 
-    experience: list[str] = []
+    experience: list[str] = Field(default_factory=list)
 
-    projects: list[str] = []
+    projects: list[str] = Field(default_factory=list)
 
-    skills: list[Skill] = []
+    skills: list[Skill] = Field(default_factory=list)
 
-    certifications: list[str] = []
+    certifications: list[str] = Field(default_factory=list)
 
-    achievements: list[str] = []
+    achievements: list[str] = Field(default_factory=list)
 
     raw_text: str
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Resume name cannot be empty.")
+        return value
+
+    @field_validator("raw_text")
+    @classmethod
+    def validate_raw_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Resume text cannot be empty.")
+        return value
