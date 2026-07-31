@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from models.job import Job
 
@@ -18,6 +19,20 @@ from services.job_discovery.providers.provider_factory import ProviderFactory
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ProviderFailure:
+    provider_name: str
+    error_type: str
+
+
+@dataclass(frozen=True)
+class JobDiscoveryResult:
+    jobs: tuple[Job, ...]
+    failures: tuple[ProviderFailure, ...]
+    providers_attempted: int
+    providers_succeeded: int
+
+
 class JobDiscoveryService:
     """Search configured providers through one typed orchestration boundary."""
 
@@ -26,19 +41,32 @@ class JobDiscoveryService:
         providers: Iterable[BaseProvider] | None = None,
         pipeline: JobPipeline | None = None,
     ):
-        self.providers = (
-            list(providers) if providers is not None else self._build_configured_providers()
-        )
+        if providers is None:
+            self.providers, self.initialization_failures = self._build_configured_providers()
+        else:
+            self.providers = list(providers)
+            self.initialization_failures = []
         self.pipeline = pipeline or self._build_default_pipeline()
 
     @staticmethod
-    def _build_configured_providers() -> list[BaseProvider]:
+    def _build_configured_providers() -> tuple[list[BaseProvider], list[ProviderFailure]]:
         providers = []
+        failures = []
         for company in COMPANIES:
             if not company.get("enabled", True):
                 continue
-            providers.append(ProviderFactory.create(company))
-        return providers
+            try:
+                providers.append(ProviderFactory.create(company))
+            except Exception as error:
+                provider_name = company.get("id") or company["name"]
+                logger.exception("Provider initialization failed: %s", provider_name)
+                failures.append(
+                    ProviderFailure(
+                        provider_name=provider_name,
+                        error_type=type(error).__name__,
+                    )
+                )
+        return providers, failures
 
     @staticmethod
     def _build_default_pipeline() -> JobPipeline:
@@ -64,16 +92,38 @@ class JobDiscoveryService:
         self,
         query: JobSearchQuery,
     ) -> list[Job]:
-        """Search every configured provider with one typed query."""
+        """Compatibility method returning jobs from every successful provider."""
+        return list(self.discover_jobs_with_status(query).jobs)
+
+    def discover_jobs_with_status(
+        self,
+        query: JobSearchQuery,
+    ) -> JobDiscoveryResult:
+        """Search all providers and retain bounded partial-failure metadata."""
         jobs = []
+        failures = list(self.initialization_failures)
+        providers_succeeded = 0
+
         for provider in self.providers:
             try:
                 jobs.extend(provider.search_jobs(query))
-            except Exception:
+                providers_succeeded += 1
+            except Exception as error:
                 logger.exception(
                     "Provider search failed: %s",
                     provider.provider_name,
                 )
-                raise
+                failures.append(
+                    ProviderFailure(
+                        provider_name=provider.provider_name,
+                        error_type=type(error).__name__,
+                    )
+                )
 
-        return self.pipeline.process(jobs)
+        processed_jobs = self.pipeline.process(jobs)
+        return JobDiscoveryResult(
+            jobs=tuple(processed_jobs),
+            failures=tuple(failures),
+            providers_attempted=len(self.providers) + len(self.initialization_failures),
+            providers_succeeded=providers_succeeded,
+        )

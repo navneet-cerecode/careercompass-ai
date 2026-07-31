@@ -62,6 +62,32 @@ streamlit run app.py
 
 `ui/app.py` remains executable during the migration for backwards compatibility.
 
+## Run the API
+
+Install the API dependency layer:
+
+```powershell
+python -m pip install -r requirements-api.txt
+```
+
+The versioned FastAPI boundary can then run alongside Streamlit:
+
+```powershell
+uvicorn api.main:app --reload
+```
+
+Interactive OpenAPI documentation is available at `http://127.0.0.1:8000/docs`. Initial health
+contracts are exposed at `/api/v1/health/live` and `/api/v1/health/ready`.
+
+Phase 2 product routes include:
+
+- `POST /api/v1/resumes/parse`
+- `POST /api/v1/jobs/search`
+- `GET /api/v1/jobs/{job_id}`
+- `POST /api/v1/recommendations`
+
+Streamlit remains operational and calls the same underlying application services.
+
 ## Verification
 
 Run the offline test suite:

@@ -76,6 +76,8 @@ class Settings(BaseSettings):
 
     default_location: str = "India"
 
+    max_resume_upload_bytes: int = Field(default=5 * 1024 * 1024, ge=1)
+
     # ==========================
     # Database
     # ==========================

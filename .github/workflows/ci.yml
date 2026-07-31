@@ -28,17 +28,19 @@ jobs:
           cache: pip
           cache-dependency-path: |
             requirements.txt
+            requirements-api.txt
             requirements-dev.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-api.txt
           python -m pip install -r requirements-dev.txt
 
       - name: Lint current Python boundary
         run: >-
           ruff check
+          api
           agents/candidate_evaluation_agent.py
           core/config.py
           core/career_compass.py
@@ -86,6 +88,7 @@ jobs:
       - name: Check current Python formatting
         run: >-
           ruff format --check
+          api
           agents/candidate_evaluation_agent.py
           core/config.py
           core/career_compass.py

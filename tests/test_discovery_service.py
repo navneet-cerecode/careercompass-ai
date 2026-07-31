@@ -28,6 +28,15 @@ class RecordingProvider(BaseProvider):
         raise AssertionError("Normalization is not used by this test provider")
 
 
+class FailingProvider(RecordingProvider):
+    @property
+    def provider_name(self):
+        return "failing"
+
+    def search_jobs(self, query):
+        raise TimeoutError("synthetic provider timeout")
+
+
 def make_job(*, location="India"):
     return Job(
         title="Data Engineer",
@@ -56,3 +65,18 @@ def test_discovery_service_accepts_explicit_empty_provider_list():
     service = JobDiscoveryService(providers=[])
 
     assert service.discover("Data Engineer", "India") == []
+
+
+def test_discovery_service_returns_partial_results_when_one_provider_fails():
+    successful = RecordingProvider([make_job()])
+    service = JobDiscoveryService(providers=[FailingProvider([]), successful])
+
+    result = service.discover_jobs_with_status(
+        JobSearchQuery(role="Data Engineer", location="India")
+    )
+
+    assert len(result.jobs) == 1
+    assert result.providers_attempted == 2
+    assert result.providers_succeeded == 1
+    assert result.failures[0].provider_name == "failing"
+    assert result.failures[0].error_type == "TimeoutError"
