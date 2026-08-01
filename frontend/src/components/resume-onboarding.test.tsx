@@ -93,6 +93,47 @@ describe("ResumeOnboarding", () => {
     );
   });
 
+  it("continues with the user-reviewed profile while preserving source text", async () => {
+    const user = userEvent.setup();
+    const onContinue = vi.fn();
+    render(
+      <ResumeOnboarding
+        initialResult={parsedResume}
+        onContinue={onContinue}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Correct profile" }),
+    );
+    expect(
+      screen.getByRole("button", { name: /Set preferences/ }),
+    ).toBeDisabled();
+
+    await user.clear(screen.getByLabelText(/^Skills/));
+    await user.type(
+      screen.getByLabelText(/^Skills/),
+      "Python, SQL, Statistics",
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Save reviewed profile/ }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Set preferences/ }),
+    );
+
+    expect(onContinue).toHaveBeenCalledWith({
+      raw_text: parsedResume.raw_text,
+      resume: expect.objectContaining({
+        skills: [
+          { name: "Python", category: "technical" },
+          { name: "SQL", category: "technical" },
+          { name: "Statistics", category: null },
+        ],
+      }),
+    });
+  });
+
   it("surfaces the backend error without discarding the selected file", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

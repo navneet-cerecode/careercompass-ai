@@ -14,6 +14,7 @@ import {
   type ParsedResumeResponse,
   validateResumeFile,
 } from "@/lib/api/resume-contract";
+import { CandidateProfileEditor } from "@/components/candidate-profile-editor";
 
 type ResumeOnboardingProps = {
   initialResult?: ParsedResumeResponse;
@@ -58,6 +59,8 @@ export function ResumeOnboarding({
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileCorrected, setProfileCorrected] = useState(false);
   const [uploadState, setUploadState] = useState<UploadState>(
     initialResult
       ? { status: "success", result: initialResult }
@@ -135,6 +138,8 @@ export function ResumeOnboarding({
 
   const resetUpload = () => {
     setFile(null);
+    setEditingProfile(false);
+    setProfileCorrected(false);
     setUploadState({ status: "idle" });
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -174,62 +179,95 @@ export function ResumeOnboarding({
         </div>
 
         <div className="profile-sheet">
-          <div className="profile-identity">
-            <div>
-              <span className="micro-label">Candidate profile</span>
-              <h3>{resume.name}</h3>
-            </div>
-            <span className="profile-state">Ready for review</span>
-          </div>
+          {editingProfile ? (
+            <CandidateProfileEditor
+              profile={resume}
+              onCancel={() => setEditingProfile(false)}
+              onSave={(reviewedProfile) => {
+                setUploadState({
+                  status: "success",
+                  result: {
+                    ...uploadState.result,
+                    resume: reviewedProfile,
+                  },
+                });
+                setProfileCorrected(true);
+                setEditingProfile(false);
+              }}
+            />
+          ) : (
+            <>
+              <div className="profile-identity">
+                <div>
+                  <span className="micro-label">Candidate profile</span>
+                  <h3>{resume.name}</h3>
+                </div>
+                <div className="profile-identity-actions">
+                  <span className="profile-state">
+                    {profileCorrected
+                      ? "Corrected in session"
+                      : "Ready for review"}
+                  </span>
+                  <button
+                    className="text-button profile-edit-button"
+                    type="button"
+                    onClick={() => setEditingProfile(true)}
+                  >
+                    Correct profile
+                  </button>
+                </div>
+              </div>
 
-          {(contactDetails.length > 0 || links.length > 0) && (
-            <div className="profile-contact" aria-label="Contact details">
-              {[...contactDetails, ...links].map((detail) => (
-                <span key={detail}>{detail}</span>
-              ))}
-            </div>
-          )}
-
-          <div className="profile-grid">
-            <section className="profile-section skill-section">
-              <span className="micro-label">Skills detected</span>
-              {resume.skills.length > 0 ? (
-                <div className="skill-cloud">
-                  {resume.skills.map((skill) => (
-                    <span key={`${skill.name}-${skill.category}`}>
-                      {skill.name}
-                    </span>
+              {(contactDetails.length > 0 || links.length > 0) && (
+                <div className="profile-contact" aria-label="Contact details">
+                  {[...contactDetails, ...links].map((detail) => (
+                    <span key={detail}>{detail}</span>
                   ))}
                 </div>
-              ) : (
-                <p className="empty-profile-copy">
-                  No explicit skills were detected. Review the source text
-                  before matching.
-                </p>
               )}
-            </section>
 
-            <ProfileList title="Experience" items={resume.experience} />
-            <ProfileList title="Education" items={resume.education} />
-            <ProfileList title="Projects" items={resume.projects} />
-            <ProfileList
-              title="Certifications"
-              items={resume.certifications}
-            />
-            <ProfileList title="Achievements" items={resume.achievements} />
-          </div>
+              <div className="profile-grid">
+                <section className="profile-section skill-section">
+                  <span className="micro-label">Skills detected</span>
+                  {resume.skills.length > 0 ? (
+                    <div className="skill-cloud">
+                      {resume.skills.map((skill) => (
+                        <span key={`${skill.name}-${skill.category}`}>
+                          {skill.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="empty-profile-copy">
+                      No explicit skills were detected. Review the source text
+                      before matching.
+                    </p>
+                  )}
+                </section>
 
-          <details className="source-text">
-            <summary>Inspect original source text</summary>
-            <p>
-              This is the exact text CareerCompass will use for matching. It is
-              returned for your review and is not saved by this workflow.
-            </p>
-            <pre>{rawText}</pre>
-          </details>
+                <ProfileList title="Experience" items={resume.experience} />
+                <ProfileList title="Education" items={resume.education} />
+                <ProfileList title="Projects" items={resume.projects} />
+                <ProfileList
+                  title="Certifications"
+                  items={resume.certifications}
+                />
+                <ProfileList title="Achievements" items={resume.achievements} />
+              </div>
+
+              <details className="source-text">
+                <summary>Inspect original source text</summary>
+                <p>
+                  This is the exact uploaded text. Corrections update the
+                  structured profile used for this session, never the source.
+                </p>
+                <pre>{rawText}</pre>
+              </details>
+            </>
+          )}
         </div>
 
-        <div className="review-next">
+        <div className={`review-next ${editingProfile ? "is-disabled" : ""}`}>
           <span className="review-next-number">02</span>
           <div>
             <strong>Next: define the roles you want</strong>
@@ -241,6 +279,7 @@ export function ResumeOnboarding({
             <button
               className="button review-continue"
               type="button"
+              disabled={editingProfile}
               onClick={() => onContinue(uploadState.result)}
             >
               Set preferences
