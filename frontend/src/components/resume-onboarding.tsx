@@ -15,6 +15,11 @@ import {
   validateResumeFile,
 } from "@/lib/api/resume-contract";
 
+type ResumeOnboardingProps = {
+  initialResult?: ParsedResumeResponse;
+  onContinue?: (result: ParsedResumeResponse) => void;
+};
+
 type UploadState =
   | { status: "idle" }
   | { status: "uploading" }
@@ -46,13 +51,18 @@ function ProfileList({
   );
 }
 
-export function ResumeOnboarding() {
+export function ResumeOnboarding({
+  initialResult,
+  onContinue,
+}: ResumeOnboardingProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>({
-    status: "idle",
-  });
+  const [uploadState, setUploadState] = useState<UploadState>(
+    initialResult
+      ? { status: "success", result: initialResult }
+      : { status: "idle" },
+  );
 
   const chooseFile = (nextFile: File | null) => {
     if (!nextFile) {
@@ -224,10 +234,19 @@ export function ResumeOnboarding() {
           <div>
             <strong>Next: define the roles you want</strong>
             <span>
-              Job discovery and explainable ranking arrive in the next
-              approved slice.
+              We will use this reviewed evidence to search and rank jobs.
             </span>
           </div>
+          {onContinue && (
+            <button
+              className="button review-continue"
+              type="button"
+              onClick={() => onContinue(uploadState.result)}
+            >
+              Set preferences
+              <span aria-hidden="true">→</span>
+            </button>
+          )}
         </div>
       </section>
     );

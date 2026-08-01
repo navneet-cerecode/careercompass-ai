@@ -109,6 +109,10 @@ The `/workspace` route provides the Phase 4B resume-onboarding flow. It accepts 
 plain-text resumes up to 5 MB, forwards them through a narrow Next.js server route, and renders
 the parser output for factual review without saving it.
 
+Phase 4C extends that workspace with explicit role preferences, multi-provider discovery, and
+explainable ranked recommendations. Anonymous workflow state remains in the current browser
+session, and application links always require user review.
+
 FastAPI remains the source of truth for HTTP contracts. Regenerate the committed OpenAPI document
 and TypeScript declarations after changing an API schema:
 
