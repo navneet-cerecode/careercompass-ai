@@ -292,7 +292,13 @@ export function ResumeOnboarding({
   }
 
   return (
-    <form className="resume-form" onSubmit={handleSubmit} noValidate>
+    <form
+      className="resume-form"
+      onSubmit={handleSubmit}
+      aria-label="Resume upload"
+      aria-busy={uploadState.status === "uploading"}
+      noValidate
+    >
       <div
         className={`upload-zone ${dragActive ? "is-dragging" : ""} ${
           file ? "has-file" : ""

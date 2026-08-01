@@ -99,6 +99,16 @@ describe("CareerWorkspace", () => {
     await user.click(
       screen.getByRole("button", { name: /Set preferences/ }),
     );
+    expect(
+      screen.getByRole("heading", {
+        name: "Point the compass toward your next move.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("listitem", {
+        name: "Preferences: current step",
+      }),
+    ).toHaveAttribute("aria-current", "step");
 
     await user.click(
       screen.getByRole("button", { name: /Review profile/ }),
@@ -128,10 +138,11 @@ describe("CareerWorkspace", () => {
     expect(
       screen.getByText("Results are ready, with partial provider coverage."),
     ).toBeVisible();
-    expect(screen.getByRole("link", { name: /Review job/ })).toHaveAttribute(
-      "href",
-      "https://example.com/jobs/ai-engineer",
-    );
+    expect(
+      screen.getByRole("link", {
+        name: "Review AI Engineer at Analytical Engines (opens in a new tab)",
+      }),
+    ).toHaveAttribute("href", "https://example.com/jobs/ai-engineer");
 
     const recommendationRequest = JSON.parse(
       String(fetchMock.mock.calls[2][1]?.body),
@@ -188,5 +199,46 @@ describe("CareerWorkspace", () => {
     expect(
       screen.getByRole("button", { name: "Refine preferences" }),
     ).toBeVisible();
+  });
+
+  it("marks the matching workspace busy while providers are responding", async () => {
+    const user = userEvent.setup();
+    const pendingSearch = new Promise<Response>(() => undefined);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(Response.json(parsedProfile))
+        .mockReturnValueOnce(pendingSearch),
+    );
+    render(<CareerWorkspace />);
+
+    await user.upload(
+      screen.getByLabelText("Browse files"),
+      new File(["Ada"], "ada.txt", { type: "text/plain" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Build my profile/ }),
+    );
+    await screen.findByRole("heading", { name: "Review what we found." });
+    await user.click(
+      screen.getByRole("button", { name: /Set preferences/ }),
+    );
+    await user.type(
+      screen.getByLabelText(/Role or career lane/),
+      "AI Engineer",
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Find and rank jobs/ }),
+    );
+
+    expect(
+      screen.getByRole("region", { name: "Matches workspace" }),
+    ).toHaveAttribute("aria-busy", "true");
+    expect(
+      screen.getByRole("heading", {
+        name: "See the fit. Keep the judgment.",
+      }),
+    ).toHaveFocus();
   });
 });

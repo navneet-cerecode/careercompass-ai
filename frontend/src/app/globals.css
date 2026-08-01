@@ -82,6 +82,7 @@ button:focus-visible {
 
 .brand {
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 0.55rem;
   width: fit-content;
@@ -182,6 +183,10 @@ button:focus-visible {
 .connection-status.is-online .connection-dot {
   background: #50a56e;
   box-shadow: 0 0 0 4px rgba(80, 165, 110, 0.14);
+}
+
+.connection-copy-mobile {
+  display: none;
 }
 
 .hero {
@@ -2155,11 +2160,12 @@ button:focus-visible {
     padding: 0 1.1rem;
   }
 
-  .connection-status span:last-child {
-    max-width: 7rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .connection-copy-full {
+    display: none;
+  }
+
+  .connection-copy-mobile {
+    display: inline;
   }
 
   .hero-copy {

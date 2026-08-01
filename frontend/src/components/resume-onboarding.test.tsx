@@ -163,4 +163,22 @@ describe("ResumeOnboarding", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("resume.pdf")).toBeVisible();
   });
+
+  it("announces that resume parsing is in progress", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(() => undefined)));
+    render(<ResumeOnboarding />);
+
+    await user.upload(
+      screen.getByLabelText("Browse files"),
+      new File(["Ada Lovelace"], "ada.txt", { type: "text/plain" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Build my profile/ }),
+    );
+
+    expect(
+      screen.getByRole("form", { name: "Resume upload" }),
+    ).toHaveAttribute("aria-busy", "true");
+  });
 });

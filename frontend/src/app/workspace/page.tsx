@@ -28,7 +28,7 @@ export default async function WorkspacePage() {
 
         <footer className="site-footer">
           <span>Built for thoughtful career moves.</span>
-          <span>Phase 4C · Explainable job matching</span>
+          <span>Explainable matching · Human-reviewed decisions</span>
         </footer>
       </div>
     </>

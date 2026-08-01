@@ -188,7 +188,7 @@ export default async function Home() {
 
         <footer className="site-footer">
           <span>Built for thoughtful career moves.</span>
-          <span>Phase 4 · Frontend foundation</span>
+          <span>Explainable matching · Human-reviewed decisions</span>
         </footer>
       </div>
     </>

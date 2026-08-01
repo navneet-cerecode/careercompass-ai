@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { RecommendationResults } from "@/components/recommendation-results";
 import { ResumeOnboarding } from "@/components/resume-onboarding";
@@ -38,6 +38,8 @@ const DEFAULT_PREFERENCES: RolePreferences = {
   employmentTypes: ["Full Time"],
   datePosted: "month",
 };
+
+const stepNames = ["Profile", "Preferences", "Matches"] as const;
 
 const stepCopy: Record<
   WorkflowStep,
@@ -106,9 +108,20 @@ export function CareerWorkspace() {
   const [preferences, setPreferences] =
     useState<RolePreferences>(DEFAULT_PREFERENCES);
   const [matchState, setMatchState] = useState<MatchState>({ status: "idle" });
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const previousStepRef = useRef<WorkflowStep>("profile");
 
   const copy = stepCopy[step];
   const currentStep = step === "profile" ? 1 : step === "preferences" ? 2 : 3;
+  const isMatching =
+    matchState.status === "searching" || matchState.status === "ranking";
+
+  useEffect(() => {
+    if (previousStepRef.current !== step) {
+      titleRef.current?.focus();
+      previousStepRef.current = step;
+    }
+  }, [step]);
 
   const handleProfileContinue = (result: ParsedResumeResponse) => {
     setProfile(result);
@@ -203,10 +216,27 @@ export function CareerWorkspace() {
   return (
     <main id="main-content" className="workspace-main">
       <section className="workspace-intro" aria-labelledby="workspace-title">
-        <div className="workspace-progress" aria-label="Onboarding progress">
+        <div
+          className="workspace-progress"
+          aria-label="Onboarding progress"
+          role="list"
+        >
           {[1, 2, 3].map((number, index) => (
-            <span key={number} className="progress-fragment">
+            <span
+              key={number}
+              className="progress-fragment"
+              role="listitem"
+              aria-current={number === currentStep ? "step" : undefined}
+              aria-label={`${stepNames[index]}: ${
+                number === currentStep
+                  ? "current step"
+                  : number < currentStep
+                    ? "complete"
+                    : "not started"
+              }`}
+            >
               <span
+                aria-hidden="true"
                 className={
                   number === currentStep
                     ? "step-number is-current"
@@ -217,8 +247,8 @@ export function CareerWorkspace() {
               >
                 {number < currentStep ? "✓" : `0${number}`}
               </span>
-              <span className="step-name">
-                {["Profile", "Preferences", "Matches"][index]}
+              <span className="step-name" aria-hidden="true">
+                {stepNames[index]}
               </span>
               {number < 3 && <span className="progress-line" aria-hidden="true" />}
             </span>
@@ -226,8 +256,8 @@ export function CareerWorkspace() {
         </div>
 
         <span className="micro-label">{copy.eyebrow}</span>
-        <h1 id="workspace-title">
-          {copy.title}
+        <h1 id="workspace-title" ref={titleRef} tabIndex={-1}>
+          {copy.title}{" "}
           <span>{copy.emphasis}</span>
         </h1>
         <p>{copy.description}</p>
@@ -248,7 +278,12 @@ export function CareerWorkspace() {
         </div>
       </section>
 
-      <div className={`workspace-panel workspace-panel-${step}`}>
+      <div
+        className={`workspace-panel workspace-panel-${step}`}
+        role="region"
+        aria-label={`${stepNames[currentStep - 1]} workspace`}
+        aria-busy={isMatching}
+      >
         {step === "profile" && (
           <ResumeOnboarding
             initialResult={profile ?? undefined}
@@ -273,7 +308,11 @@ export function CareerWorkspace() {
               onRefine={() => setStep("preferences")}
             />
           ) : (
-            <section className="matching-state" aria-live="polite">
+            <section
+              className="matching-state"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               {matchState.status === "error" ? (
                 <>
                   <span className="matching-symbol is-error" aria-hidden="true">

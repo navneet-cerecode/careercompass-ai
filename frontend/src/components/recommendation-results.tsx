@@ -178,6 +178,7 @@ export function RecommendationResults({
                     href={job.url}
                     target="_blank"
                     rel="noreferrer"
+                    aria-label={`Review ${job.title} at ${job.company} (opens in a new tab)`}
                   >
                     Review job
                     <span aria-hidden="true">↗</span>

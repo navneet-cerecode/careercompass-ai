@@ -15,9 +15,10 @@ describe("ConnectionStatus", () => {
       />,
     );
 
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "API connected · v1.0.0",
-    );
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("aria-label", "API connected · v1.0.0");
+    expect(status).toHaveTextContent("API connected · v1.0.0");
+    expect(status).toHaveTextContent("API online");
   });
 
   it("keeps the frontend usable when the API is offline", () => {
@@ -27,8 +28,11 @@ describe("ConnectionStatus", () => {
       />,
     );
 
-    expect(screen.getByRole("status")).toHaveTextContent(
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute(
+      "aria-label",
       "Preview mode · API offline",
     );
+    expect(status).toHaveTextContent("API offline");
   });
 });
