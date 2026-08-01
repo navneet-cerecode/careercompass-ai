@@ -82,7 +82,7 @@ def test_background_task_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'tasks.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0006")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0006"
     assert "background_tasks" in inspect(engine).get_table_names()
@@ -99,3 +99,18 @@ def test_background_task_schema_migration_is_reversible(tmp_path):
 
     command.downgrade(config, "0005")
     assert "background_tasks" not in inspect(engine).get_table_names()
+
+
+def test_job_discovery_task_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'discovery-tasks.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0007"
+    assert {"job_discovery_tasks", "job_discovery_task_results"} <= set(
+        inspect(engine).get_table_names()
+    )
+
+    command.downgrade(config, "0006")
+    assert "job_discovery_tasks" not in inspect(engine).get_table_names()

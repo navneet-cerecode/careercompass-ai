@@ -10,11 +10,14 @@ from sqlalchemy.engine import make_url
 from database.alembic import build_alembic_config
 from database.repositories.applications import ApplicationRepository, SavedJobRepository
 from database.repositories.jobs import JobRepository
+from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
 from database.repositories.tasks import BackgroundTaskRepository
 from database.repositories.users import UserRepository
 from database.session import Database
 from models.enums import ApplicationStatus, BackgroundTaskStatus
 from models.job import Job
+from api.schemas.job_search import JobSearchRequest
+from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
 
 pytestmark = pytest.mark.postgres
 
@@ -40,7 +43,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0006"
+            assert MigrationContext.configure(connection).get_current_revision() == "0007"
         assert database.check_connection() is True
 
         with database.session() as session:
@@ -89,6 +92,25 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
             )
             assert completed_task is not None
             assert completed_task.status == BackgroundTaskStatus.SUCCEEDED
+            discovery_repository = JobDiscoveryTaskRepository(session)
+            discovery_task, created = discovery_repository.create(
+                request=JobSearchRequest(
+                    role="Reliability Engineer",
+                    location="Remote",
+                ),
+                idempotency_key="postgres-discovery-gate",
+                max_attempts=2,
+            )
+            assert created is True
+            discovery_repository.save_result(
+                task_id=discovery_task.id,
+                jobs=(job,),
+                outcome=JobDiscoveryOutcome(
+                    status=JobDiscoveryOutcomeStatus.COMPLETE,
+                    providers_attempted=1,
+                    providers_succeeded=1,
+                ),
+            )
 
         with database.session() as session:
             assert (
@@ -111,6 +133,11 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
             assert loaded_task is not None
             assert loaded_task.status == BackgroundTaskStatus.SUCCEEDED
             assert loaded_task.attempt_count == 2
+            discovery_result = JobDiscoveryTaskRepository(session).get_result(
+                discovery_task.id
+            )
+            assert discovery_result is not None
+            assert discovery_result[1][0].id == job.id
     finally:
         database.dispose()
         command.downgrade(config, "base")

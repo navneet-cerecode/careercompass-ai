@@ -6,12 +6,16 @@ from fastapi import Depends, Request
 
 from api.errors import APIError
 from api.services.job_catalog import JobCatalog
+from api.services.job_discovery_tasks import JobDiscoveryTaskService
+from api.services.task_capability import TaskCapability
 from core.config import Settings
 from database.session import Database
 from services.job_discovery.discovery_service import JobDiscoveryService
 from services.recommendation.recommendation_service import RecommendationService
 from services.resume.extractor import ResumeExtractor
 from services.resume.parser_service import ResumeParserService
+from workers.broker import build_broker
+from workers.publisher import BackgroundTaskPublisher
 
 
 def get_settings(request: Request) -> Settings:
@@ -62,6 +66,36 @@ def get_job_discovery_service(request: Request) -> JobDiscoveryService:
         service = JobDiscoveryService()
         request.app.state.job_discovery_service = service
     return service
+
+
+def get_job_discovery_task_service(
+    request: Request,
+    database: Annotated[Database, Depends(get_database)],
+) -> JobDiscoveryTaskService:
+    broker = request.app.state.task_broker
+    if broker is None:
+        with request.app.state.task_broker_lock:
+            broker = request.app.state.task_broker
+            if broker is None:
+                try:
+                    broker = build_broker(get_settings(request))
+                except ValueError as error:
+                    raise APIError(
+                        503,
+                        "worker_not_configured",
+                        "Asynchronous job discovery is not configured.",
+                    ) from error
+                request.app.state.task_broker = broker
+    settings = get_settings(request)
+    return JobDiscoveryTaskService(
+        database=database,
+        publisher=BackgroundTaskPublisher(
+            broker,
+            queue_name=settings.worker_queue_name,
+        ),
+        capability=TaskCapability(request.app.state.task_token_secret),
+        max_attempts=settings.worker_max_retries + 1,
+    )
 
 
 def get_recommendation_service(request: Request) -> RecommendationService:

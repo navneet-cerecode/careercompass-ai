@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from threading import Lock
+import secrets
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -22,6 +23,9 @@ async def application_lifespan(application: FastAPI) -> AsyncIterator[None]:
     database = application.state.database
     if database is not None:
         database.dispose()
+    broker = application.state.task_broker
+    if broker is not None:
+        broker.close()
 
 
 def create_app(app_settings: Settings | None = None) -> FastAPI:
@@ -36,6 +40,14 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     application.state.settings = active_settings
     application.state.database = None
     application.state.database_lock = Lock()
+    application.state.task_broker = None
+    application.state.task_broker_lock = Lock()
+    configured_secret = (
+        active_settings.task_token_secret.get_secret_value().encode()
+        if active_settings.task_token_secret is not None
+        else secrets.token_bytes(32)
+    )
+    application.state.task_token_secret = configured_secret
     application.add_exception_handler(APIError, api_error_handler)
     application.add_exception_handler(
         RequestValidationError,

@@ -73,6 +73,25 @@ const recommendationResponse = {
   ],
 };
 
+const taskCreatedResponse = {
+  task_id: "20fe7844-bfdb-4a2e-ae32-13ae7426e969",
+  access_token: "opaque-task-capability-token-for-tests",
+  status: "queued",
+};
+
+function completedTask(result: typeof searchResponse) {
+  return {
+    task_id: taskCreatedResponse.task_id,
+    status: "succeeded",
+    attempt_count: 1,
+    max_attempts: 4,
+    error_code: null,
+    created_at: "2026-08-02T10:00:00Z",
+    updated_at: "2026-08-02T10:00:01Z",
+    result,
+  };
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -83,7 +102,8 @@ describe("CareerWorkspace", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(Response.json(parsedProfile))
-      .mockResolvedValueOnce(Response.json(searchResponse))
+      .mockResolvedValueOnce(Response.json(taskCreatedResponse, { status: 202 }))
+      .mockResolvedValueOnce(Response.json(completedTask(searchResponse)))
       .mockResolvedValueOnce(Response.json(recommendationResponse));
     vi.stubGlobal("fetch", fetchMock);
     render(<CareerWorkspace />);
@@ -149,7 +169,7 @@ describe("CareerWorkspace", () => {
     ).toHaveAttribute("href", "https://example.com/jobs/ai-engineer");
 
     const recommendationRequest = JSON.parse(
-      String(fetchMock.mock.calls[2][1]?.body),
+      String(fetchMock.mock.calls[3][1]?.body),
     );
     expect(recommendationRequest.resume.raw_text).toBe(
       "Ada Lovelace\nPython engineer",
@@ -165,13 +185,18 @@ describe("CareerWorkspace", () => {
         .fn()
         .mockResolvedValueOnce(Response.json(parsedProfile))
         .mockResolvedValueOnce(
-          Response.json({
-            status: "complete",
-            jobs: [],
-            provider_failures: [],
-            providers_attempted: 4,
-            providers_succeeded: 4,
-          }),
+          Response.json(taskCreatedResponse, { status: 202 }),
+        )
+        .mockResolvedValueOnce(
+          Response.json(
+            completedTask({
+              status: "complete",
+              jobs: [],
+              provider_failures: [],
+              providers_attempted: 4,
+              providers_succeeded: 4,
+            }),
+          ),
         ),
     );
     render(<CareerWorkspace />);

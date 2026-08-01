@@ -1,11 +1,21 @@
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from api.application import create_app
-from api.dependencies import get_job_discovery_service
+from api.dependencies import (
+    get_job_discovery_service,
+    get_job_discovery_task_service,
+)
+from api.services.job_discovery_tasks import JobDiscoveryTaskSnapshot
 from core.config import Settings
 from database.base import Base
 from database.session import Database
 from models.job import Job
+from models.background_task import BackgroundTask
+from models.enums import BackgroundTaskStatus
+from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
 from services.job_discovery.discovery_service import (
     JobDiscoveryResult,
     ProviderFailure,
@@ -138,3 +148,67 @@ def test_database_backed_route_fails_cleanly_without_configuration():
 
     assert response.status_code == 503
     assert response.json()["code"] == "database_not_configured"
+
+
+def test_async_search_creation_and_capability_scoped_polling():
+    job = make_job()
+    now = datetime.now(UTC)
+    task = BackgroundTask(
+        id=uuid4(),
+        task_type="job.discovery",
+        status=BackgroundTaskStatus.SUCCEEDED,
+        attempt_count=1,
+        max_attempts=4,
+        created_at=now,
+        updated_at=now,
+        finished_at=now,
+    )
+
+    class StubTaskService:
+        def create(self, *, request, idempotency_key):
+            assert request.role == "Data Engineer"
+            assert idempotency_key == "browser-search-123"
+            return JobDiscoveryTaskSnapshot(task=task), "opaque-capability-token"
+
+        def get(self, *, task_id, token):
+            if task_id != task.id or token != "opaque-capability-token":
+                return None
+            return JobDiscoveryTaskSnapshot(
+                task=task,
+                outcome=JobDiscoveryOutcome(
+                    status=JobDiscoveryOutcomeStatus.COMPLETE,
+                    providers_attempted=2,
+                    providers_succeeded=2,
+                ),
+                jobs=(job,),
+            )
+
+    application = create_app(Settings(_env_file=None))
+    application.dependency_overrides[get_job_discovery_task_service] = StubTaskService
+    client = TestClient(application)
+
+    created = client.post(
+        "/api/v1/jobs/search-tasks",
+        headers={"Idempotency-Key": "browser-search-123"},
+        json={"role": "Data Engineer", "location": "India"},
+    )
+    assert created.status_code == 202
+    assert created.json() == {
+        "task_id": str(task.id),
+        "access_token": "opaque-capability-token",
+        "status": "succeeded",
+    }
+
+    polled = client.get(
+        f"/api/v1/jobs/search-tasks/{task.id}",
+        headers={"X-Task-Token": "opaque-capability-token"},
+    )
+    assert polled.status_code == 200
+    assert polled.json()["result"]["jobs"][0]["id"] == str(job.id)
+
+    denied = client.get(
+        f"/api/v1/jobs/search-tasks/{task.id}",
+        headers={"X-Task-Token": "wrong-token-that-is-long-enough"},
+    )
+    assert denied.status_code == 404
+    assert denied.json()["code"] == "task_not_found"

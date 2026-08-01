@@ -9,6 +9,8 @@ import {
   buildJobSearchRequest,
   buildRecommendationRequest,
   type JobSearchResponse,
+  type JobSearchTaskCreatedResponse,
+  type JobSearchTaskResponse,
   type RecommendationBatchResponse,
   type RolePreferences,
 } from "@/lib/api/job-contract";
@@ -21,7 +23,7 @@ type WorkflowStep = "profile" | "preferences" | "matches";
 
 type MatchState =
   | { status: "idle" }
-  | { status: "searching" }
+  | { status: "searching"; phase: "queued" | "running" }
   | { status: "ranking"; jobsFound: number }
   | { status: "error"; message: string }
   | {
@@ -102,6 +104,56 @@ function isRecommendationResponse(
   );
 }
 
+function isTaskCreatedResponse(
+  value: unknown,
+): value is JobSearchTaskCreatedResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "task_id" in value &&
+    typeof value.task_id === "string" &&
+    "access_token" in value &&
+    typeof value.access_token === "string" &&
+    "status" in value
+  );
+}
+
+function isTaskResponse(value: unknown): value is JobSearchTaskResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "task_id" in value &&
+    typeof value.task_id === "string" &&
+    "status" in value &&
+    ["queued", "running", "succeeded", "failed", "cancelled"].includes(
+      String(value.status),
+    )
+  );
+}
+
+function hasErrorCode(value: unknown, code: string) {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "code" in value &&
+    value.code === code
+  );
+}
+
+function waitForPoll(signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(resolve, 900);
+    signal.addEventListener(
+      "abort",
+      () => {
+        window.clearTimeout(timer);
+        reject(new DOMException("Search cancelled.", "AbortError"));
+      },
+      { once: true },
+    );
+  });
+}
+
 export function CareerWorkspace() {
   const [step, setStep] = useState<WorkflowStep>("profile");
   const [profile, setProfile] = useState<ParsedResumeResponse | null>(null);
@@ -110,6 +162,7 @@ export function CareerWorkspace() {
   const [matchState, setMatchState] = useState<MatchState>({ status: "idle" });
   const titleRef = useRef<HTMLHeadingElement>(null);
   const previousStepRef = useRef<WorkflowStep>("profile");
+  const searchControllerRef = useRef<AbortController | null>(null);
 
   const copy = stepCopy[step];
   const currentStep = step === "profile" ? 1 : step === "preferences" ? 2 : 3;
@@ -122,6 +175,13 @@ export function CareerWorkspace() {
       previousStepRef.current = step;
     }
   }, [step]);
+
+  useEffect(
+    () => () => {
+      searchControllerRef.current?.abort();
+    },
+    [],
+  );
 
   const handleProfileContinue = (result: ParsedResumeResponse) => {
     setProfile(result);
@@ -137,28 +197,94 @@ export function CareerWorkspace() {
 
     setPreferences(nextPreferences);
     setStep("matches");
-    setMatchState({ status: "searching" });
+    searchControllerRef.current?.abort();
+    const controller = new AbortController();
+    searchControllerRef.current = controller;
+    setMatchState({ status: "searching", phase: "queued" });
 
     try {
-      const searchResponse = await fetch("/api/jobs/search", {
+      const requestBody = JSON.stringify(buildJobSearchRequest(nextPreferences));
+      const taskResponse = await fetch("/api/jobs/search-tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildJobSearchRequest(nextPreferences)),
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": crypto.randomUUID(),
+        },
+        body: requestBody,
+        signal: controller.signal,
       });
-      const searchPayload = await readJson(searchResponse);
+      const taskPayload = await readJson(taskResponse);
+      let search: JobSearchResponse;
 
-      if (!searchResponse.ok) {
-        throw new Error(
-          getApiErrorMessage(searchPayload) ??
-            "CareerCompass could not search jobs with these preferences.",
-        );
+      if (!taskResponse.ok && hasErrorCode(taskPayload, "worker_not_configured")) {
+        const fallbackResponse = await fetch("/api/jobs/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+          signal: controller.signal,
+        });
+        const fallbackPayload = await readJson(fallbackResponse);
+        if (!fallbackResponse.ok || !isJobSearchResponse(fallbackPayload)) {
+          throw new Error(
+            getApiErrorMessage(fallbackPayload) ??
+              "CareerCompass could not search jobs with these preferences.",
+          );
+        }
+        search = fallbackPayload;
+      } else {
+        if (!taskResponse.ok || !isTaskCreatedResponse(taskPayload)) {
+          throw new Error(
+            getApiErrorMessage(taskPayload) ??
+              "CareerCompass could not start this job search.",
+          );
+        }
+
+        const deadline = Date.now() + 2 * 60 * 1000;
+        let completedSearch: JobSearchResponse | null = null;
+        while (Date.now() < deadline) {
+          await waitForPoll(controller.signal);
+          const pollResponse = await fetch(
+            `/api/jobs/search-tasks/${taskPayload.task_id}`,
+            {
+              headers: { "X-Task-Token": taskPayload.access_token },
+              cache: "no-store",
+              signal: controller.signal,
+            },
+          );
+          const pollPayload = await readJson(pollResponse);
+          if (!pollResponse.ok || !isTaskResponse(pollPayload)) {
+            throw new Error(
+              getApiErrorMessage(pollPayload) ??
+                "CareerCompass lost contact with this search.",
+            );
+          }
+          if (pollPayload.status === "running") {
+            setMatchState({ status: "searching", phase: "running" });
+          }
+          if (
+            pollPayload.status === "failed" ||
+            pollPayload.status === "cancelled"
+          ) {
+            throw new Error(
+              "The background search could not finish. Please try again.",
+            );
+          }
+          if (pollPayload.status === "succeeded") {
+            if (!isJobSearchResponse(pollPayload.result)) {
+              throw new Error("Job search completed without a usable result.");
+            }
+            completedSearch = pollPayload.result;
+            break;
+          }
+        }
+        if (!completedSearch) {
+          throw new Error(
+            "This search is taking longer than expected. Please try again.",
+          );
+        }
+        search = completedSearch;
       }
 
-      if (!isJobSearchResponse(searchPayload)) {
-        throw new Error("Job search returned an unexpected response.");
-      }
-
-      const search = searchPayload;
       if (search.jobs.length === 0) {
         setMatchState({
           status: "error",
@@ -177,6 +303,7 @@ export function CareerWorkspace() {
         body: JSON.stringify(
           buildRecommendationRequest(profile, search.jobs),
         ),
+        signal: controller.signal,
       });
       const recommendationPayload = await readJson(recommendationResponse);
 
@@ -203,6 +330,9 @@ export function CareerWorkspace() {
         results: recommendationPayload,
       });
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       setMatchState({
         status: "error",
         message:
@@ -350,12 +480,18 @@ export function CareerWorkspace() {
                   <h2>
                     {matchState.status === "ranking"
                       ? `Ranking ${matchState.jobsFound} verified jobs.`
-                      : "Searching across verified sources."}
+                      : matchState.status === "searching" &&
+                          matchState.phase === "queued"
+                        ? "Your verified search is queued."
+                        : "Searching across verified sources."}
                   </h2>
                   <p>
                     {matchState.status === "ranking"
                       ? "Comparing role requirements with the evidence you reviewed."
-                      : "Normalizing results and merging duplicate opportunities before scoring."}
+                      : matchState.status === "searching" &&
+                          matchState.phase === "queued"
+                        ? "A worker will begin discovery shortly. You can keep this page open."
+                        : "Normalizing results and merging duplicate opportunities before scoring."}
                   </p>
                   <div className="matching-steps">
                     <span className="is-active">Discover</span>

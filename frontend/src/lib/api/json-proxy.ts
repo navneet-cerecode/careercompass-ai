@@ -7,6 +7,7 @@ type JsonProxyOptions = {
   timeoutMs: number;
   maxBytes: number;
   serviceName: string;
+  forwardedHeaders?: string[];
 };
 
 function errorResponse(status: number, code: string, message: string) {
@@ -60,14 +61,22 @@ export async function forwardJsonRequest(
     return errorResponse(400, "invalid_json", "The request contains invalid JSON.");
   }
 
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  for (const name of options.forwardedHeaders ?? []) {
+    const value = request.headers.get(name);
+    if (value) {
+      headers[name] = value;
+    }
+  }
+
   let upstreamResponse: Response;
   try {
     upstreamResponse = await fetch(`${getApiBaseUrl()}${options.path}`, {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
+      headers,
       body,
       cache: "no-store",
       signal: AbortSignal.timeout(options.timeoutMs),

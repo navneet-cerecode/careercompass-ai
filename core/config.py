@@ -138,6 +138,12 @@ class Settings(BaseSettings):
             raise ValueError("REDIS_URL is required for background workers.")
         return self.redis_url.get_secret_value()
 
+    task_token_secret: SecretStr | None = Field(
+        default=None,
+        min_length=32,
+        validation_alias=AliasChoices("TASK_TOKEN_SECRET", "task_token_secret"),
+    )
+
     # ==========================
     # Logging
     # ==========================

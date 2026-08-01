@@ -6,6 +6,10 @@ from database.models.applications import (
     SavedJobRecord,
 )
 from database.models.jobs import JobRecord, JobSourceRecord
+from database.models.job_discovery_tasks import (
+    JobDiscoveryTaskRecord,
+    JobDiscoveryTaskResultRecord,
+)
 from database.models.recommendations import (
     RecommendationRecord,
     SearchRecord,
@@ -20,6 +24,8 @@ __all__ = [
     "ApplicationRecord",
     "BackgroundTaskRecord",
     "JobRecord",
+    "JobDiscoveryTaskRecord",
+    "JobDiscoveryTaskResultRecord",
     "JobSourceRecord",
     "RecommendationRecord",
     "ResumeRecord",

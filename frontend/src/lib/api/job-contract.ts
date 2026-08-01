@@ -3,6 +3,10 @@ import type { ParsedResumeResponse } from "@/lib/api/resume-contract";
 
 export type JobSearchRequest = components["schemas"]["JobSearchRequest"];
 export type JobSearchResponse = components["schemas"]["JobSearchResponse"];
+export type JobSearchTaskCreatedResponse =
+  components["schemas"]["JobSearchTaskCreatedResponse"];
+export type JobSearchTaskResponse =
+  components["schemas"]["JobSearchTaskResponse"];
 export type JobResponse = components["schemas"]["JobResponse"];
 export type RecommendationRequest =
   components["schemas"]["RecommendationRequest"];
