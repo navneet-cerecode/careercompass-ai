@@ -133,6 +133,10 @@ describe("CareerWorkspace", () => {
         name: "Your clearest next moves.",
       }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("main")).toHaveClass("workspace-main-matches");
+    expect(screen.getByLabelText("Search summary")).toHaveTextContent(
+      "1ranked roles3/4sources reachedIndia",
+    );
     expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
     expect(screen.getByText("MLOps")).toBeVisible();
     expect(

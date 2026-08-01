@@ -323,6 +323,7 @@ export function ResumeOnboarding({
           type="file"
           accept={ACCEPT_ATTRIBUTE}
           onChange={handleFileChange}
+          aria-label={file ? "Replace resume file" : "Browse files"}
           aria-describedby="resume-file-help resume-file-status"
         />
 
@@ -335,9 +336,9 @@ export function ResumeOnboarding({
             <span className="micro-label">Ready to parse</span>
             <h2>{file.name}</h2>
             <p>{(file.size / 1024).toFixed(1)} KB · Stored only for review</p>
-            <label className="text-button" htmlFor="resume-file">
+            <span className="text-button" aria-hidden="true">
               Replace file
-            </label>
+            </span>
           </>
         ) : (
           <>
@@ -347,9 +348,9 @@ export function ResumeOnboarding({
               PDF, DOCX, or TXT · 5 MB maximum · Never used to invent
               experience
             </p>
-            <label className="button button-secondary" htmlFor="resume-file">
+            <span className="button button-secondary" aria-hidden="true">
               Browse files
-            </label>
+            </span>
           </>
         )}
       </div>

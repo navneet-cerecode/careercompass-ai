@@ -214,7 +214,10 @@ export function CareerWorkspace() {
   };
 
   return (
-    <main id="main-content" className="workspace-main">
+    <main
+      id="main-content"
+      className={`workspace-main workspace-main-${step}`}
+    >
       <section className="workspace-intro" aria-labelledby="workspace-title">
         <div
           className="workspace-progress"

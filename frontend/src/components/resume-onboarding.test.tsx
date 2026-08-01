@@ -36,10 +36,13 @@ describe("ResumeOnboarding", () => {
     expect(
       screen.getByRole("heading", { name: "Drop your resume here." }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Browse files")).toHaveAttribute(
-      "accept",
-      ".pdf,.docx,.txt",
-    );
+    const fileInput = screen.getByLabelText("Browse files");
+    expect(fileInput).toHaveAttribute("type", "file");
+    expect(fileInput).toHaveAttribute("accept", ".pdf,.docx,.txt");
+    expect(fileInput).toHaveClass("file-input");
+    expect(
+      screen.queryByRole("button", { name: "Paste resume text" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Build my profile/ }),
     ).toBeDisabled();

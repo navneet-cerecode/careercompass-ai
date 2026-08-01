@@ -43,9 +43,41 @@ export function RecommendationResults({
             Scores compare your reviewed evidence with each job.
           </p>
         </div>
-        <button className="text-button" type="button" onClick={onRefine}>
-          Refine search
-        </button>
+        <div className="results-heading-actions">
+          <span className="results-assurance">Review-first · No auto-apply</span>
+          <button
+            className="button results-refine"
+            type="button"
+            onClick={onRefine}
+          >
+            Refine search
+          </button>
+        </div>
+      </div>
+
+      <div className="results-overview" aria-label="Search summary">
+        <div>
+          <strong>{results.recommendations.length}</strong>
+          <span>ranked roles</span>
+        </div>
+        <div>
+          <strong>
+            {search.providers_succeeded}/{search.providers_attempted}
+          </strong>
+          <span>sources reached</span>
+        </div>
+        <div>
+          <strong>{preferences.location}</strong>
+          <span>search area</span>
+        </div>
+        <div>
+          <strong>
+            {preferences.datePosted === "all"
+              ? "Any time"
+              : `Past ${preferences.datePosted}`}
+          </strong>
+          <span>freshness</span>
+        </div>
       </div>
 
       {search.status === "partial" && (
@@ -68,6 +100,9 @@ export function RecommendationResults({
           const job = assessment.job;
           const score = safeScore(assessment.score);
           const rank = recommendation.rank ?? index + 1;
+          const hasEvidence =
+            assessment.matched_skills.length > 0 ||
+            assessment.missing_skills.length > 0;
 
           return (
             <article className="recommendation-card" key={recommendation.id}>
@@ -109,32 +144,30 @@ export function RecommendationResults({
                   </p>
                 )}
 
-                <div className="evidence-columns">
-                  <div>
-                    <span className="micro-label">Evidence that matches</span>
-                    <div className="evidence-chips matched">
-                      {assessment.matched_skills.length > 0 ? (
-                        assessment.matched_skills.map((skill) => (
-                          <span key={skill.name}>{skill.name}</span>
-                        ))
-                      ) : (
-                        <small>No direct skill overlap was returned.</small>
-                      )}
-                    </div>
+                {hasEvidence && (
+                  <div className="evidence-columns">
+                    {assessment.matched_skills.length > 0 && (
+                      <div>
+                        <span className="micro-label">Evidence that matches</span>
+                        <div className="evidence-chips matched">
+                          {assessment.matched_skills.map((skill) => (
+                            <span key={skill.name}>{skill.name}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {assessment.missing_skills.length > 0 && (
+                      <div>
+                        <span className="micro-label">Growth edge</span>
+                        <div className="evidence-chips missing">
+                          {assessment.missing_skills.map((skill) => (
+                            <span key={skill.name}>{skill.name}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <span className="micro-label">Growth edge</span>
-                    <div className="evidence-chips missing">
-                      {assessment.missing_skills.length > 0 ? (
-                        assessment.missing_skills.map((skill) => (
-                          <span key={skill.name}>{skill.name}</span>
-                        ))
-                      ) : (
-                        <small>No missing skills were identified.</small>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 <details className="match-details">
                   <summary>Why this role ranks here</summary>
@@ -169,10 +202,6 @@ export function RecommendationResults({
                 </details>
 
                 <div className="job-actions">
-                  <span>
-                    You stay in control—CareerCompass never submits this
-                    application for you.
-                  </span>
                   <a
                     className="button apply-button"
                     href={job.url}
