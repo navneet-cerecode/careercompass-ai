@@ -136,7 +136,8 @@
       "HealthStatus": {
         "enum": [
           "ok",
-          "ready"
+          "ready",
+          "not_ready"
         ],
         "title": "HealthStatus",
         "type": "string"
@@ -410,6 +411,11 @@
           "attempt_count": {
             "title": "Attempt Count",
             "type": "integer"
+          },
+          "cancellation_requested": {
+            "default": false,
+            "title": "Cancellation Requested",
+            "type": "boolean"
           },
           "created_at": {
             "format": "date-time",
@@ -1176,6 +1182,78 @@
       }
     },
     "/api/v1/jobs/search-tasks/{task_id}": {
+      "delete": {
+        "operationId": "cancel_search_task_api_v1_jobs_search_tasks__task_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Task-Token",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 20,
+              "title": "X-Task-Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSearchTaskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request cancellation of an asynchronous job search",
+        "tags": [
+          "jobs"
+        ]
+      },
       "get": {
         "operationId": "get_search_task_api_v1_jobs_search_tasks__task_id__get",
         "parameters": [

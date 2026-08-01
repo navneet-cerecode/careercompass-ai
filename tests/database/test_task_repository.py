@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -205,3 +206,79 @@ def test_failure_records_accept_safe_codes_only():
         assert unchanged is not None
         assert unchanged.status == BackgroundTaskStatus.RUNNING
         assert unchanged.error_code is None
+
+
+def test_running_cancellation_is_cooperative_and_wins_at_completion():
+    database = make_database()
+    with database.session() as session:
+        repository = BackgroundTaskRepository(session)
+        task = repository.create(
+            task_type="job.discovery",
+            idempotency_key="cooperative-cancel",
+        )
+        repository.start(task_id=task.id, user_id=None)
+
+        requested = repository.request_cancel(task_id=task.id, user_id=None)
+        assert requested is not None
+        assert requested.status == BackgroundTaskStatus.RUNNING
+        assert requested.cancel_requested_at is not None
+
+        completed = repository.complete(task_id=task.id, user_id=None)
+        assert completed is not None
+        assert completed.status == BackgroundTaskStatus.CANCELLED
+        assert completed.error_code == "cancelled_by_user"
+
+
+def test_stale_tasks_are_recovered_expired_or_failed_deterministically():
+    database = make_database()
+    old = datetime.now(UTC) - timedelta(hours=2)
+    with database.session() as session:
+        repository = BackgroundTaskRepository(session)
+        recoverable = repository.create(
+            task_type="job.discovery",
+            idempotency_key="recover-stale-task",
+            max_attempts=2,
+        )
+        exhausted = repository.create(
+            task_type="job.discovery",
+            idempotency_key="exhaust-stale-task",
+            max_attempts=1,
+        )
+        expired = repository.create(
+            task_type="job.discovery",
+            idempotency_key="expire-queued-task",
+        )
+        repository.start(task_id=recoverable.id, user_id=None)
+        repository.start(task_id=exhausted.id, user_id=None)
+        for task_id in (recoverable.id, exhausted.id):
+            record = session.get(BackgroundTaskRecord, task_id)
+            assert record is not None
+            record.heartbeat_at = old
+            record.updated_at = old
+        expired_record = session.get(BackgroundTaskRecord, expired.id)
+        assert expired_record is not None
+        expired_record.created_at = old
+        expired_record.updated_at = old
+        session.flush()
+
+        result = repository.reconcile_stale(
+            running_before=datetime.now(UTC) - timedelta(minutes=10),
+            delivery_before=datetime.now(UTC) - timedelta(minutes=2),
+            queued_before=datetime.now(UTC) - timedelta(minutes=30),
+            limit=10,
+            task_types=("job.discovery",),
+        )
+
+        assert result.requeued_task_ids == (recoverable.id,)
+        assert result.failed_count == 1
+        assert result.expired_count == 1
+        recovered = repository.get(task_id=recoverable.id, user_id=None)
+        failed = repository.get(task_id=exhausted.id, user_id=None)
+        timed_out = repository.get(task_id=expired.id, user_id=None)
+        assert recovered is not None
+        assert recovered.status == BackgroundTaskStatus.QUEUED
+        assert recovered.error_code == "stale_worker_recovered"
+        assert failed is not None
+        assert failed.error_code == "stale_worker_timeout"
+        assert timed_out is not None
+        assert timed_out.error_code == "queue_expired"

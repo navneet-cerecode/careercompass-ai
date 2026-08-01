@@ -83,7 +83,8 @@ export interface paths {
         get: operations["get_search_task_api_v1_jobs_search_tasks__task_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Request cancellation of an asynchronous job search */
+        delete: operations["cancel_search_task_api_v1_jobs_search_tasks__task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -212,7 +213,7 @@ export interface components {
          * HealthStatus
          * @enum {string}
          */
-        HealthStatus: "ok" | "ready";
+        HealthStatus: "ok" | "ready" | "not_ready";
         /** JobRecommendationResponse */
         JobRecommendationResponse: {
             assessment: components["schemas"]["MatchAssessmentResponse"];
@@ -325,6 +326,11 @@ export interface components {
         JobSearchTaskResponse: {
             /** Attempt Count */
             attempt_count: number;
+            /**
+             * Cancellation Requested
+             * @default false
+             */
+            cancellation_requested: boolean;
             /**
              * Created At
              * Format: date-time
@@ -731,6 +737,57 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_search_task_api_v1_jobs_search_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Task-Token": string;
+            };
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSearchTaskResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

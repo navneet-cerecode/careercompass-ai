@@ -10,6 +10,7 @@ from core.config import Settings
 from workers.execution import BackgroundTaskRunner, TaskNotFoundError
 from workers.operations import run_system_probe
 from workers.job_discovery import RunJobDiscovery
+from workers.maintenance import TaskMaintenance
 
 logger = logging.getLogger(__name__)
 
@@ -115,3 +116,28 @@ def build_job_discovery_actor(
             raise RetryableTaskExecution(outcome.task.error_code or "retryable_failure")
 
     return job_discovery
+
+
+def build_task_maintenance_actor(
+    *,
+    broker: Broker,
+    maintenance: TaskMaintenance,
+    app_settings: Settings,
+    actor_name: str = "task_maintenance",
+) -> dramatiq.Actor:
+    """Build the scheduled task-reconciliation actor."""
+
+    @dramatiq.actor(
+        actor_name=actor_name,
+        broker=broker,
+        queue_name=app_settings.worker_queue_name,
+        max_retries=app_settings.worker_max_retries,
+        min_backoff=1_000,
+        max_backoff=30_000,
+        time_limit=app_settings.worker_time_limit_ms,
+        max_age=app_settings.worker_message_max_age_ms,
+    )
+    def task_maintenance() -> None:
+        maintenance.run()
+
+    return task_maintenance

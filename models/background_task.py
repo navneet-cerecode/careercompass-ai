@@ -24,4 +24,6 @@ class BackgroundTask(BaseModel):
     created_at: datetime
     updated_at: datetime
     started_at: datetime | None = None
+    heartbeat_at: datetime | None = None
+    cancel_requested_at: datetime | None = None
     finished_at: datetime | None = None

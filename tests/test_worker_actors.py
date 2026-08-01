@@ -8,7 +8,7 @@ from database.base import Base
 from database.repositories.tasks import BackgroundTaskRepository
 from database.session import Database
 from models.enums import BackgroundTaskStatus
-from workers.actors import build_system_probe_actor
+from workers.actors import build_system_probe_actor, build_task_maintenance_actor
 from workers.execution import BackgroundTaskRunner
 from workers.middleware import DatabaseDisposalMiddleware
 
@@ -86,3 +86,25 @@ def test_worker_shutdown_disposes_database_connections():
     middleware.after_worker_shutdown(Mock(), Mock())
 
     database.dispose.assert_called_once_with()
+
+
+def test_task_maintenance_actor_uses_bounded_worker_options():
+    broker = StubBroker()
+    maintenance = Mock()
+    settings = Settings(
+        _env_file=None,
+        worker_queue_name="maintenance_test",
+        worker_max_retries=2,
+    )
+    actor = build_task_maintenance_actor(
+        broker=broker,
+        maintenance=maintenance,
+        app_settings=settings,
+        actor_name="task_maintenance_test",
+    )
+
+    actor.fn()
+
+    maintenance.run.assert_called_once_with()
+    assert actor.queue_name == "maintenance_test"
+    assert actor.options["max_retries"] == 2

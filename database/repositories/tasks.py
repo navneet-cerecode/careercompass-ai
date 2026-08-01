@@ -2,10 +2,11 @@
 
 import hashlib
 import re
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -24,6 +25,15 @@ class IdempotencyConflict(ValueError):
 
 class InvalidTaskTransition(ValueError):
     """Raised when a task lifecycle operation is not allowed."""
+
+
+@dataclass(frozen=True)
+class TaskReconciliation:
+    requeued_task_ids: tuple[UUID, ...] = ()
+    redelivered_task_ids: tuple[UUID, ...] = ()
+    cancelled_count: int = 0
+    failed_count: int = 0
+    expired_count: int = 0
 
 
 class BackgroundTaskRepository:
@@ -127,6 +137,7 @@ class BackgroundTaskRepository:
         record.attempt_count += 1
         record.error_code = None
         record.started_at = now
+        record.heartbeat_at = now
         record.updated_at = now
         record.finished_at = None
         self.session.flush()
@@ -149,9 +160,15 @@ class BackgroundTaskRepository:
         self._require_status(record, BackgroundTaskStatus.RUNNING)
 
         now = datetime.now(timezone.utc)
-        record.status = BackgroundTaskStatus.SUCCEEDED.value
-        record.error_code = None
+        cancellation_won = record.cancel_requested_at is not None
+        record.status = (
+            BackgroundTaskStatus.CANCELLED.value
+            if cancellation_won
+            else BackgroundTaskStatus.SUCCEEDED.value
+        )
+        record.error_code = "cancelled_by_user" if cancellation_won else None
         record.updated_at = now
+        record.heartbeat_at = now
         record.finished_at = now
         self.session.flush()
         self.session.refresh(record)
@@ -176,19 +193,37 @@ class BackgroundTaskRepository:
         self._require_status(record, BackgroundTaskStatus.RUNNING)
 
         now = datetime.now(timezone.utc)
-        can_retry = retryable and record.attempt_count < record.max_attempts
-        record.status = (
-            BackgroundTaskStatus.QUEUED.value if can_retry else BackgroundTaskStatus.FAILED.value
+        cancellation_won = record.cancel_requested_at is not None
+        can_retry = (
+            retryable and not cancellation_won and record.attempt_count < record.max_attempts
         )
-        record.error_code = normalized_error
+        record.status = (
+            BackgroundTaskStatus.CANCELLED.value
+            if cancellation_won
+            else (
+                BackgroundTaskStatus.QUEUED.value
+                if can_retry
+                else BackgroundTaskStatus.FAILED.value
+            )
+        )
+        record.error_code = "cancelled_by_user" if cancellation_won else normalized_error
         record.updated_at = now
         record.started_at = None if can_retry else record.started_at
+        record.heartbeat_at = None if can_retry else now
         record.finished_at = None if can_retry else now
         self.session.flush()
         self.session.refresh(record)
         return self._to_domain(record)
 
     def cancel(
+        self,
+        *,
+        task_id: UUID,
+        user_id: UUID | None,
+    ) -> BackgroundTask | None:
+        return self.request_cancel(task_id=task_id, user_id=user_id)
+
+    def request_cancel(
         self,
         *,
         task_id: UUID,
@@ -201,16 +236,165 @@ class BackgroundTaskRepository:
         )
         if record is None:
             return None
-        self._require_status(record, BackgroundTaskStatus.QUEUED)
+        current = BackgroundTaskStatus(record.status)
+        if current == BackgroundTaskStatus.CANCELLED:
+            return self._to_domain(record)
+        if current not in {BackgroundTaskStatus.QUEUED, BackgroundTaskStatus.RUNNING}:
+            raise InvalidTaskTransition(f"Task cannot be cancelled from status {current.value!r}.")
 
         now = datetime.now(timezone.utc)
-        record.status = BackgroundTaskStatus.CANCELLED.value
-        record.error_code = None
+        record.cancel_requested_at = now
         record.updated_at = now
-        record.finished_at = now
+        if current == BackgroundTaskStatus.QUEUED:
+            record.status = BackgroundTaskStatus.CANCELLED.value
+            record.error_code = "cancelled_by_user"
+            record.finished_at = now
         self.session.flush()
         self.session.refresh(record)
         return self._to_domain(record)
+
+    def heartbeat(
+        self,
+        *,
+        task_id: UUID,
+        user_id: UUID | None,
+    ) -> BackgroundTask | None:
+        record = self._get_owned_record(task_id=task_id, user_id=user_id)
+        if record is None:
+            return None
+        if BackgroundTaskStatus(record.status) != BackgroundTaskStatus.RUNNING:
+            return self._to_domain(record)
+        now = datetime.now(timezone.utc)
+        record.heartbeat_at = now
+        record.updated_at = now
+        self.session.flush()
+        return self._to_domain(record)
+
+    def reconcile_stale(
+        self,
+        *,
+        running_before: datetime,
+        delivery_before: datetime,
+        queued_before: datetime,
+        limit: int,
+        task_types: tuple[str, ...],
+    ) -> TaskReconciliation:
+        if limit < 1:
+            raise ValueError("Reconciliation limit must be positive.")
+        if not task_types:
+            raise ValueError("At least one task type is required.")
+        now = datetime.now(timezone.utc)
+        running_records = self.session.scalars(
+            select(BackgroundTaskRecord)
+            .where(
+                BackgroundTaskRecord.status == BackgroundTaskStatus.RUNNING.value,
+                BackgroundTaskRecord.task_type.in_(task_types),
+                func.coalesce(
+                    BackgroundTaskRecord.heartbeat_at,
+                    BackgroundTaskRecord.started_at,
+                    BackgroundTaskRecord.updated_at,
+                )
+                < running_before,
+            )
+            .order_by(BackgroundTaskRecord.updated_at, BackgroundTaskRecord.id)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        ).all()
+
+        requeued: list[UUID] = []
+        cancelled_count = 0
+        failed_count = 0
+        for record in running_records:
+            if record.cancel_requested_at is not None:
+                record.status = BackgroundTaskStatus.CANCELLED.value
+                record.error_code = "cancelled_by_user"
+                record.finished_at = now
+                cancelled_count += 1
+            elif record.attempt_count < record.max_attempts:
+                record.status = BackgroundTaskStatus.QUEUED.value
+                record.error_code = "stale_worker_recovered"
+                record.started_at = None
+                record.heartbeat_at = None
+                record.finished_at = None
+                requeued.append(record.id)
+            else:
+                record.status = BackgroundTaskStatus.FAILED.value
+                record.error_code = "stale_worker_timeout"
+                record.finished_at = now
+                failed_count += 1
+            record.updated_at = now
+
+        remaining = max(0, limit - len(running_records))
+        queued_records = []
+        if remaining:
+            queued_records = self.session.scalars(
+                select(BackgroundTaskRecord)
+                .where(
+                    BackgroundTaskRecord.status == BackgroundTaskStatus.QUEUED.value,
+                    BackgroundTaskRecord.task_type.in_(task_types),
+                    BackgroundTaskRecord.created_at < queued_before,
+                )
+                .order_by(BackgroundTaskRecord.updated_at, BackgroundTaskRecord.id)
+                .limit(remaining)
+                .with_for_update(skip_locked=True)
+            ).all()
+            for record in queued_records:
+                record.status = BackgroundTaskStatus.FAILED.value
+                record.error_code = "queue_expired"
+                record.updated_at = now
+                record.finished_at = now
+
+        remaining = max(0, remaining - len(queued_records))
+        redelivery_records = []
+        if remaining:
+            redelivery_records = self.session.scalars(
+                select(BackgroundTaskRecord)
+                .where(
+                    BackgroundTaskRecord.status == BackgroundTaskStatus.QUEUED.value,
+                    BackgroundTaskRecord.task_type.in_(task_types),
+                    BackgroundTaskRecord.created_at >= queued_before,
+                    BackgroundTaskRecord.updated_at < delivery_before,
+                )
+                .order_by(BackgroundTaskRecord.updated_at, BackgroundTaskRecord.id)
+                .limit(remaining)
+                .with_for_update(skip_locked=True)
+            ).all()
+            for record in redelivery_records:
+                record.error_code = "delivery_recovered"
+                record.updated_at = now
+
+        self.session.flush()
+        return TaskReconciliation(
+            requeued_task_ids=tuple(requeued),
+            redelivered_task_ids=tuple(record.id for record in redelivery_records),
+            cancelled_count=cancelled_count,
+            failed_count=failed_count,
+            expired_count=len(queued_records),
+        )
+
+    def purge_terminal_before(self, *, cutoff: datetime, limit: int) -> int:
+        terminal_statuses = (
+            BackgroundTaskStatus.SUCCEEDED.value,
+            BackgroundTaskStatus.FAILED.value,
+            BackgroundTaskStatus.CANCELLED.value,
+        )
+        task_ids = tuple(
+            self.session.scalars(
+                select(BackgroundTaskRecord.id)
+                .where(
+                    BackgroundTaskRecord.status.in_(terminal_statuses),
+                    BackgroundTaskRecord.finished_at < cutoff,
+                )
+                .order_by(BackgroundTaskRecord.finished_at, BackgroundTaskRecord.id)
+                .limit(limit)
+            ).all()
+        )
+        if task_ids:
+            self.session.execute(
+                delete(BackgroundTaskRecord).where(BackgroundTaskRecord.id.in_(task_ids))
+            )
+            self.session.flush()
+        return len(task_ids)
 
     def _get_owned_record(
         self,

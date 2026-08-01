@@ -183,6 +183,18 @@ def test_async_search_creation_and_capability_scoped_polling():
                 jobs=(job,),
             )
 
+        def cancel(self, *, task_id, token):
+            if task_id != task.id or token != "opaque-capability-token":
+                return None
+            return JobDiscoveryTaskSnapshot(
+                task=task.model_copy(
+                    update={
+                        "status": BackgroundTaskStatus.CANCELLED,
+                        "cancel_requested_at": now,
+                    }
+                )
+            )
+
     application = create_app(Settings(_env_file=None))
     application.dependency_overrides[get_job_discovery_task_service] = StubTaskService
     client = TestClient(application)
@@ -212,3 +224,11 @@ def test_async_search_creation_and_capability_scoped_polling():
     )
     assert denied.status_code == 404
     assert denied.json()["code"] == "task_not_found"
+
+    cancelled = client.delete(
+        f"/api/v1/jobs/search-tasks/{task.id}",
+        headers={"X-Task-Token": "opaque-capability-token"},
+    )
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "cancelled"
+    assert cancelled.json()["cancellation_requested"] is True

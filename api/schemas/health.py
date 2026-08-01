@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 class HealthStatus(StrEnum):
     OK = "ok"
     READY = "ready"
+    NOT_READY = "not_ready"
 
 
 class HealthResponse(BaseModel):

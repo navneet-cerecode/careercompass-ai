@@ -12,6 +12,7 @@ from database.models.job_discovery_tasks import (
 )
 from database.repositories.jobs import JobRepository
 from database.repositories.tasks import BackgroundTaskRepository, IdempotencyConflict
+from database.repositories.task_outbox import TaskOutboxRepository
 from models.background_task import BackgroundTask
 from models.job import Job
 from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
@@ -39,6 +40,10 @@ class JobDiscoveryTaskRepository:
                 raise IdempotencyConflict(
                     "Idempotency key was already used for different discovery inputs."
                 )
+            TaskOutboxRepository(self.session).ensure(
+                task_id=task.id,
+                actor_name="job_discovery",
+            )
             return task, False
 
         self.session.add(
@@ -55,6 +60,10 @@ class JobDiscoveryTaskRepository:
             )
         )
         self.session.flush()
+        TaskOutboxRepository(self.session).ensure(
+            task_id=task.id,
+            actor_name="job_discovery",
+        )
         return task, True
 
     def get_request(self, task_id: UUID) -> JobSearchRequest | None:

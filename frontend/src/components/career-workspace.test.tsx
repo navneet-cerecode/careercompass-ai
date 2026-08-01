@@ -270,4 +270,65 @@ describe("CareerWorkspace", () => {
       }),
     ).toHaveFocus();
   });
+
+  it("requests cooperative cancellation without putting the token in a URL", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(parsedProfile))
+      .mockResolvedValueOnce(Response.json(taskCreatedResponse, { status: 202 }))
+      .mockResolvedValueOnce(
+        Response.json({
+          task_id: taskCreatedResponse.task_id,
+          status: "cancelled",
+          attempt_count: 0,
+          max_attempts: 4,
+          error_code: "cancelled_by_user",
+          cancellation_requested: true,
+          created_at: "2026-08-02T10:00:00Z",
+          updated_at: "2026-08-02T10:00:01Z",
+          result: null,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<CareerWorkspace />);
+
+    await user.upload(
+      screen.getByLabelText("Browse files"),
+      new File(["Ada"], "ada.txt", { type: "text/plain" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Build my profile/ }),
+    );
+    await screen.findByRole("heading", { name: "Review what we found." });
+    await user.click(
+      screen.getByRole("button", { name: /Set preferences/ }),
+    );
+    await user.type(
+      screen.getByLabelText(/Role or career lane/),
+      "AI Engineer",
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Find and rank jobs/ }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Cancel search" }),
+    );
+
+    expect(
+      await screen.findByText("This search was cancelled before it started."),
+    ).toBeVisible();
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      `/api/jobs/search-tasks/${taskCreatedResponse.task_id}`,
+    );
+    expect(fetchMock.mock.calls[2][0]).not.toContain(
+      taskCreatedResponse.access_token,
+    );
+    expect(fetchMock.mock.calls[2][1]).toEqual(
+      expect.objectContaining({
+        method: "DELETE",
+        headers: { "X-Task-Token": taskCreatedResponse.access_token },
+      }),
+    );
+  });
 });

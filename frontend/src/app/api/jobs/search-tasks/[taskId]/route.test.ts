@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { GET } from "@/app/api/jobs/search-tasks/[taskId]/route";
+import { DELETE, GET } from "@/app/api/jobs/search-tasks/[taskId]/route";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -32,5 +32,33 @@ describe("job search task polling route", () => {
     );
     expect(url).not.toContain("opaque-capability-token");
     expect(options.headers["X-Task-Token"]).toBe("opaque-capability-token");
+  });
+
+  it("forwards cancellation without exposing the capability", async () => {
+    vi.stubEnv("CAREERCOMPASS_API_URL", "https://api.example.test/");
+    const taskId = "20fe7844-bfdb-4a2e-ae32-13ae7426e969";
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({ task_id: taskId, status: "cancelled" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await DELETE(
+      new Request(`http://localhost/api/jobs/search-tasks/${taskId}`, {
+        method: "DELETE",
+        headers: { "X-Task-Token": "opaque-capability-token" },
+      }),
+      { params: Promise.resolve({ taskId }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.example.test/api/v1/jobs/search-tasks/${taskId}`,
+      expect.objectContaining({
+        method: "DELETE",
+        headers: expect.objectContaining({
+          "X-Task-Token": "opaque-capability-token",
+        }),
+      }),
+    );
   });
 });

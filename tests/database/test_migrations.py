@@ -105,7 +105,7 @@ def test_job_discovery_task_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'discovery-tasks.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0007")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0007"
     assert {"job_discovery_tasks", "job_discovery_task_results"} <= set(
@@ -114,3 +114,19 @@ def test_job_discovery_task_schema_migration_is_reversible(tmp_path):
 
     command.downgrade(config, "0006")
     assert "job_discovery_tasks" not in inspect(engine).get_table_names()
+
+
+def test_task_hardening_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'task-hardening.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    inspector = inspect(engine)
+    assert current_revision(database_url) == "0008"
+    assert "task_outbox" in inspector.get_table_names()
+    task_columns = {column["name"] for column in inspector.get_columns("background_tasks")}
+    assert {"heartbeat_at", "cancel_requested_at"} <= task_columns
+
+    command.downgrade(config, "0007")
+    assert "task_outbox" not in inspect(engine).get_table_names()

@@ -89,14 +89,24 @@ $env:REDIS_URL = "redis://127.0.0.1:6379/0"
 .\venv\Scripts\python.exe -m dramatiq workers.entrypoint --processes 1 --threads 4
 ```
 
-The only registered actor is currently an internal `system.probe` operation used to verify
-delivery and lifecycle behavior. It calls no job provider or AI model and has no public API
-endpoint.
+The worker registers durable job discovery, bounded maintenance, and the internal `system.probe`
+verification actor. Redis messages carry identifiers only; PostgreSQL owns task inputs, results,
+and lifecycle state.
+
+Trigger one maintenance cycle from another terminal:
+
+```powershell
+$env:REDIS_URL = "redis://127.0.0.1:6379/0"
+.\venv\Scripts\python.exe -m workers.enqueue_maintenance
+```
+
+Production must schedule that command at least once per `TASK_DELIVERY_RETRY_SECONDS`.
 
 Run FastAPI from the repository root:
 
 ```powershell
 $env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:5432/careercompass"
+$env:REDIS_URL = "redis://127.0.0.1:6379/0"
 .\venv\Scripts\python.exe -m uvicorn api.main:app --reload
 ```
 
@@ -161,6 +171,10 @@ Background work has a durable PostgreSQL lifecycle record with owner-ready scopi
 idempotency fingerprints, bounded attempts, and safe machine-readable failure codes. Task rows
 contain identifiers and lifecycle metadata only; Redis remains the delivery broker and does not
 replace PostgreSQL task history.
+
+Discovery publication uses a transactional outbox. Heartbeats, stale-worker recovery, bounded
+redelivery, cooperative cancellation, queue expiry, and terminal-history retention are handled
+by scheduled maintenance. See `docs/operations/background-tasks.md`.
 
 ## Verification
 

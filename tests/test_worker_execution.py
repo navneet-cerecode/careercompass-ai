@@ -1,3 +1,5 @@
+from threading import Event
+
 from database.base import Base
 from database.repositories.tasks import BackgroundTaskRepository
 from database.session import Database
@@ -127,3 +129,25 @@ def test_system_probe_rejects_another_task_type_without_external_work():
 
     assert outcome.task.status == BackgroundTaskStatus.FAILED
     assert outcome.task.error_code == "invalid_task_type"
+
+
+def test_runner_heartbeats_during_long_operations():
+    database = make_database()
+    task = create_task(database)
+
+    def operation(_task):
+        Event().wait(0.05)
+
+    outcome = BackgroundTaskRunner(
+        database,
+        heartbeat_interval_seconds=0.01,
+    ).run(
+        task_id=task.id,
+        user_id=None,
+        operation=operation,
+    )
+
+    assert outcome.task.status == BackgroundTaskStatus.SUCCEEDED
+    assert outcome.task.heartbeat_at is not None
+    assert outcome.task.started_at is not None
+    assert outcome.task.heartbeat_at >= outcome.task.started_at

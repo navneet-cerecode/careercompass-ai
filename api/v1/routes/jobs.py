@@ -55,6 +55,20 @@ def _map_search_result(snapshot) -> JobSearchResponse | None:
     )
 
 
+def _map_task_snapshot(snapshot) -> JobSearchTaskResponse:
+    return JobSearchTaskResponse(
+        task_id=snapshot.task.id,
+        status=snapshot.task.status,
+        attempt_count=snapshot.task.attempt_count,
+        max_attempts=snapshot.task.max_attempts,
+        error_code=snapshot.task.error_code,
+        cancellation_requested=snapshot.task.cancel_requested_at is not None,
+        created_at=snapshot.task.created_at,
+        updated_at=snapshot.task.updated_at,
+        result=_map_search_result(snapshot),
+    )
+
+
 @router.post(
     "/search-tasks",
     response_model=JobSearchTaskCreatedResponse,
@@ -99,16 +113,24 @@ def get_search_task(
     snapshot = tasks.get(task_id=task_id, token=task_token)
     if snapshot is None:
         raise APIError(404, "task_not_found", "The requested task was not found.")
-    return JobSearchTaskResponse(
-        task_id=snapshot.task.id,
-        status=snapshot.task.status,
-        attempt_count=snapshot.task.attempt_count,
-        max_attempts=snapshot.task.max_attempts,
-        error_code=snapshot.task.error_code,
-        created_at=snapshot.task.created_at,
-        updated_at=snapshot.task.updated_at,
-        result=_map_search_result(snapshot),
-    )
+    return _map_task_snapshot(snapshot)
+
+
+@router.delete(
+    "/search-tasks/{task_id}",
+    response_model=JobSearchTaskResponse,
+    responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    summary="Request cancellation of an asynchronous job search",
+)
+def cancel_search_task(
+    task_id: UUID,
+    tasks: TaskServiceDependency,
+    task_token: Annotated[str, Header(alias="X-Task-Token", min_length=20, max_length=200)],
+) -> JobSearchTaskResponse:
+    snapshot = tasks.cancel(task_id=task_id, token=task_token)
+    if snapshot is None:
+        raise APIError(404, "task_not_found", "The requested task was not found.")
+    return _map_task_snapshot(snapshot)
 
 
 @router.post(

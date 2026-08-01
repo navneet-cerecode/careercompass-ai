@@ -4,6 +4,7 @@ import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from threading import Event, Thread
 from uuid import UUID
 
 from database.repositories.tasks import (
@@ -48,8 +49,16 @@ class TaskExecutionOutcome:
 class BackgroundTaskRunner:
     """Execute one operation without holding a database transaction open."""
 
-    def __init__(self, database: Database) -> None:
+    def __init__(
+        self,
+        database: Database,
+        *,
+        heartbeat_interval_seconds: float = 30,
+    ) -> None:
+        if heartbeat_interval_seconds <= 0:
+            raise ValueError("Heartbeat interval must be positive.")
         self.database = database
+        self.heartbeat_interval_seconds = heartbeat_interval_seconds
 
     def run(
         self,
@@ -65,6 +74,18 @@ class BackgroundTaskRunner:
                 duplicate_delivery=True,
             )
 
+        stop_heartbeat = Event()
+        heartbeat_thread = Thread(
+            target=self._heartbeat_loop,
+            kwargs={
+                "task_id": task_id,
+                "user_id": user_id,
+                "stop": stop_heartbeat,
+            },
+            daemon=True,
+            name=f"task-heartbeat-{task_id}",
+        )
+        heartbeat_thread.start()
         try:
             operation(started)
         except TaskOperationError as error:
@@ -85,6 +106,9 @@ class BackgroundTaskRunner:
                 error_code="unexpected_error",
                 retryable=True,
             )
+        finally:
+            stop_heartbeat.set()
+            heartbeat_thread.join(timeout=self.heartbeat_interval_seconds + 1)
 
         with self.database.session() as session:
             completed = BackgroundTaskRepository(session).complete(
@@ -94,6 +118,29 @@ class BackgroundTaskRunner:
             if completed is None:
                 raise TaskNotFoundError
             return TaskExecutionOutcome(task=completed)
+
+    def _heartbeat_loop(
+        self,
+        *,
+        task_id: UUID,
+        user_id: UUID | None,
+        stop: Event,
+    ) -> None:
+        while not stop.wait(self.heartbeat_interval_seconds):
+            try:
+                with self.database.session() as session:
+                    task = BackgroundTaskRepository(session).heartbeat(
+                        task_id=task_id,
+                        user_id=user_id,
+                    )
+                if task is None or task.status != BackgroundTaskStatus.RUNNING:
+                    return
+            except Exception as error:
+                logger.error(
+                    "Task heartbeat failed; error_type=%s",
+                    type(error).__name__,
+                )
+                return
 
     def _start(
         self,

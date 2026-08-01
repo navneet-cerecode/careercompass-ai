@@ -12,6 +12,7 @@ from database.repositories.applications import ApplicationRepository, SavedJobRe
 from database.repositories.jobs import JobRepository
 from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
 from database.repositories.tasks import BackgroundTaskRepository
+from database.repositories.task_outbox import TaskOutboxRepository
 from database.repositories.users import UserRepository
 from database.session import Database
 from models.enums import ApplicationStatus, BackgroundTaskStatus
@@ -43,7 +44,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0007"
+            assert MigrationContext.configure(connection).get_current_revision() == "0008"
         assert database.check_connection() is True
 
         with database.session() as session:
@@ -102,6 +103,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
                 max_attempts=2,
             )
             assert created is True
+            assert TaskOutboxRepository(session).get_pending_for_task(discovery_task.id) is not None
             discovery_repository.save_result(
                 task_id=discovery_task.id,
                 jobs=(job,),
@@ -133,9 +135,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
             assert loaded_task is not None
             assert loaded_task.status == BackgroundTaskStatus.SUCCEEDED
             assert loaded_task.attempt_count == 2
-            discovery_result = JobDiscoveryTaskRepository(session).get_result(
-                discovery_task.id
-            )
+            discovery_result = JobDiscoveryTaskRepository(session).get_result(discovery_task.id)
             assert discovery_result is not None
             assert discovery_result[1][0].id == job.id
     finally:

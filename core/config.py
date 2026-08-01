@@ -144,6 +144,22 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("TASK_TOKEN_SECRET", "task_token_secret"),
     )
 
+    worker_heartbeat_seconds: int = Field(default=30, ge=5, le=300)
+
+    task_stale_after_seconds: int = Field(default=10 * 60, ge=60, le=24 * 60 * 60)
+
+    task_delivery_retry_seconds: int = Field(default=2 * 60, ge=30, le=60 * 60)
+
+    task_queue_expiry_seconds: int = Field(
+        default=30 * 60,
+        ge=60,
+        le=7 * 24 * 60 * 60,
+    )
+
+    task_retention_days: int = Field(default=30, ge=1, le=365)
+
+    task_maintenance_batch_size: int = Field(default=100, ge=1, le=1_000)
+
     # ==========================
     # Logging
     # ==========================

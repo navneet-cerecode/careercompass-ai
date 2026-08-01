@@ -55,6 +55,7 @@ class JobSearchTaskResponse(APIModel):
     attempt_count: int
     max_attempts: int
     error_code: str | None = None
+    cancellation_requested: bool = False
     created_at: datetime
     updated_at: datetime
     result: JobSearchResponse | None = None

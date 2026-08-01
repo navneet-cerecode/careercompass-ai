@@ -6,7 +6,9 @@ from uuid import uuid4
 import pytest
 from dramatiq import Worker
 from dramatiq.brokers.redis import RedisBroker
+from fastapi.testclient import TestClient
 
+from api.application import create_app
 from core.config import Settings
 from database.base import Base
 from database.repositories.tasks import BackgroundTaskRepository
@@ -174,3 +176,31 @@ def test_job_discovery_executes_through_live_redis(tmp_path):
         broker.flush_all()
         broker.close()
         database.dispose()
+
+
+@pytest.mark.redis
+def test_readiness_checks_live_postgresql_and_redis():
+    redis_url = os.getenv("TEST_REDIS_URL")
+    database_url = os.getenv("TEST_DATABASE_URL")
+    if redis_url is None or database_url is None:
+        pytest.skip("Both integration dependency URLs are required for readiness.")
+
+    application = create_app(
+        Settings(
+            _env_file=None,
+            database_url=database_url,
+            redis_url=redis_url,
+            task_token_secret="x" * 32,
+            worker_broker_namespace=f"readiness-{uuid4().hex}",
+        )
+    )
+
+    response = TestClient(application).get("/api/v1/health/ready")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+    assert response.json()["checks"] == {
+        "database": "ok",
+        "broker": "ok",
+        "task_capability": "shared",
+    }

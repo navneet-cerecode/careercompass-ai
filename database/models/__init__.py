@@ -16,7 +16,7 @@ from database.models.recommendations import (
     SearchResultRecord,
 )
 from database.models.resumes import ResumeRecord, ResumeSkillRecord, SkillRecord
-from database.models.tasks import BackgroundTaskRecord
+from database.models.tasks import BackgroundTaskRecord, TaskOutboxRecord
 from database.models.users import UserRecord
 
 __all__ = [
@@ -34,5 +34,6 @@ __all__ = [
     "SearchResultRecord",
     "SavedJobRecord",
     "SkillRecord",
+    "TaskOutboxRecord",
     "UserRecord",
 ]

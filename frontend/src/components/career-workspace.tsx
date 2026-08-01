@@ -32,6 +32,11 @@ type MatchState =
       results: RecommendationBatchResponse;
     };
 
+type ActiveSearchTask = {
+  taskId: string;
+  accessToken: string;
+};
+
 const DEFAULT_PREFERENCES: RolePreferences = {
   role: "",
   location: "India",
@@ -163,6 +168,7 @@ export function CareerWorkspace() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const previousStepRef = useRef<WorkflowStep>("profile");
   const searchControllerRef = useRef<AbortController | null>(null);
+  const activeSearchTaskRef = useRef<ActiveSearchTask | null>(null);
 
   const copy = stepCopy[step];
   const currentStep = step === "profile" ? 1 : step === "preferences" ? 2 : 3;
@@ -238,6 +244,10 @@ export function CareerWorkspace() {
               "CareerCompass could not start this job search.",
           );
         }
+        activeSearchTaskRef.current = {
+          taskId: taskPayload.task_id,
+          accessToken: taskPayload.access_token,
+        };
 
         const deadline = Date.now() + 2 * 60 * 1000;
         let completedSearch: JobSearchResponse | null = null;
@@ -283,6 +293,7 @@ export function CareerWorkspace() {
           );
         }
         search = completedSearch;
+        activeSearchTaskRef.current = null;
       }
 
       if (search.jobs.length === 0) {
@@ -329,6 +340,7 @@ export function CareerWorkspace() {
         search,
         results: recommendationPayload,
       });
+      activeSearchTaskRef.current = null;
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
@@ -339,6 +351,56 @@ export function CareerWorkspace() {
           error instanceof Error
             ? error.message
             : "CareerCompass could not complete this search.",
+      });
+      activeSearchTaskRef.current = null;
+    }
+  };
+
+  const handleCancelSearch = async () => {
+    const activeTask = activeSearchTaskRef.current;
+    if (!activeTask) {
+      searchControllerRef.current?.abort();
+      setMatchState({
+        status: "error",
+        message: "This search was stopped. You can refine it and try again.",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/jobs/search-tasks/${activeTask.taskId}`,
+        {
+          method: "DELETE",
+          headers: { "X-Task-Token": activeTask.accessToken },
+          cache: "no-store",
+        },
+      );
+      const payload = await readJson(response);
+      if (!response.ok || !isTaskResponse(payload)) {
+        throw new Error(
+          getApiErrorMessage(payload) ??
+            "CareerCompass could not cancel this search.",
+        );
+      }
+      activeSearchTaskRef.current = null;
+      searchControllerRef.current?.abort();
+      setMatchState({
+        status: "error",
+        message:
+          payload.status === "cancelled"
+            ? "This search was cancelled before it started."
+            : "Cancellation was requested. The current provider call will stop at the next safe boundary.",
+      });
+    } catch (error) {
+      activeSearchTaskRef.current = null;
+      searchControllerRef.current?.abort();
+      setMatchState({
+        status: "error",
+        message:
+          error instanceof Error
+            ? `${error.message} Waiting stopped locally; server completion was not confirmed.`
+            : "Waiting stopped locally, but server cancellation was not confirmed.",
       });
     }
   };
@@ -510,6 +572,13 @@ export function CareerWorkspace() {
                       Rank
                     </span>
                   </div>
+                  <button
+                    className="button button-quiet"
+                    type="button"
+                    onClick={handleCancelSearch}
+                  >
+                    Cancel search
+                  </button>
                 </>
               )}
             </section>

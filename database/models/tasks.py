@@ -43,6 +43,8 @@ class BackgroundTaskRecord(Base):
         onupdate=func.now(),
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (
@@ -75,5 +77,40 @@ class BackgroundTaskRecord(Base):
             "ix_background_tasks_user_status",
             "user_id",
             "status",
+        ),
+        Index(
+            "ix_background_tasks_status_heartbeat",
+            "status",
+            "heartbeat_at",
+        ),
+    )
+
+
+class TaskOutboxRecord(Base):
+    __tablename__ = "task_outbox"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    task_id: Mapped[UUID] = mapped_column(
+        ForeignKey("background_tasks.id", ondelete="CASCADE"),
+        unique=True,
+    )
+    actor_name: Mapped[str] = mapped_column(String(100))
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint(
+            "attempt_count >= 0",
+            name="attempt_count_nonnegative",
+        ),
+        Index(
+            "ix_task_outbox_unpublished",
+            "published_at",
+            "created_at",
         ),
     )

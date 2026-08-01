@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -31,6 +31,8 @@ class Database:
             )
 
         self.engine: Engine = create_engine(database_url, **engine_options)
+        if database_url.startswith("sqlite"):
+            event.listen(self.engine, "connect", self._enable_sqlite_foreign_keys)
         self._session_factory = sessionmaker(
             bind=self.engine,
             autoflush=False,
@@ -55,3 +57,9 @@ class Database:
 
     def dispose(self) -> None:
         self.engine.dispose()
+
+    @staticmethod
+    def _enable_sqlite_foreign_keys(dbapi_connection, _) -> None:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()

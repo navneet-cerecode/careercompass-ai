@@ -12,9 +12,10 @@ function proxyError(status: number, code: string, message: string) {
   );
 }
 
-export async function GET(
+async function forwardTaskRequest(
   request: Request,
   context: { params: Promise<{ taskId: string }> },
+  method: "GET" | "DELETE",
 ) {
   const { taskId } = await context.params;
   const token = request.headers.get("x-task-token");
@@ -27,6 +28,7 @@ export async function GET(
     upstream = await fetch(
       `${getApiBaseUrl()}/api/v1/jobs/search-tasks/${taskId}`,
       {
+        method,
         headers: {
           Accept: "application/json",
           "X-Task-Token": token,
@@ -66,4 +68,18 @@ export async function GET(
       "The career service returned an unexpected response.",
     );
   }
+}
+
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ taskId: string }> },
+) {
+  return forwardTaskRequest(request, context, "GET");
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ taskId: string }> },
+) {
+  return forwardTaskRequest(request, context, "DELETE");
 }

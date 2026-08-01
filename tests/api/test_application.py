@@ -38,15 +38,19 @@ def test_liveness_endpoint_does_not_require_external_credentials():
     }
 
 
-def test_readiness_endpoint_reports_boot_configuration():
+def test_readiness_endpoint_reports_missing_required_dependencies():
     response = make_client().get("/api/v1/health/ready")
 
-    assert response.status_code == 200
+    assert response.status_code == 503
     assert response.json() == {
-        "status": "ready",
+        "status": "not_ready",
         "service": "CareerCompass Test API",
         "version": "2.0-test",
-        "checks": {"configuration": "ok"},
+        "checks": {
+            "database": "not_configured",
+            "broker": "not_configured",
+            "task_capability": "ephemeral",
+        },
     }
 
 
