@@ -41,7 +41,7 @@ Install runtime and development dependencies:
 
 ```powershell
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-worker.txt
 python -m pip install -r requirements-dev.txt
 ```
 
@@ -59,17 +59,17 @@ logs, screenshots, or issue reports.
 Install the complete development dependency layers:
 
 ```powershell
-python -m pip install -r requirements-db.txt
+python -m pip install -r requirements-worker.txt
 python -m pip install -r requirements-dev.txt
 Set-Location frontend
 npm.cmd install
 Set-Location ..
 ```
 
-Start the repository-managed PostgreSQL service, then apply migrations:
+Start the repository-managed PostgreSQL and Redis services, then apply migrations:
 
 ```powershell
-docker compose up -d postgres
+docker compose up -d postgres redis
 $env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:5432/careercompass"
 .\venv\Scripts\python.exe -m alembic upgrade head
 ```
@@ -77,6 +77,10 @@ $env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:
 The Docker password is a local-development default only. Never reuse it in staging or
 production. If PostgreSQL is already running, point `DATABASE_URL` at that development database
 instead of starting a second service.
+
+Redis is the Phase 5 background-job broker. Its local port is bound to loopback, and its data
+volume is for development convenience only. PostgreSQL remains the durable source of truth.
+Phase 5A does not start a worker or enqueue application work yet.
 
 Run FastAPI from the repository root:
 
@@ -147,7 +151,14 @@ and work across API workers.
 Run the offline test suite:
 
 ```powershell
-python -m pytest
+python -m pytest -m "not postgres and not redis"
+```
+
+With the repository Redis service running, verify the worker broker:
+
+```powershell
+$env:TEST_REDIS_URL = "redis://127.0.0.1:6379/15"
+python -m pytest -m redis
 ```
 
 Run lint and formatting checks for tests you change:
@@ -220,9 +231,9 @@ Streamlit compatibility fallback
      -> optional legacy Groq analysis
 ```
 
-The remaining long-term direction adds Redis and background workers, authenticated ownership,
-subscription billing, production observability, and S3-compatible object storage. Migration
-remains incremental; Streamlit removal requires the separate gate in
+The remaining long-term direction adds durable task records and worker actors on the Redis broker,
+authenticated ownership, subscription billing, production observability, and S3-compatible
+object storage. Migration remains incremental; Streamlit removal requires the separate gate in
 `docs/frontend-cutover.md`.
 
 ## Security and privacy

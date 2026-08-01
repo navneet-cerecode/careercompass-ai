@@ -1,0 +1,2 @@
+-r requirements-db.txt
+dramatiq[redis]==2.2.0

@@ -27,10 +27,21 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       GROQ_API_KEY: test-groq-key
       RAPIDAPI_KEY: test-rapidapi-key
       TEST_DATABASE_URL: postgresql+psycopg://careercompass:careercompass@localhost:5432/careercompass_test
+      TEST_REDIS_URL: redis://localhost:6379/15
       PYTHONDONTWRITEBYTECODE: "1"
 
     steps:
@@ -46,6 +57,7 @@ jobs:
             requirements.txt
             requirements-api.txt
             requirements-db.txt
+            requirements-worker.txt
             requirements-dev.txt
 
       - name: Set up Node.js
@@ -58,7 +70,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-db.txt
+          python -m pip install -r requirements-worker.txt
           python -m pip install -r requirements-dev.txt
 
       - name: Install frontend dependencies
@@ -125,6 +137,7 @@ jobs:
           ui/components/resume_upload.py
           ui/app.py
           tests
+          workers
 
       - name: Check current Python formatting
         run: >-
@@ -180,6 +193,7 @@ jobs:
           ui/components/resume_upload.py
           ui/app.py
           tests
+          workers
 
       - name: Check frontend quality
         working-directory: frontend
@@ -191,7 +205,10 @@ jobs:
           npm audit --audit-level=high
 
       - name: Run offline tests
-        run: python -m pytest -m "not postgres"
+        run: python -m pytest -m "not postgres and not redis"
+
+      - name: Run Redis worker-broker gate
+        run: python -m pytest -m redis
 
       - name: Run PostgreSQL persistence gate
         run: python -m pytest -m postgres

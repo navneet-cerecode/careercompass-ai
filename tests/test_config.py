@@ -43,3 +43,38 @@ def test_environment_example_documents_required_credentials():
     assert "GROQ_API_KEY=" in content
     assert "RAPIDAPI_KEY=" in content
     assert "GROQ_MODEL=" in content
+    assert "REDIS_URL=" in content
+
+
+def test_worker_settings_are_safe_without_a_broker(monkeypatch):
+    monkeypatch.delenv("REDIS_URL", raising=False)
+    from core.config import Settings
+
+    settings = Settings(_env_file=None)
+
+    assert settings.redis_url is None
+    assert settings.worker_broker_namespace == "careercompass"
+    assert settings.worker_queue_name == "careercompass"
+    assert settings.worker_max_retries == 3
+    assert settings.worker_time_limit_ms == 300_000
+
+    try:
+        settings.require_redis_url()
+    except ValueError as error:
+        assert str(error) == "REDIS_URL is required for background workers."
+    else:
+        raise AssertionError("Missing REDIS_URL should fail at the worker boundary.")
+
+
+def test_worker_settings_hide_redis_credentials(monkeypatch):
+    monkeypatch.setenv("REDIS_URL", "redis://:private-password@redis.internal:6379/0")
+    monkeypatch.setenv("WORKER_MAX_RETRIES", "5")
+    monkeypatch.setenv("WORKER_TIME_LIMIT_MS", "120000")
+    from core.config import Settings
+
+    settings = Settings(_env_file=None)
+
+    assert settings.require_redis_url().endswith("@redis.internal:6379/0")
+    assert settings.worker_max_retries == 5
+    assert settings.worker_time_limit_ms == 120_000
+    assert "private-password" not in repr(settings)

@@ -99,6 +99,40 @@ class Settings(BaseSettings):
         return self.database_url.get_secret_value()
 
     # ==========================
+    # Background Workers
+    # ==========================
+
+    redis_url: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("REDIS_URL", "redis_url"),
+    )
+
+    worker_broker_namespace: str = Field(
+        default="careercompass",
+        min_length=1,
+        pattern=r"^[a-z0-9_-]+$",
+    )
+
+    worker_queue_name: str = Field(
+        default="careercompass",
+        min_length=1,
+        pattern=r"^[a-z0-9_-]+$",
+    )
+
+    worker_max_retries: int = Field(default=3, ge=0, le=10)
+
+    worker_time_limit_ms: int = Field(
+        default=5 * 60 * 1000,
+        ge=1_000,
+        le=60 * 60 * 1000,
+    )
+
+    def require_redis_url(self) -> str:
+        if self.redis_url is None:
+            raise ValueError("REDIS_URL is required for background workers.")
+        return self.redis_url.get_secret_value()
+
+    # ==========================
     # Logging
     # ==========================
 
