@@ -1,12 +1,12 @@
 # CareerCompass AI
 
-CareerCompass AI is an early-stage job discovery and resume-matching prototype. The current
-interface is built with Streamlit, while job discovery, normalization, recommendation signals,
-and LangGraph orchestration live in Python service modules.
+CareerCompass AI is an explainable job discovery and resume-matching application. The canonical
+interface is the Next.js workspace in `frontend/`, backed by FastAPI, Python application
+services, LangGraph orchestration, and PostgreSQL.
 
 The repository is being migrated incrementally toward a production SaaS architecture. The
-current milestone intentionally preserves the prototype while establishing documentation,
-offline tests, and basic safety controls.
+former Streamlit interface remains available as a compatibility fallback and is not removed by
+the frontend cutover.
 
 ## Current capabilities
 
@@ -23,6 +23,8 @@ roadmap but are not active provider implementations in this repository yet.
 ## Requirements
 
 - Python 3.13
+- Node.js 24
+- Docker Desktop or PostgreSQL 16
 - A Groq API key
 - A RapidAPI key with access to JSearch
 
@@ -52,82 +54,72 @@ Copy-Item .env.example .env
 Populate the required keys in `.env`. Never commit that file or paste credentials into tests,
 logs, screenshots, or issue reports.
 
-## Run the prototype
+## Run the canonical web product
 
-The canonical Streamlit entry point is the root `app.py`:
-
-```powershell
-streamlit run app.py
-```
-
-`ui/app.py` remains executable during the migration for backwards compatibility.
-
-## Run the API
-
-Install the API dependency layer:
+Install the complete development dependency layers:
 
 ```powershell
-python -m pip install -r requirements-api.txt
+python -m pip install -r requirements-db.txt
+python -m pip install -r requirements-dev.txt
+Set-Location frontend
+npm.cmd install
+Set-Location ..
 ```
 
-The versioned FastAPI boundary can then run alongside Streamlit:
+Start the repository-managed PostgreSQL service, then apply migrations:
 
 ```powershell
-uvicorn api.main:app --reload
+docker compose up -d postgres
+$env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:5432/careercompass"
+.\venv\Scripts\python.exe -m alembic upgrade head
 ```
 
-Interactive OpenAPI documentation is available at `http://127.0.0.1:8000/docs`. Initial health
-contracts are exposed at `/api/v1/health/live` and `/api/v1/health/ready`.
+The Docker password is a local-development default only. Never reuse it in staging or
+production. If PostgreSQL is already running, point `DATABASE_URL` at that development database
+instead of starting a second service.
 
-Phase 2 product routes include:
+Run FastAPI from the repository root:
 
-- `POST /api/v1/resumes/parse`
-- `POST /api/v1/jobs/search`
-- `GET /api/v1/jobs/{job_id}`
-- `POST /api/v1/recommendations`
+```powershell
+$env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:5432/careercompass"
+.\venv\Scripts\python.exe -m uvicorn api.main:app --reload
+```
 
-Streamlit remains operational and calls the same underlying application services.
-
-## Run the Next.js frontend
-
-Phase 4 introduces an additive Next.js App Router frontend under `frontend/`. Streamlit remains
-the production-parity fallback until the browser experience reaches the agreed feature gate.
-
-Install and run the frontend:
+In a second terminal, run Next.js:
 
 ```powershell
 Set-Location frontend
-npm.cmd install
 Copy-Item .env.example .env.local
 npm.cmd run dev
 ```
 
-The frontend uses the server-only `CAREERCOMPASS_API_URL` setting to reach FastAPI. No API keys
-or database credentials are exposed through browser-prefixed environment variables.
+Open `http://localhost:3000/workspace`. The frontend uses the server-only
+`CAREERCOMPASS_API_URL` setting to reach FastAPI. API keys and database credentials must never
+be placed in a `NEXT_PUBLIC_*` variable.
 
-The `/workspace` route provides the Phase 4B resume-onboarding flow. It accepts PDF, DOCX, and
-plain-text resumes up to 5 MB, forwards them through a narrow Next.js server route, and renders
-the parser output for factual review without saving it.
+In a third terminal, verify the running cutover surface:
 
-Phase 4C extends that workspace with explicit role preferences, multi-provider discovery, and
-explainable ranked recommendations. Anonymous workflow state remains in the current browser
-session, and application links always require user review.
+```powershell
+.\venv\Scripts\python.exe scripts\smoke_frontend.py
+```
 
-FastAPI remains the source of truth for HTTP contracts. Regenerate the committed OpenAPI document
-and TypeScript declarations after changing an API schema:
+FastAPI remains the source of truth for HTTP contracts. Regenerate the committed OpenAPI
+document and TypeScript declarations after changing an API schema from `frontend/`:
 
 ```powershell
 npm.cmd run contract:generate
 ```
 
-Frontend verification:
+## Streamlit compatibility fallback
+
+The root `app.py` remains available for rollback and the legacy Groq AI Inspector:
 
 ```powershell
-npm.cmd run lint
-npm.cmd run typecheck
-npm.cmd run test
-npm.cmd run build
+.\venv\Scripts\python.exe -m streamlit run app.py
 ```
+
+New interface work belongs in Next.js. See `docs/frontend-cutover.md` for the parity matrix and
+the explicit removal gate.
 
 ## Database migrations
 
@@ -212,19 +204,26 @@ and known technology names retain canonical casing. These boundary decisions are
 ## Current architecture
 
 ```text
-Streamlit UI
+Next.js web interface
+  -> narrow server-side route handlers
+     -> versioned FastAPI boundary
+        -> resume parsing and extraction
+        -> LangGraph job discovery
+           -> provider adapters
+           -> normalization and deduplication
+        -> PostgreSQL job catalog
+        -> recommendation signals and score fusion
+
+Streamlit compatibility fallback
   -> CareerCompass facade
-     -> resume parsing and extraction
-     -> LangGraph job discovery
-        -> provider adapters
-        -> normalization and deduplication
-     -> recommendation signals and score fusion
-     -> optional Groq analysis
+     -> shared Python application services
+     -> optional legacy Groq analysis
 ```
 
-The long-term direction is a Next.js frontend, FastAPI backend, PostgreSQL persistence, Redis
-and background workers, and S3-compatible object storage. Migration will remain incremental;
-Streamlit will not be removed until its replacement reaches agreed feature parity.
+The remaining long-term direction adds Redis and background workers, authenticated ownership,
+subscription billing, production observability, and S3-compatible object storage. Migration
+remains incremental; Streamlit removal requires the separate gate in
+`docs/frontend-cutover.md`.
 
 ## Security and privacy
 

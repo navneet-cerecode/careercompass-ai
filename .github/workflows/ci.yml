@@ -119,6 +119,7 @@ jobs:
           services/recommendation/signals/skill_signal.py
           services/resume/parser_service.py
           scripts/export_openapi.py
+          scripts/smoke_frontend.py
           scripts/test_env.py
           scripts/test_registry.py
           ui/components/resume_upload.py
@@ -173,6 +174,7 @@ jobs:
           services/recommendation/signals/skill_signal.py
           services/resume/parser_service.py
           scripts/export_openapi.py
+          scripts/smoke_frontend.py
           scripts/test_env.py
           scripts/test_registry.py
           ui/components/resume_upload.py
