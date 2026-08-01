@@ -80,7 +80,18 @@ instead of starting a second service.
 
 Redis is the Phase 5 background-job broker. Its local port is bound to loopback, and its data
 volume is for development convenience only. PostgreSQL remains the durable source of truth.
-Phase 5A does not start a worker or enqueue application work yet.
+
+Start the Phase 5 worker runtime in a separate terminal:
+
+```powershell
+$env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:5432/careercompass"
+$env:REDIS_URL = "redis://127.0.0.1:6379/0"
+.\venv\Scripts\python.exe -m dramatiq workers.entrypoint --processes 1 --threads 4
+```
+
+The only registered actor is currently an internal `system.probe` operation used to verify
+delivery and lifecycle behavior. It calls no job provider or AI model and has no public API
+endpoint.
 
 Run FastAPI from the repository root:
 

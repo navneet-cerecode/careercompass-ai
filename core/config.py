@@ -127,6 +127,12 @@ class Settings(BaseSettings):
         le=60 * 60 * 1000,
     )
 
+    worker_message_max_age_ms: int = Field(
+        default=60 * 60 * 1000,
+        ge=1_000,
+        le=24 * 60 * 60 * 1000,
+    )
+
     def require_redis_url(self) -> str:
         if self.redis_url is None:
             raise ValueError("REDIS_URL is required for background workers.")

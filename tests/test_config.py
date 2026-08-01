@@ -44,6 +44,7 @@ def test_environment_example_documents_required_credentials():
     assert "RAPIDAPI_KEY=" in content
     assert "GROQ_MODEL=" in content
     assert "REDIS_URL=" in content
+    assert "WORKER_MESSAGE_MAX_AGE_MS=" in content
 
 
 def test_worker_settings_are_safe_without_a_broker(monkeypatch):
@@ -57,6 +58,7 @@ def test_worker_settings_are_safe_without_a_broker(monkeypatch):
     assert settings.worker_queue_name == "careercompass"
     assert settings.worker_max_retries == 3
     assert settings.worker_time_limit_ms == 300_000
+    assert settings.worker_message_max_age_ms == 3_600_000
 
     try:
         settings.require_redis_url()
