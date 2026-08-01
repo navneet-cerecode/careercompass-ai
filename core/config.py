@@ -161,6 +161,23 @@ class Settings(BaseSettings):
     task_maintenance_batch_size: int = Field(default=100, ge=1, le=1_000)
 
     # ==========================
+    # Authentication
+    # ==========================
+
+    auth_issuer: str | None = Field(default=None, min_length=8)
+    auth_audience: str | None = Field(default=None, min_length=1)
+    auth_jwks_url: str | None = Field(default=None, min_length=8)
+    auth_jwks_cache_seconds: int = Field(default=300, ge=30, le=24 * 60 * 60)
+    auth_http_timeout_seconds: int = Field(default=5, ge=1, le=30)
+
+    def require_auth_config(self) -> tuple[str, str, str]:
+        if not self.auth_issuer or not self.auth_audience or not self.auth_jwks_url:
+            raise ValueError(
+                "AUTH_ISSUER, AUTH_AUDIENCE, and AUTH_JWKS_URL are required for authentication."
+            )
+        return self.auth_issuer, self.auth_audience, self.auth_jwks_url
+
+    # ==========================
     # Logging
     # ==========================
 

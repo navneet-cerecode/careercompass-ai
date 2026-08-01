@@ -44,12 +44,14 @@ class JobDiscoveryTaskService:
         *,
         request: JobSearchRequest,
         idempotency_key: str,
+        user_id: UUID | None = None,
     ) -> tuple[JobDiscoveryTaskSnapshot, str]:
         with self.database.session() as session:
             task, _ = JobDiscoveryTaskRepository(session).create(
                 request=request,
                 idempotency_key=idempotency_key,
                 max_attempts=self.max_attempts,
+                user_id=user_id,
             )
         if task.status.value == "queued":
             try:
@@ -65,11 +67,20 @@ class JobDiscoveryTaskService:
                 ) from error
         return JobDiscoveryTaskSnapshot(task=task), self.capability.issue(task.id)
 
-    def get(self, *, task_id: UUID, token: str) -> JobDiscoveryTaskSnapshot | None:
+    def get(
+        self,
+        *,
+        task_id: UUID,
+        token: str,
+        user_id: UUID | None = None,
+    ) -> JobDiscoveryTaskSnapshot | None:
         if not self.capability.verify(task_id, token):
             return None
         with self.database.session() as session:
-            task = BackgroundTaskRepository(session).get(task_id=task_id, user_id=None)
+            task = BackgroundTaskRepository(session).get(
+                task_id=task_id,
+                user_id=user_id,
+            )
             if task is None or task.task_type != "job.discovery":
                 return None
             if task.status != BackgroundTaskStatus.SUCCEEDED:
@@ -80,18 +91,24 @@ class JobDiscoveryTaskService:
             outcome, jobs = result
             return JobDiscoveryTaskSnapshot(task=task, outcome=outcome, jobs=jobs)
 
-    def cancel(self, *, task_id: UUID, token: str) -> JobDiscoveryTaskSnapshot | None:
+    def cancel(
+        self,
+        *,
+        task_id: UUID,
+        token: str,
+        user_id: UUID | None = None,
+    ) -> JobDiscoveryTaskSnapshot | None:
         if not self.capability.verify(task_id, token):
             return None
         with self.database.session() as session:
             repository = BackgroundTaskRepository(session)
-            task = repository.get(task_id=task_id, user_id=None)
+            task = repository.get(task_id=task_id, user_id=user_id)
             if task is None or task.task_type != "job.discovery":
                 return None
             try:
                 cancelled = repository.request_cancel(
                     task_id=task_id,
-                    user_id=None,
+                    user_id=user_id,
                 )
             except InvalidTaskTransition as error:
                 raise APIError(

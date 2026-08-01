@@ -97,6 +97,7 @@ jobs:
           app.py
           models/application.py
           models/background_task.py
+          models/identity.py
           models/enums.py
           models/job.py
           models/job_recommendation.py
@@ -107,6 +108,7 @@ jobs:
           models/score_component.py
           models/skill.py
           services/formatters/resume_formatter.py
+          services/auth
           services/job_discovery/discovery_service.py
           services/job_discovery/fingerprint.py
           services/job_discovery/pipeline
@@ -154,6 +156,7 @@ jobs:
           app.py
           models/application.py
           models/background_task.py
+          models/identity.py
           models/enums.py
           models/job.py
           models/job_recommendation.py
@@ -164,6 +167,7 @@ jobs:
           models/score_component.py
           models/skill.py
           services/formatters/resume_formatter.py
+          services/auth
           services/job_discovery/discovery_service.py
           services/job_discovery/fingerprint.py
           services/job_discovery/pipeline

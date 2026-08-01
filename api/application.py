@@ -48,6 +48,8 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
         else secrets.token_bytes(32)
     )
     application.state.task_token_secret = configured_secret
+    application.state.oidc_verifier = None
+    application.state.oidc_verifier_lock = Lock()
     application.add_exception_handler(APIError, api_error_handler)
     application.add_exception_handler(
         RequestValidationError,

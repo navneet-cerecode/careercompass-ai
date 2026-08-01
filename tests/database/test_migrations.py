@@ -120,7 +120,7 @@ def test_task_hardening_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'task-hardening.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0008")
     engine = create_engine(database_url)
     inspector = inspect(engine)
     assert current_revision(database_url) == "0008"
@@ -130,3 +130,16 @@ def test_task_hardening_schema_migration_is_reversible(tmp_path):
 
     command.downgrade(config, "0007")
     assert "task_outbox" not in inspect(engine).get_table_names()
+
+
+def test_external_identity_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'identities.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0009"
+    assert "user_identities" in inspect(engine).get_table_names()
+
+    command.downgrade(config, "0008")
+    assert "user_identities" not in inspect(engine).get_table_names()

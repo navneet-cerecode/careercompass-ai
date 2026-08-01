@@ -10,6 +10,7 @@ from sqlalchemy.engine import make_url
 from database.alembic import build_alembic_config
 from database.repositories.applications import ApplicationRepository, SavedJobRepository
 from database.repositories.jobs import JobRepository
+from database.repositories.identities import IdentityRepository
 from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
 from database.repositories.tasks import BackgroundTaskRepository
 from database.repositories.task_outbox import TaskOutboxRepository
@@ -17,6 +18,7 @@ from database.repositories.users import UserRepository
 from database.session import Database
 from models.enums import ApplicationStatus, BackgroundTaskStatus
 from models.job import Job
+from models.identity import VerifiedIdentity
 from api.schemas.job_search import JobSearchRequest
 from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
 
@@ -44,10 +46,19 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0008"
+            assert MigrationContext.configure(connection).get_current_revision() == "0009"
         assert database.check_connection() is True
 
         with database.session() as session:
+            principal = IdentityRepository(session).provision(
+                VerifiedIdentity(
+                    issuer="https://identity.example.test/",
+                    subject="postgres-identity-gate",
+                    email="identity-gate@example.com",
+                    name="Identity Gate",
+                )
+            )
+            assert principal.subject == "postgres-identity-gate"
             user = UserRepository(session).create(
                 email="postgres-gate@example.com",
                 name="PostgreSQL Gate",

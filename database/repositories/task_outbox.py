@@ -17,6 +17,7 @@ class TaskOutboxMessage:
     task_id: UUID
     actor_name: str
     attempt_count: int
+    user_id: UUID | None
 
 
 class TaskOutboxRepository:
@@ -44,20 +45,20 @@ class TaskOutboxRepository:
         return self._to_domain(record)
 
     def get_pending_for_task(self, task_id: UUID) -> TaskOutboxMessage | None:
-        record = self.session.scalar(
-            select(TaskOutboxRecord)
+        row = self.session.execute(
+            select(TaskOutboxRecord, BackgroundTaskRecord.user_id)
             .join(BackgroundTaskRecord, BackgroundTaskRecord.id == TaskOutboxRecord.task_id)
             .where(
                 TaskOutboxRecord.task_id == task_id,
                 TaskOutboxRecord.published_at.is_(None),
                 BackgroundTaskRecord.status == BackgroundTaskStatus.QUEUED.value,
             )
-        )
-        return self._to_domain(record) if record is not None else None
+        ).one_or_none()
+        return self._to_domain(*row) if row is not None else None
 
     def list_pending(self, *, limit: int) -> tuple[TaskOutboxMessage, ...]:
-        records = self.session.scalars(
-            select(TaskOutboxRecord)
+        rows = self.session.execute(
+            select(TaskOutboxRecord, BackgroundTaskRecord.user_id)
             .join(BackgroundTaskRecord, BackgroundTaskRecord.id == TaskOutboxRecord.task_id)
             .where(
                 TaskOutboxRecord.published_at.is_(None),
@@ -66,7 +67,7 @@ class TaskOutboxRepository:
             .order_by(TaskOutboxRecord.created_at, TaskOutboxRecord.id)
             .limit(limit)
         ).all()
-        return tuple(self._to_domain(record) for record in records)
+        return tuple(self._to_domain(*row) for row in rows)
 
     def record_attempt(self, message_id: UUID, *, published: bool) -> None:
         record = self.session.get(TaskOutboxRecord, message_id)
@@ -80,10 +81,14 @@ class TaskOutboxRepository:
         self.session.flush()
 
     @staticmethod
-    def _to_domain(record: TaskOutboxRecord) -> TaskOutboxMessage:
+    def _to_domain(
+        record: TaskOutboxRecord,
+        user_id: UUID | None = None,
+    ) -> TaskOutboxMessage:
         return TaskOutboxMessage(
             id=record.id,
             task_id=record.task_id,
             actor_name=record.actor_name,
             attempt_count=record.attempt_count,
+            user_id=user_id,
         )

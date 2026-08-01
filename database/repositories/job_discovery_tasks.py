@@ -28,11 +28,13 @@ class JobDiscoveryTaskRepository:
         request: JobSearchRequest,
         idempotency_key: str,
         max_attempts: int,
+        user_id: UUID | None = None,
     ) -> tuple[BackgroundTask, bool]:
         task = BackgroundTaskRepository(self.session).create(
             task_type="job.discovery",
             idempotency_key=idempotency_key,
             max_attempts=max_attempts,
+            user_id=user_id,
         )
         record = self.session.get(JobDiscoveryTaskRecord, task.id)
         if record is not None:

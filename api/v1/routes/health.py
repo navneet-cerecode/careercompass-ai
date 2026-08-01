@@ -61,6 +61,11 @@ def readiness(response: Response, settings: SettingsDependency) -> HealthRespons
             broker.close()
 
     checks["task_capability"] = "shared" if settings.task_token_secret is not None else "ephemeral"
+    checks["authentication"] = (
+        "configured"
+        if settings.auth_issuer and settings.auth_audience and settings.auth_jwks_url
+        else "optional_anonymous"
+    )
     if not ready:
         response.status_code = 503
     return HealthResponse(

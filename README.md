@@ -54,6 +54,12 @@ Copy-Item .env.example .env
 Populate the required keys in `.env`. Never commit that file or paste credentials into tests,
 logs, screenshots, or issue reports.
 
+Authentication uses provider-neutral OIDC access tokens. Configure `AUTH_ISSUER`,
+`AUTH_AUDIENCE`, and `AUTH_JWKS_URL` together when enabling signed-in APIs. CareerCompass stores
+external issuer/subject links but never passwords or provider tokens. The browser sign-in/session
+adapter is a separate provider-specific rollout; anonymous workspace compatibility remains
+available until that adapter is configured.
+
 ## Run the canonical web product
 
 Install the complete development dependency layers:
@@ -175,6 +181,11 @@ replace PostgreSQL task history.
 Discovery publication uses a transactional outbox. Heartbeats, stale-worker recovery, bounded
 redelivery, cooperative cancellation, queue expiry, and terminal-history retention are handled
 by scheduled maintenance. See `docs/operations/background-tasks.md`.
+
+Verified bearer identities provision credential-free user profiles through `(issuer, subject)`.
+Authenticated resume uploads become immutable owner-scoped versions, and authenticated discovery
+tasks require the same owner for polling and cancellation. Email collisions require explicit
+future account linking rather than automatic merging.
 
 ## Verification
 

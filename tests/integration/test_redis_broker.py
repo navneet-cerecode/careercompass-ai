@@ -12,6 +12,7 @@ from api.application import create_app
 from core.config import Settings
 from database.base import Base
 from database.repositories.tasks import BackgroundTaskRepository
+from database.repositories.users import UserRepository
 from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
 from database.session import Database
 from models.enums import BackgroundTaskStatus
@@ -119,10 +120,15 @@ def test_job_discovery_executes_through_live_redis(tmp_path):
         worker_max_retries=0,
     )
     with database.session() as session:
+        owner = UserRepository(session).create(
+            email=f"redis-owner-{suffix}@example.com",
+            name="Redis Owner",
+        )
         task, _ = JobDiscoveryTaskRepository(session).create(
             request=JobSearchRequest(role="AI Engineer", location="India"),
             idempotency_key=f"redis-discovery-{suffix}",
             max_attempts=1,
+            user_id=owner.id,
         )
 
     class StubDiscovery:
@@ -158,13 +164,13 @@ def test_job_discovery_executes_through_live_redis(tmp_path):
 
     try:
         worker.start()
-        actor.send(str(task.id))
+        actor.send(str(task.id), str(owner.id))
         broker.join(actor.queue_name, timeout=10_000)
         worker.join()
         with database.session() as session:
             completed = BackgroundTaskRepository(session).get(
                 task_id=task.id,
-                user_id=None,
+                user_id=owner.id,
             )
             result = JobDiscoveryTaskRepository(session).get_result(task.id)
         assert completed is not None
@@ -191,6 +197,9 @@ def test_readiness_checks_live_postgresql_and_redis():
             database_url=database_url,
             redis_url=redis_url,
             task_token_secret="x" * 32,
+            auth_issuer="https://identity.example.test/",
+            auth_audience="careercompass-api",
+            auth_jwks_url="https://identity.example.test/jwks.json",
             worker_broker_namespace=f"readiness-{uuid4().hex}",
         )
     )
@@ -203,4 +212,5 @@ def test_readiness_checks_live_postgresql_and_redis():
         "database": "ok",
         "broker": "ok",
         "task_capability": "shared",
+        "authentication": "configured",
     }

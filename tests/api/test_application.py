@@ -50,6 +50,7 @@ def test_readiness_endpoint_reports_missing_required_dependencies():
             "database": "not_configured",
             "broker": "not_configured",
             "task_capability": "ephemeral",
+            "authentication": "optional_anonymous",
         },
     }
 

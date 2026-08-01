@@ -42,6 +42,7 @@ class TaskOutboxDispatcher:
             self.publisher.enqueue(
                 actor_name=message.actor_name,
                 task_id=message.task_id,
+                user_id=message.user_id,
             )
         except Exception:
             with self.database.session() as session:

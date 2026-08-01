@@ -165,12 +165,14 @@ def test_async_search_creation_and_capability_scoped_polling():
     )
 
     class StubTaskService:
-        def create(self, *, request, idempotency_key):
+        def create(self, *, request, idempotency_key, user_id=None):
             assert request.role == "Data Engineer"
             assert idempotency_key == "browser-search-123"
+            assert user_id is None
             return JobDiscoveryTaskSnapshot(task=task), "opaque-capability-token"
 
-        def get(self, *, task_id, token):
+        def get(self, *, task_id, token, user_id=None):
+            assert user_id is None
             if task_id != task.id or token != "opaque-capability-token":
                 return None
             return JobDiscoveryTaskSnapshot(
@@ -183,7 +185,8 @@ def test_async_search_creation_and_capability_scoped_polling():
                 jobs=(job,),
             )
 
-        def cancel(self, *, task_id, token):
+        def cancel(self, *, task_id, token, user_id=None):
+            assert user_id is None
             if task_id != task.id or token != "opaque-capability-token":
                 return None
             return JobDiscoveryTaskSnapshot(

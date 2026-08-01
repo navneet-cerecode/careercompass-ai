@@ -10,6 +10,7 @@ from api.dependencies import (
     get_job_catalog,
     get_job_discovery_service,
     get_job_discovery_task_service,
+    get_optional_principal,
 )
 from api.errors import APIError, ErrorResponse
 from api.mappers import map_job
@@ -25,6 +26,7 @@ from api.schemas.jobs import JobResponse
 from api.services.job_catalog import JobCatalog
 from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from database.repositories.tasks import IdempotencyConflict
+from models.identity import AuthenticatedPrincipal
 from services.job_discovery.discovery_service import JobDiscoveryService
 from services.job_discovery.providers.contracts import JobSearchQuery
 
@@ -37,6 +39,10 @@ CatalogDependency = Annotated[JobCatalog, Depends(get_job_catalog)]
 TaskServiceDependency = Annotated[
     JobDiscoveryTaskService,
     Depends(get_job_discovery_task_service),
+]
+OptionalPrincipalDependency = Annotated[
+    AuthenticatedPrincipal | None,
+    Depends(get_optional_principal),
 ]
 
 
@@ -74,17 +80,20 @@ def _map_task_snapshot(snapshot) -> JobSearchTaskResponse:
     response_model=JobSearchTaskCreatedResponse,
     status_code=202,
     responses={409: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+    openapi_extra={"security": [{}, {"HTTPBearer": []}]},
     summary="Create an asynchronous job-discovery task",
 )
 def create_search_task(
     request: JobSearchRequest,
     tasks: TaskServiceDependency,
+    principal: OptionalPrincipalDependency,
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=8, max_length=200)],
 ) -> JobSearchTaskCreatedResponse:
     try:
         snapshot, token = tasks.create(
             request=request,
             idempotency_key=idempotency_key,
+            user_id=principal.user_id if principal is not None else None,
         )
     except IdempotencyConflict as error:
         raise APIError(
@@ -103,14 +112,20 @@ def create_search_task(
     "/search-tasks/{task_id}",
     response_model=JobSearchTaskResponse,
     responses={404: {"model": ErrorResponse}},
+    openapi_extra={"security": [{}, {"HTTPBearer": []}]},
     summary="Poll an asynchronous job-discovery task",
 )
 def get_search_task(
     task_id: UUID,
     tasks: TaskServiceDependency,
+    principal: OptionalPrincipalDependency,
     task_token: Annotated[str, Header(alias="X-Task-Token", min_length=20, max_length=200)],
 ) -> JobSearchTaskResponse:
-    snapshot = tasks.get(task_id=task_id, token=task_token)
+    snapshot = tasks.get(
+        task_id=task_id,
+        token=task_token,
+        user_id=principal.user_id if principal is not None else None,
+    )
     if snapshot is None:
         raise APIError(404, "task_not_found", "The requested task was not found.")
     return _map_task_snapshot(snapshot)
@@ -120,14 +135,20 @@ def get_search_task(
     "/search-tasks/{task_id}",
     response_model=JobSearchTaskResponse,
     responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    openapi_extra={"security": [{}, {"HTTPBearer": []}]},
     summary="Request cancellation of an asynchronous job search",
 )
 def cancel_search_task(
     task_id: UUID,
     tasks: TaskServiceDependency,
+    principal: OptionalPrincipalDependency,
     task_token: Annotated[str, Header(alias="X-Task-Token", min_length=20, max_length=200)],
 ) -> JobSearchTaskResponse:
-    snapshot = tasks.cancel(task_id=task_id, token=task_token)
+    snapshot = tasks.cancel(
+        task_id=task_id,
+        token=task_token,
+        user_id=principal.user_id if principal is not None else None,
+    )
     if snapshot is None:
         raise APIError(404, "task_not_found", "The requested task was not found.")
     return _map_task_snapshot(snapshot)

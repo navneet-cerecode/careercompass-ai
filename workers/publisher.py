@@ -10,17 +10,28 @@ class BackgroundTaskPublisher:
         self.broker = broker
         self.queue_name = queue_name
 
-    def enqueue_job_discovery(self, task_id: UUID) -> None:
-        self.enqueue(actor_name="job_discovery", task_id=task_id)
+    def enqueue_job_discovery(
+        self,
+        task_id: UUID,
+        *,
+        user_id: UUID | None = None,
+    ) -> None:
+        self.enqueue(actor_name="job_discovery", task_id=task_id, user_id=user_id)
 
-    def enqueue(self, *, actor_name: str, task_id: UUID) -> None:
+    def enqueue(
+        self,
+        *,
+        actor_name: str,
+        task_id: UUID,
+        user_id: UUID | None = None,
+    ) -> None:
         if actor_name != "job_discovery":
             raise ValueError("Unsupported task actor.")
         self.broker.enqueue(
             Message(
                 queue_name=self.queue_name,
                 actor_name=actor_name,
-                args=(str(task_id), None),
+                args=(str(task_id), str(user_id) if user_id is not None else None),
                 kwargs={},
                 options={},
             )

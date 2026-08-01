@@ -19,8 +19,8 @@ class RecordingPublisher:
     def __init__(self):
         self.messages = []
 
-    def enqueue(self, *, actor_name, task_id):
-        self.messages.append((actor_name, task_id))
+    def enqueue(self, *, actor_name, task_id, user_id=None):
+        self.messages.append((actor_name, task_id, user_id))
 
 
 def test_maintenance_recovers_stale_work_and_replays_outbox():
@@ -58,7 +58,7 @@ def test_maintenance_recovers_stale_work_and_replays_outbox():
 
     assert result.requeued == 1
     assert result.published == 1
-    assert publisher.messages == [("job_discovery", task.id)]
+    assert publisher.messages == [("job_discovery", task.id, None)]
     with database.session() as session:
         recovered = BackgroundTaskRepository(session).get(task_id=task.id, user_id=None)
     assert recovered is not None
