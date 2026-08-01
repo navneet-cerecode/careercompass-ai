@@ -67,7 +67,7 @@ def test_application_tracking_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'applications.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0005")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0005"
     assert {"saved_jobs", "applications", "application_events"} <= set(
@@ -76,3 +76,26 @@ def test_application_tracking_schema_migration_is_reversible(tmp_path):
 
     command.downgrade(config, "0004")
     assert "applications" not in inspect(engine).get_table_names()
+
+
+def test_background_task_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'tasks.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0006"
+    assert "background_tasks" in inspect(engine).get_table_names()
+    check_names = {
+        constraint["name"]
+        for constraint in inspect(engine).get_check_constraints("background_tasks")
+    }
+    assert {
+        "ck_background_tasks_attempt_count_nonnegative",
+        "ck_background_tasks_attempt_count_within_limit",
+        "ck_background_tasks_max_attempts_bounds",
+        "ck_background_tasks_status",
+    } <= check_names
+
+    command.downgrade(config, "0005")
+    assert "background_tasks" not in inspect(engine).get_table_names()

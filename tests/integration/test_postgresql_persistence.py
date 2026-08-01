@@ -10,9 +10,10 @@ from sqlalchemy.engine import make_url
 from database.alembic import build_alembic_config
 from database.repositories.applications import ApplicationRepository, SavedJobRepository
 from database.repositories.jobs import JobRepository
+from database.repositories.tasks import BackgroundTaskRepository
 from database.repositories.users import UserRepository
 from database.session import Database
-from models.enums import ApplicationStatus
+from models.enums import ApplicationStatus, BackgroundTaskStatus
 from models.job import Job
 
 pytestmark = pytest.mark.postgres
@@ -39,7 +40,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0005"
+            assert MigrationContext.configure(connection).get_current_revision() == "0006"
         assert database.check_connection() is True
 
         with database.session() as session:
@@ -66,6 +67,28 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
                 job_id=job.id,
                 status=ApplicationStatus.SAVED,
             )
+            task_repository = BackgroundTaskRepository(session)
+            task = task_repository.create(
+                task_type="job.discovery",
+                idempotency_key="postgres-task-gate",
+                user_id=user.id,
+                resource_id=job.id,
+                max_attempts=2,
+            )
+            task_repository.start(task_id=task.id, user_id=user.id)
+            task_repository.record_failure(
+                task_id=task.id,
+                user_id=user.id,
+                error_code="provider_timeout",
+                retryable=True,
+            )
+            task_repository.start(task_id=task.id, user_id=user.id)
+            completed_task = task_repository.complete(
+                task_id=task.id,
+                user_id=user.id,
+            )
+            assert completed_task is not None
+            assert completed_task.status == BackgroundTaskStatus.SUCCEEDED
 
         with database.session() as session:
             assert (
@@ -81,6 +104,13 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
             )
             assert loaded is not None
             assert loaded.status == ApplicationStatus.SAVED
+            loaded_task = BackgroundTaskRepository(session).get(
+                task_id=task.id,
+                user_id=user.id,
+            )
+            assert loaded_task is not None
+            assert loaded_task.status == BackgroundTaskStatus.SUCCEEDED
+            assert loaded_task.attempt_count == 2
     finally:
         database.dispose()
         command.downgrade(config, "base")

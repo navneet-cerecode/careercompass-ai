@@ -12,11 +12,19 @@ from database.repositories.history import (
     SearchHistoryRepository,
 )
 from database.repositories.resumes import PersistedResume, ResumeRepository
+from database.repositories.tasks import (
+    BackgroundTaskRepository,
+    IdempotencyConflict,
+    InvalidTaskTransition,
+)
 from database.repositories.users import User, UserRepository
 
 __all__ = [
     "ApplicationRepository",
+    "BackgroundTaskRepository",
+    "IdempotencyConflict",
     "InvalidApplicationTransition",
+    "InvalidTaskTransition",
     "JobRepository",
     "RecommendationHistoryRepository",
     "PersistedResume",

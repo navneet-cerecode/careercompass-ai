@@ -60,3 +60,13 @@ class ApplicationStatus(str, Enum):
     OFFER = "Offer"
     REJECTED = "Rejected"
     WITHDRAWN = "Withdrawn"
+
+
+class BackgroundTaskStatus(str, Enum):
+    """Durable lifecycle states for background work."""
+
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"

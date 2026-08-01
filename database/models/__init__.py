@@ -12,11 +12,13 @@ from database.models.recommendations import (
     SearchResultRecord,
 )
 from database.models.resumes import ResumeRecord, ResumeSkillRecord, SkillRecord
+from database.models.tasks import BackgroundTaskRecord
 from database.models.users import UserRecord
 
 __all__ = [
     "ApplicationEventRecord",
     "ApplicationRecord",
+    "BackgroundTaskRecord",
     "JobRecord",
     "JobSourceRecord",
     "RecommendationRecord",

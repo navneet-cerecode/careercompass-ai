@@ -96,6 +96,7 @@ jobs:
           graph/workflow.py
           app.py
           models/application.py
+          models/background_task.py
           models/enums.py
           models/job.py
           models/job_recommendation.py
@@ -152,6 +153,7 @@ jobs:
           graph/workflow.py
           app.py
           models/application.py
+          models/background_task.py
           models/enums.py
           models/job.py
           models/job_recommendation.py

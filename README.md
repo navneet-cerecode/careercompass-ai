@@ -146,6 +146,11 @@ Job search now upserts canonical jobs and separate provider-source records. Sear
 durable database IDs, allowing job-detail and recommendation requests to survive process restarts
 and work across API workers.
 
+Background work has a durable PostgreSQL lifecycle record with owner-ready scoping, hashed
+idempotency fingerprints, bounded attempts, and safe machine-readable failure codes. Task rows
+contain identifiers and lifecycle metadata only; Redis remains the delivery broker and does not
+replace PostgreSQL task history.
+
 ## Verification
 
 Run the offline test suite:
@@ -223,6 +228,7 @@ Next.js web interface
            -> provider adapters
            -> normalization and deduplication
         -> PostgreSQL job catalog
+        -> PostgreSQL background-task lifecycle
         -> recommendation signals and score fusion
 
 Streamlit compatibility fallback
