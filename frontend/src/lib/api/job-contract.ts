@@ -18,6 +18,18 @@ export type SaveJobRequest = components["schemas"]["SaveJobRequest"];
 export type SavedJobResponse = components["schemas"]["SavedJobResponse"];
 export type SavedJobListResponse =
   components["schemas"]["SavedJobListResponse"];
+export type ApplicationStatus = components["schemas"]["ApplicationStatus"];
+export type ApplicationResponse = components["schemas"]["ApplicationResponse"];
+export type ApplicationDetailResponse =
+  components["schemas"]["ApplicationDetailResponse"];
+export type ApplicationEventResponse =
+  components["schemas"]["ApplicationEventResponse"];
+export type ApplicationListResponse =
+  components["schemas"]["ApplicationListResponse"];
+export type CreateApplicationRequest =
+  components["schemas"]["CreateApplicationRequest"];
+export type TransitionApplicationRequest =
+  components["schemas"]["TransitionApplicationRequest"];
 export type EmploymentType = components["schemas"]["EmploymentType"];
 export type DatePosted = components["schemas"]["DatePosted"];
 

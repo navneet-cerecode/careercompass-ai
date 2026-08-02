@@ -7,7 +7,7 @@ import type { SiteUser } from "@/lib/auth/session";
 type SiteHeaderProps = {
   connection: ApiConnection;
   user: SiteUser | null;
-  activePage?: "home" | "workspace" | "saved";
+  activePage?: "home" | "workspace" | "saved" | "applications";
 };
 
 export function SiteHeader({
@@ -34,12 +34,22 @@ export function SiteHeader({
           Workspace
         </Link>
         {user && (
-          <Link
-            href="/saved"
-            aria-current={activePage === "saved" ? "page" : undefined}
-          >
-            Saved roles
-          </Link>
+          <>
+            <Link
+              href="/saved"
+              aria-current={activePage === "saved" ? "page" : undefined}
+            >
+              Saved
+            </Link>
+            <Link
+              href="/applications"
+              aria-current={
+                activePage === "applications" ? "page" : undefined
+              }
+            >
+              Tracker
+            </Link>
+          </>
         )}
         <Link href="/#trust">Trust</Link>
       </nav>

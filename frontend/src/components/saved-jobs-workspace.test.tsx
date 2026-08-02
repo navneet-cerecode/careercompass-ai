@@ -53,4 +53,42 @@ describe("SavedJobsWorkspace", () => {
       screen.getByRole("heading", { name: "Your shortlist has room." }),
     ).toBeVisible();
   });
+
+  it("starts tracking a saved role only after an explicit click", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ items: [savedJob] }))
+      .mockResolvedValueOnce(
+        Response.json(
+          {
+            id: "64d64589-c247-4df7-baf3-01c9fc10a39b",
+            job: savedJob.job,
+            status: "Preparing",
+          },
+          { status: 201 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<SavedJobsWorkspace />);
+
+    await user.click(
+      await screen.findByRole("button", { name: "Start tracking" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "AI Engineer is ready in your application tracker.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Open tracker" })).toHaveAttribute(
+      "href",
+      "/applications",
+    );
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/applications",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });

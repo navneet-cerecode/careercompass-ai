@@ -9,9 +9,11 @@ import {
 
 type AuthenticatedProxyOptions = {
   path: string;
-  method: "GET" | "PUT" | "DELETE";
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   timeoutMs?: number;
   maxBytes?: number;
+  unavailableCode?: string;
+  unavailableMessage?: string;
 };
 
 function proxyError(status: number, code: string, message: string) {
@@ -48,7 +50,7 @@ export async function forwardAuthenticatedRequest(
     Authorization: identity.authorization,
   });
   let body: string | undefined;
-  if (options.method === "PUT") {
+  if (["POST", "PUT", "PATCH"].includes(options.method)) {
     if (
       !request.headers
         .get("content-type")
@@ -96,8 +98,9 @@ export async function forwardAuthenticatedRequest(
     return attachSessionHeaders(
       proxyError(
         503,
-        "saved_jobs_unavailable",
-        "Saved jobs are temporarily unavailable. Try again shortly.",
+        options.unavailableCode ?? "saved_jobs_unavailable",
+        options.unavailableMessage ??
+          "Saved jobs are temporarily unavailable. Try again shortly.",
       ),
       identity,
     );

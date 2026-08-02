@@ -45,9 +45,13 @@ describe("SiteHeader", () => {
       "href",
       "/auth/logout",
     );
-    expect(screen.getByRole("link", { name: "Saved roles" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Saved" })).toHaveAttribute(
       "href",
       "/saved",
+    );
+    expect(screen.getByRole("link", { name: "Tracker" })).toHaveAttribute(
+      "href",
+      "/applications",
     );
     expect(
       screen.queryByRole("link", { name: "Sign in" }),

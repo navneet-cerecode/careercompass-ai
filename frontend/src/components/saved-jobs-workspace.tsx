@@ -33,6 +33,8 @@ function savedDate(value: string) {
 export function SavedJobsWorkspace() {
   const [state, setState] = useState<SavedJobsState>({ status: "loading" });
   const [removing, setRemoving] = useState<Set<string>>(new Set());
+  const [tracking, setTracking] = useState<Set<string>>(new Set());
+  const [trackedJobIds, setTrackedJobIds] = useState<Set<string>>(new Set());
   const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
@@ -97,6 +99,55 @@ export function SavedJobsWorkspace() {
       );
     } finally {
       setRemoving((current) => {
+        const next = new Set(current);
+        next.delete(jobId);
+        return next;
+      });
+    }
+  };
+
+  const startTracking = async (item: SavedJobResponse) => {
+    const jobId = item.job.id;
+    setTracking((current) => new Set(current).add(jobId));
+    setAnnouncement("");
+    try {
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          job_id: jobId,
+          notes: item.notes,
+          next_action: "Review the role and prepare application evidence",
+          next_action_due_at: null,
+          resume_id: null,
+        }),
+      });
+      const payload: unknown = await response.json();
+      const alreadyTracked =
+        typeof payload === "object" &&
+        payload !== null &&
+        "code" in payload &&
+        payload.code === "application_already_exists";
+      if (!response.ok && !alreadyTracked) {
+        throw new Error(
+          getApiErrorMessage(payload) ??
+            "Solara Hire could not add this role to your tracker.",
+        );
+      }
+      setTrackedJobIds((current) => new Set(current).add(jobId));
+      setAnnouncement(
+        alreadyTracked
+          ? `${item.job.title} is already in your application tracker.`
+          : `${item.job.title} is ready in your application tracker.`,
+      );
+    } catch (error) {
+      setAnnouncement(
+        error instanceof Error
+          ? error.message
+          : "Solara Hire could not add this role to your tracker.",
+      );
+    } finally {
+      setTracking((current) => {
         const next = new Set(current);
         next.delete(jobId);
         return next;
@@ -216,6 +267,23 @@ export function SavedJobsWorkspace() {
                     >
                       {removing.has(item.job.id) ? "Removing" : "Remove"}
                     </button>
+                    {trackedJobIds.has(item.job.id) ? (
+                      <a className="saved-track-link" href="/applications">
+                        Open tracker
+                        <span aria-hidden="true">→</span>
+                      </a>
+                    ) : (
+                      <button
+                        className="saved-track-link"
+                        type="button"
+                        disabled={tracking.has(item.job.id)}
+                        onClick={() => startTracking(item)}
+                      >
+                        {tracking.has(item.job.id)
+                          ? "Starting"
+                          : "Start tracking"}
+                      </button>
+                    )}
                     <a
                       className="button"
                       href={item.job.url}
