@@ -1,5 +1,5 @@
 """
-CareerCompass Design System.
+Solara Hire Design System.
 
 Shared UI helpers for consistent styling across the application.
 """

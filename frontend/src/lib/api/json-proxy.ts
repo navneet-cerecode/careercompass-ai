@@ -1,6 +1,11 @@
 import "server-only";
 
 import { getApiBaseUrl } from "@/lib/api/config";
+import {
+  attachSessionHeaders,
+  resolveApiIdentity,
+  type ApiIdentity,
+} from "@/lib/auth/session";
 
 type JsonProxyOptions = {
   path: string;
@@ -8,6 +13,7 @@ type JsonProxyOptions = {
   maxBytes: number;
   serviceName: string;
   forwardedHeaders?: string[];
+  forwardIdentity?: boolean;
 };
 
 function errorResponse(status: number, code: string, message: string) {
@@ -65,6 +71,24 @@ export async function forwardJsonRequest(
     Accept: "application/json",
     "Content-Type": "application/json",
   };
+  let identity: ApiIdentity = {
+    authorization: null,
+    sessionHeaders: new Headers(),
+  };
+  if (options.forwardIdentity) {
+    try {
+      identity = await resolveApiIdentity(request);
+    } catch {
+      return errorResponse(
+        401,
+        "authentication_expired",
+        "Your secure session could not be refreshed. Sign in again.",
+      );
+    }
+    if (identity.authorization) {
+      headers.Authorization = identity.authorization;
+    }
+  }
   for (const name of options.forwardedHeaders ?? []) {
     const value = request.headers.get(name);
     if (value) {
@@ -82,10 +106,13 @@ export async function forwardJsonRequest(
       signal: AbortSignal.timeout(options.timeoutMs),
     });
   } catch {
-    return errorResponse(
-      503,
-      `${options.serviceName}_unavailable`,
-      `${options.serviceName === "job_search" ? "Job search" : "Recommendations"} are temporarily unavailable. Try again shortly.`,
+    return attachSessionHeaders(
+      errorResponse(
+        503,
+        `${options.serviceName}_unavailable`,
+        `${options.serviceName === "job_search" ? "Job search" : "Recommendations"} are temporarily unavailable. Try again shortly.`,
+      ),
+      identity,
     );
   }
 
@@ -95,24 +122,33 @@ export async function forwardJsonRequest(
       ?.toLowerCase()
       .includes("application/json")
   ) {
-    return errorResponse(
-      502,
-      "invalid_service_response",
-      "The career service returned an unexpected response.",
+    return attachSessionHeaders(
+      errorResponse(
+        502,
+        "invalid_service_response",
+        "The career service returned an unexpected response.",
+      ),
+      identity,
     );
   }
 
   try {
     const payload: unknown = await upstreamResponse.json();
-    return Response.json(payload, {
-      status: upstreamResponse.status,
-      headers: { "Cache-Control": "no-store" },
-    });
+    return attachSessionHeaders(
+      Response.json(payload, {
+        status: upstreamResponse.status,
+        headers: { "Cache-Control": "no-store" },
+      }),
+      identity,
+    );
   } catch {
-    return errorResponse(
-      502,
-      "invalid_service_response",
-      "The career service returned an unexpected response.",
+    return attachSessionHeaders(
+      errorResponse(
+        502,
+        "invalid_service_response",
+        "The career service returned an unexpected response.",
+      ),
+      identity,
     );
   }
 }

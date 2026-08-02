@@ -1,6 +1,6 @@
-# CareerCompass AI
+# Solara Hire
 
-CareerCompass AI is an explainable job discovery and resume-matching application. The canonical
+Solara Hire is an explainable job discovery and resume-matching application. The canonical
 interface is the Next.js workspace in `frontend/`, backed by FastAPI, Python application
 services, LangGraph orchestration, and PostgreSQL.
 
@@ -55,10 +55,14 @@ Populate the required keys in `.env`. Never commit that file or paste credential
 logs, screenshots, or issue reports.
 
 Authentication uses provider-neutral OIDC access tokens. Configure `AUTH_ISSUER`,
-`AUTH_AUDIENCE`, and `AUTH_JWKS_URL` together when enabling signed-in APIs. CareerCompass stores
-external issuer/subject links but never passwords or provider tokens. The browser sign-in/session
-adapter is a separate provider-specific rollout; anonymous workspace compatibility remains
-available until that adapter is configured.
+`AUTH_AUDIENCE`, and `AUTH_JWKS_URL` together when enabling signed-in APIs. Solara Hire stores
+external issuer/subject links but never passwords or provider tokens. The canonical Next.js
+frontend uses an encrypted, HTTP-only Auth0 session and forwards access tokens to FastAPI only
+from server-side route handlers.
+
+The public product name is Solara Hire. Legacy database, Docker-volume, queue, and Python-facade
+identifiers retain the CareerCompass codename until they can be migrated without breaking local
+data or compatibility.
 
 ## Run the canonical web product
 
@@ -125,7 +129,7 @@ npm.cmd run dev
 ```
 
 Open `http://localhost:3000/workspace`. The frontend uses the server-only
-`CAREERCOMPASS_API_URL` setting to reach FastAPI. API keys and database credentials must never
+`SOLARAHIRE_API_URL` setting to reach FastAPI. API keys and database credentials must never
 be placed in a `NEXT_PUBLIC_*` variable.
 
 In a third terminal, verify the running cutover surface:

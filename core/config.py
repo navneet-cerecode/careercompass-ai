@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     # Application
     # ==========================
 
-    app_name: str = "CareerCompass AI"
+    app_name: str = "Solara Hire"
 
     version: str = "1.0.0"
 

@@ -1,1 +1,1 @@
-"""Background-worker infrastructure for CareerCompass AI."""
+"""Background-worker infrastructure for Solara Hire."""

@@ -1049,8 +1049,8 @@
     }
   },
   "info": {
-    "description": "Typed HTTP API for CareerCompass AI.",
-    "title": "CareerCompass AI",
+    "description": "Typed HTTP API for Solara Hire.",
+    "title": "Solara Hire",
     "version": "1.0.0"
   },
   "openapi": "3.1.0",

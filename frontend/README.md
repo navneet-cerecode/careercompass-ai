@@ -1,6 +1,6 @@
-# CareerCompass AI frontend
+# Solara Hire frontend
 
-The canonical Next.js App Router interface for CareerCompass AI. Streamlit remains available as
+The canonical Next.js App Router interface for Solara Hire. Streamlit remains available as
 an explicitly documented compatibility fallback.
 
 ## Local development
@@ -31,6 +31,12 @@ npm.cmd run dev
 
 Open `http://localhost:3000`.
 
+For signed-in development, configure the server-only Auth0 values documented in `.env.example`.
+The Auth0 application must be a Regular Web Application with
+`http://localhost:3000/auth/callback` registered as an allowed callback and
+`urn:solarahire:api` requested as the audience. Access tokens remain in the encrypted server
+session and are forwarded to FastAPI only by same-origin route handlers.
+
 From the repository root, verify the running web boundary:
 
 ```powershell
@@ -47,7 +53,7 @@ npm.cmd run build
 npm.cmd audit --audit-level=high
 ```
 
-`CAREERCOMPASS_API_URL` and `CAREERCOMPASS_SITE_URL` are server-only configuration. Never place
+`SOLARAHIRE_API_URL` and `SOLARAHIRE_SITE_URL` are server-only configuration. Never place
 API keys, database credentials, or provider secrets in a `NEXT_PUBLIC_*` variable.
 
 The complete parity and rollback contract is documented in

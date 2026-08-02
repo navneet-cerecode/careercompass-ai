@@ -1,7 +1,7 @@
 """
 Reusable chip components.
 
-Used throughout CareerCompass.
+Used throughout Solara Hire.
 """
 
 import streamlit as st

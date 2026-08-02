@@ -7,6 +7,8 @@ from pydantic import ValidationError
 
 from models.identity import VerifiedIdentity
 
+SOLARA_IDENTITY_NAMESPACE = "urn:solarahire:identity"
+
 
 class TokenValidationError(ValueError):
     """Safe signal for any rejected access token."""
@@ -59,12 +61,22 @@ class OIDCTokenVerifier:
                     "verify_aud": True,
                 },
             )
-            if claims.get("email_verified") is not True:
+            verified_claim = claims.get(
+                f"{SOLARA_IDENTITY_NAMESPACE}:email_verified",
+                claims.get("email_verified"),
+            )
+            if verified_claim is not True:
                 raise TokenValidationError("Access token email is not verified.")
-            email = claims.get("email")
+            email = claims.get(
+                f"{SOLARA_IDENTITY_NAMESPACE}:email",
+                claims.get("email"),
+            )
             if not isinstance(email, str) or not email:
                 raise TokenValidationError("Access token has no verified email.")
-            name = claims.get("name")
+            name = claims.get(
+                f"{SOLARA_IDENTITY_NAMESPACE}:name",
+                claims.get("name"),
+            )
             if not isinstance(name, str) or not name.strip():
                 name = email.split("@", 1)[0]
             return VerifiedIdentity(

@@ -9,7 +9,7 @@ describe("ConnectionStatus", () => {
       <ConnectionStatus
         connection={{
           state: "online",
-          service: "CareerCompass AI",
+          service: "Solara Hire",
           version: "1.0.0",
         }}
       />,

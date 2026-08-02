@@ -4,7 +4,11 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from services.auth.oidc import OIDCTokenVerifier, TokenValidationError
+from services.auth.oidc import (
+    SOLARA_IDENTITY_NAMESPACE,
+    OIDCTokenVerifier,
+    TokenValidationError,
+)
 
 
 class StaticSigningKey:
@@ -24,7 +28,7 @@ def build_verifier_and_key():
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     verifier = OIDCTokenVerifier(
         issuer="https://identity.example.test/",
-        audience="careercompass-api",
+        audience="urn:solarahire:api",
         jwks_url="https://identity.example.test/.well-known/jwks.json",
         jwks_cache_seconds=300,
         http_timeout_seconds=5,
@@ -38,7 +42,7 @@ def encode_token(private_key, **overrides):
     claims = {
         "iss": "https://identity.example.test/",
         "sub": "provider-user-123",
-        "aud": "careercompass-api",
+        "aud": "urn:solarahire:api",
         "iat": now,
         "exp": now + timedelta(minutes=5),
         "email": "ada@example.com",
@@ -55,6 +59,26 @@ def test_oidc_verifier_accepts_required_verified_claims():
     identity = verifier.verify(encode_token(private_key))
 
     assert identity.subject == "provider-user-123"
+    assert str(identity.email) == "ada@example.com"
+    assert identity.name == "Ada Lovelace"
+
+
+def test_oidc_verifier_accepts_namespaced_solara_hire_identity_claims():
+    verifier, private_key = build_verifier_and_key()
+    token = encode_token(
+        private_key,
+        email=None,
+        email_verified=None,
+        name=None,
+        **{
+            f"{SOLARA_IDENTITY_NAMESPACE}:email": "ada@example.com",
+            f"{SOLARA_IDENTITY_NAMESPACE}:email_verified": True,
+            f"{SOLARA_IDENTITY_NAMESPACE}:name": "Ada Lovelace",
+        },
+    )
+
+    identity = verifier.verify(token)
+
     assert str(identity.email) == "ada@example.com"
     assert identity.name == "Ada Lovelace"
 

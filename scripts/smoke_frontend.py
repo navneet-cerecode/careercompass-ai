@@ -1,4 +1,4 @@
-"""Non-destructive smoke checks for the canonical CareerCompass web boundary."""
+"""Non-destructive smoke checks for the canonical Solara Hire web boundary."""
 
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ def build_checks(api_url: str, frontend_url: str) -> tuple[EndpointCheck, ...]:
             name="Next.js home",
             url=f"{frontend_base}/",
             content_type="text/html",
-            marker=b"CareerCompass AI",
+            marker=b"Solara Hire",
         ),
         EndpointCheck(
             name="Next.js workspace",
@@ -102,7 +102,7 @@ def run_check(
         check.url,
         headers={
             "Accept": check.content_type,
-            "User-Agent": "CareerCompass-cutover-smoke/1.0",
+            "User-Agent": "SolaraHire-cutover-smoke/1.0",
         },
     )
 
@@ -133,7 +133,7 @@ def run_check(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Verify the running CareerCompass API and canonical Next.js routes "
+            "Verify the running Solara Hire API and canonical Next.js routes "
             "without sending resume data or calling job providers."
         )
     )
@@ -163,7 +163,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"FAIL {error}", file=sys.stderr)
         return 1
 
-    print("CareerCompass canonical web boundary is ready.")
+    print("Solara Hire canonical web boundary is ready.")
     return 0
 
 

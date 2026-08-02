@@ -21,7 +21,7 @@ from ui.components.sidebar import render_sidebar
 # ======================================================
 
 st.set_page_config(
-    page_title="CareerCompass AI",
+    page_title="Solara Hire",
     page_icon="🚀",
     layout="wide",
 )

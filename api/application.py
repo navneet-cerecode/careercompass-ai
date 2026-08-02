@@ -34,7 +34,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     application = FastAPI(
         title=active_settings.app_name,
         version=active_settings.version,
-        description="Typed HTTP API for CareerCompass AI.",
+        description="Typed HTTP API for Solara Hire.",
         lifespan=application_lifespan,
     )
     application.state.settings = active_settings

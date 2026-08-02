@@ -26,7 +26,7 @@ describe("job search route", () => {
   });
 
   it("forwards search JSON only to the fixed FastAPI endpoint", async () => {
-    vi.stubEnv("CAREERCOMPASS_API_URL", "https://api.example.test/");
+    vi.stubEnv("SOLARAHIRE_API_URL", "https://api.example.test/");
     const payload = {
       status: "complete",
       jobs: [],

@@ -1,1 +1,1 @@
-"""CareerCompass HTTP API package."""
+"""Solara Hire HTTP API package."""

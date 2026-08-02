@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { getApiConnection } from "@/lib/api/client";
+import { getSiteUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,10 @@ const signals = [
 ];
 
 export default async function Home() {
-  const connection = await getApiConnection();
+  const [connection, user] = await Promise.all([
+    getApiConnection(),
+    getSiteUser(),
+  ]);
 
   return (
     <>
@@ -34,7 +38,7 @@ export default async function Home() {
       </a>
 
       <div className="site-shell">
-        <SiteHeader connection={connection} />
+        <SiteHeader connection={connection} user={user} />
 
         <main id="main-content">
           <section className="hero" aria-labelledby="hero-title">
@@ -48,7 +52,7 @@ export default async function Home() {
                 <span>Not guesswork.</span>
               </h1>
               <p className="hero-intro">
-                CareerCompass turns your experience into an explainable view of
+                Solara Hire turns your experience into an explainable view of
                 where you fit, what you are missing, and which opportunity
                 deserves your energy next.
               </p>
@@ -83,7 +87,7 @@ export default async function Home() {
               <div className="stage-glow" aria-hidden="true" />
               <div className="stage-label">
                 <span>Workspace preview</span>
-                <span className="stage-index">CC / 01</span>
+                <span className="stage-index">SH / 01</span>
               </div>
 
               <div className="match-card">
@@ -164,7 +168,7 @@ export default async function Home() {
 
           <section className="approach" id="approach" aria-labelledby="approach-title">
             <div className="section-heading">
-              <span className="micro-label">The CareerCompass method</span>
+              <span className="micro-label">The Solara Hire method</span>
               <h2 id="approach-title">
                 One profile.
                 <br />

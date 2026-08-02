@@ -1,4 +1,8 @@
 import { getApiBaseUrl } from "@/lib/api/config";
+import {
+  attachSessionHeaders,
+  resolveApiIdentity,
+} from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -23,25 +27,44 @@ async function forwardTaskRequest(
     return proxyError(404, "task_not_found", "The requested task was not found.");
   }
 
+  let identity;
+  try {
+    identity = await resolveApiIdentity(request);
+  } catch {
+    return proxyError(
+      401,
+      "authentication_expired",
+      "Your secure session could not be refreshed. Sign in again.",
+    );
+  }
+
+  const headers = new Headers({
+    Accept: "application/json",
+    "X-Task-Token": token,
+  });
+  if (identity.authorization) {
+    headers.set("Authorization", identity.authorization);
+  }
+
   let upstream: Response;
   try {
     upstream = await fetch(
       `${getApiBaseUrl()}/api/v1/jobs/search-tasks/${taskId}`,
       {
         method,
-        headers: {
-          Accept: "application/json",
-          "X-Task-Token": token,
-        },
+        headers,
         cache: "no-store",
         signal: AbortSignal.timeout(10_000),
       },
     );
   } catch {
-    return proxyError(
-      503,
-      "job_search_unavailable",
-      "Job search is temporarily unavailable. Try again shortly.",
+    return attachSessionHeaders(
+      proxyError(
+        503,
+        "job_search_unavailable",
+        "Job search is temporarily unavailable. Try again shortly.",
+      ),
+      identity,
     );
   }
   if (
@@ -50,22 +73,31 @@ async function forwardTaskRequest(
       ?.toLowerCase()
       .includes("application/json")
   ) {
-    return proxyError(
-      502,
-      "invalid_service_response",
-      "The career service returned an unexpected response.",
+    return attachSessionHeaders(
+      proxyError(
+        502,
+        "invalid_service_response",
+        "The career service returned an unexpected response.",
+      ),
+      identity,
     );
   }
   try {
-    return Response.json(await upstream.json(), {
-      status: upstream.status,
-      headers: { "Cache-Control": "no-store" },
-    });
+    return attachSessionHeaders(
+      Response.json(await upstream.json(), {
+        status: upstream.status,
+        headers: { "Cache-Control": "no-store" },
+      }),
+      identity,
+    );
   } catch {
-    return proxyError(
-      502,
-      "invalid_service_response",
-      "The career service returned an unexpected response.",
+    return attachSessionHeaders(
+      proxyError(
+        502,
+        "invalid_service_response",
+        "The career service returned an unexpected response.",
+      ),
+      identity,
     );
   }
 }

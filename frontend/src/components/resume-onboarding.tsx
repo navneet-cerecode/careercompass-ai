@@ -131,7 +131,7 @@ export function ResumeOnboarding({
       setUploadState({
         status: "error",
         message:
-          "CareerCompass could not reach the resume service. Try again shortly.",
+          "Solara Hire could not reach the resume service. Try again shortly.",
       });
     }
   };

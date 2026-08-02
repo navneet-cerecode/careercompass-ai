@@ -8,7 +8,7 @@ def render_sidebar():
 
     with st.sidebar:
 
-        st.title("🚀 CareerCompass AI")
+        st.title("🚀 Solara Hire")
 
         st.caption("AI-Powered Resume & Job Matching")
 
@@ -53,6 +53,6 @@ def render_sidebar():
 
         st.markdown("---")
 
-        st.caption("CareerCompass AI • Prototype")
+        st.caption("Solara Hire • Prototype")
 
     return role, location, search

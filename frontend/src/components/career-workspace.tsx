@@ -21,6 +21,12 @@ import {
 
 type WorkflowStep = "profile" | "preferences" | "matches";
 
+type WorkspaceIdentity = {
+  name: string;
+  email: string | null;
+  emailVerified: boolean;
+};
+
 type MatchState =
   | { status: "idle" }
   | { status: "searching"; phase: "queued" | "running" }
@@ -57,7 +63,7 @@ const stepCopy: Record<
     title: "Let's map what",
     emphasis: "you already know.",
     description:
-      "Upload your current resume. CareerCompass will extract a profile for you to inspect before it scores a single opportunity.",
+      "Upload your current resume. Solara Hire will extract a profile for you to inspect before it scores a single opportunity.",
   },
   preferences: {
     eyebrow: "A focused search",
@@ -159,7 +165,11 @@ function waitForPoll(signal: AbortSignal) {
   });
 }
 
-export function CareerWorkspace() {
+export function CareerWorkspace({
+  user = null,
+}: {
+  user?: WorkspaceIdentity | null;
+}) {
   const [step, setStep] = useState<WorkflowStep>("profile");
   const [profile, setProfile] = useState<ParsedResumeResponse | null>(null);
   const [preferences, setPreferences] =
@@ -233,7 +243,7 @@ export function CareerWorkspace() {
         if (!fallbackResponse.ok || !isJobSearchResponse(fallbackPayload)) {
           throw new Error(
             getApiErrorMessage(fallbackPayload) ??
-              "CareerCompass could not search jobs with these preferences.",
+              "Solara Hire could not search jobs with these preferences.",
           );
         }
         search = fallbackPayload;
@@ -241,7 +251,7 @@ export function CareerWorkspace() {
         if (!taskResponse.ok || !isTaskCreatedResponse(taskPayload)) {
           throw new Error(
             getApiErrorMessage(taskPayload) ??
-              "CareerCompass could not start this job search.",
+              "Solara Hire could not start this job search.",
           );
         }
         activeSearchTaskRef.current = {
@@ -265,7 +275,7 @@ export function CareerWorkspace() {
           if (!pollResponse.ok || !isTaskResponse(pollPayload)) {
             throw new Error(
               getApiErrorMessage(pollPayload) ??
-                "CareerCompass lost contact with this search.",
+                "Solara Hire lost contact with this search.",
             );
           }
           if (pollPayload.status === "running") {
@@ -321,7 +331,7 @@ export function CareerWorkspace() {
       if (!recommendationResponse.ok) {
         throw new Error(
           getApiErrorMessage(recommendationPayload) ??
-            "CareerCompass could not rank these jobs right now.",
+            "Solara Hire could not rank these jobs right now.",
         );
       }
 
@@ -350,7 +360,7 @@ export function CareerWorkspace() {
         message:
           error instanceof Error
             ? error.message
-            : "CareerCompass could not complete this search.",
+            : "Solara Hire could not complete this search.",
       });
       activeSearchTaskRef.current = null;
     }
@@ -380,7 +390,7 @@ export function CareerWorkspace() {
       if (!response.ok || !isTaskResponse(payload)) {
         throw new Error(
           getApiErrorMessage(payload) ??
-            "CareerCompass could not cancel this search.",
+            "Solara Hire could not cancel this search.",
         );
       }
       activeSearchTaskRef.current = null;
@@ -448,6 +458,36 @@ export function CareerWorkspace() {
               {number < 3 && <span className="progress-line" aria-hidden="true" />}
             </span>
           ))}
+        </div>
+
+        <div
+          className={`workspace-identity ${
+            user
+              ? user.emailVerified
+                ? "is-authenticated"
+                : "is-unverified"
+              : "is-anonymous"
+          }`}
+        >
+          <span className="workspace-identity-dot" aria-hidden="true" />
+          {user ? (
+            <span>
+              <strong>{user.name}</strong>
+              <span>
+                {user.emailVerified
+                  ? "Private profile and searches are saved to your account."
+                  : "Verify your email, then sign out and back in to save private progress."}
+              </span>
+            </span>
+          ) : (
+            <span>
+              <strong>Private preview</strong>
+              <span>
+                This session works without an account.{" "}
+                <a href="/auth/login?screen_hint=signup">Sign up to save progress.</a>
+              </span>
+            </span>
+          )}
         </div>
 
         <span className="micro-label">{copy.eyebrow}</span>

@@ -2,8 +2,9 @@
 
 ## Current product surface
 
-The Next.js application in `frontend/` is the canonical CareerCompass web interface. Its
-`/workspace` route owns the standard anonymous journey:
+The Next.js application in `frontend/` is the canonical Solara Hire web interface. Its
+`/workspace` route owns both the standard anonymous journey and the same owner-scoped journey
+when an Auth0 session is present:
 
 1. upload and parse a resume;
 2. review and correct structured facts for the current session;
@@ -42,7 +43,8 @@ window and every required fallback-only capability has a replacement.
 | Provider coverage and partial-result disclosure | Complete | Limited | Next.js canonical |
 | External application review | Complete | Complete | Assisted workflow only |
 | On-demand Groq recruiter narrative | Not exposed in the web workflow | Available in AI Inspector | Compatibility exception |
-| Saved jobs and application tracking | Requires authenticated identity | Not production-ready | Phase 6 |
+| Verified browser identity and owner-scoped resume/search persistence | Complete | Not available | Next.js canonical |
+| Saved jobs and application tracking | Backend foundation only | Not production-ready | Later Phase 6 |
 | Tailored resumes and cover letters | Not implemented | Not implemented | Later product phase |
 
 The Streamlit-only Groq narrative is not part of the anonymous cutover gate. Moving long-running

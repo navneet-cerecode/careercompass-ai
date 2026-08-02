@@ -2,23 +2,26 @@ import Link from "next/link";
 
 import { ConnectionStatus } from "@/components/connection-status";
 import type { ApiConnection } from "@/lib/api/client";
+import type { SiteUser } from "@/lib/auth/session";
 
 type SiteHeaderProps = {
   connection: ApiConnection;
+  user: SiteUser | null;
   activePage?: "home" | "workspace";
 };
 
 export function SiteHeader({
   connection,
+  user,
   activePage = "home",
 }: SiteHeaderProps) {
   return (
     <header className="site-header">
-      <Link className="brand" href="/" aria-label="CareerCompass AI home">
+      <Link className="brand" href="/" aria-label="Solara Hire home">
         <span className="brand-mark" aria-hidden="true">
           <span />
         </span>
-        <span>CareerCompass</span>
+        <span>Solara Hire</span>
         <span className="brand-ai">AI</span>
       </Link>
 
@@ -33,7 +36,39 @@ export function SiteHeader({
         <Link href="/#trust">Trust</Link>
       </nav>
 
-      <ConnectionStatus connection={connection} />
+      <div className="header-tools">
+        <ConnectionStatus connection={connection} />
+        {user ? (
+          <div className="account-menu">
+            <span className="account-avatar" aria-hidden="true">
+              {user.name.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="account-copy">
+              <strong>{user.name}</strong>
+              <span>
+                {user.emailVerified
+                  ? user.email ?? "Verified account"
+                  : "Verify your email"}
+              </span>
+            </span>
+            <a className="account-action" href="/auth/logout">
+              Sign out
+            </a>
+          </div>
+        ) : (
+          <div className="auth-actions">
+            <a className="auth-link" href="/auth/login">
+              Sign in
+            </a>
+            <a
+              className="auth-signup"
+              href="/auth/login?screen_hint=signup"
+            >
+              Create account
+            </a>
+          </div>
+        )}
+      </div>
     </header>
   );
 }

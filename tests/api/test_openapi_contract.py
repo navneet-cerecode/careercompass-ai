@@ -15,5 +15,5 @@ def test_exported_openapi_contract_contains_frontend_health_path(tmp_path):
         {},
         {"HTTPBearer": []},
     ]
-    assert contract["info"]["title"] == "CareerCompass AI"
+    assert contract["info"]["title"] == "Solara Hire"
     assert "GROQ_API_KEY" not in output_path.read_text(encoding="utf-8")

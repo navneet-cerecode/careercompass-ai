@@ -11,7 +11,7 @@ afterEach(() => {
 
 describe("asynchronous job search route", () => {
   it("forwards the idempotency key to the fixed API endpoint", async () => {
-    vi.stubEnv("CAREERCOMPASS_API_URL", "https://api.example.test/");
+    vi.stubEnv("SOLARAHIRE_API_URL", "https://api.example.test/");
     const fetchMock = vi.fn().mockResolvedValue(
       Response.json(
         {

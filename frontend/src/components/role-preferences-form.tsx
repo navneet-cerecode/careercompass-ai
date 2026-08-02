@@ -79,7 +79,7 @@ export function RolePreferencesForm({
         </span>
         <h2 id="preferences-title">What deserves your attention?</h2>
         <p>
-          Give CareerCompass a focused lane. You can refine it after seeing the
+          Give Solara Hire a focused lane. You can refine it after seeing the
           first ranked set.
         </p>
       </div>

@@ -10,14 +10,22 @@ describe("getApiBaseUrl", () => {
   it("normalizes an explicit server-only URL", () => {
     expect(
       getApiBaseUrl({
-        CAREERCOMPASS_API_URL: "https://api.careercompass.example/",
+        SOLARAHIRE_API_URL: "https://api.solarahire.example/",
       }),
-    ).toBe("https://api.careercompass.example");
+    ).toBe("https://api.solarahire.example");
+  });
+
+  it("keeps the previous environment name as a migration fallback", () => {
+    expect(
+      getApiBaseUrl({
+        CAREERCOMPASS_API_URL: "https://legacy-api.example/",
+      }),
+    ).toBe("https://legacy-api.example");
   });
 
   it("rejects non-HTTP schemes", () => {
     expect(() =>
-      getApiBaseUrl({ CAREERCOMPASS_API_URL: "file:///tmp/secrets" }),
+      getApiBaseUrl({ SOLARAHIRE_API_URL: "file:///tmp/secrets" }),
     ).toThrow("must use HTTP or HTTPS");
   });
 });

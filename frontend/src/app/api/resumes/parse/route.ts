@@ -1,5 +1,9 @@
 import { getApiBaseUrl } from "@/lib/api/config";
 import { MAX_RESUME_BYTES } from "@/lib/api/resume-contract";
+import {
+  attachSessionHeaders,
+  resolveApiIdentity,
+} from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -65,22 +69,42 @@ export async function POST(request: Request) {
   const upstreamForm = new FormData();
   upstreamForm.set("file", candidate, candidate.name);
 
+  let identity;
+  try {
+    identity = await resolveApiIdentity(request);
+  } catch {
+    return errorResponse(
+      401,
+      "authentication_expired",
+      "Your secure session could not be refreshed. Sign in again.",
+    );
+  }
+
+  const upstreamHeaders = new Headers();
+  if (identity.authorization) {
+    upstreamHeaders.set("Authorization", identity.authorization);
+  }
+
   let upstreamResponse: Response;
   try {
     upstreamResponse = await fetch(
       `${getApiBaseUrl()}/api/v1/resumes/parse`,
       {
         method: "POST",
+        headers: upstreamHeaders,
         body: upstreamForm,
         cache: "no-store",
         signal: AbortSignal.timeout(RESUME_PARSE_TIMEOUT_MS),
       },
     );
   } catch {
-    return errorResponse(
-      503,
-      "resume_service_unavailable",
-      "Resume parsing is temporarily unavailable. Try again shortly.",
+    return attachSessionHeaders(
+      errorResponse(
+        503,
+        "resume_service_unavailable",
+        "Resume parsing is temporarily unavailable. Try again shortly.",
+      ),
+      identity,
     );
   }
 
@@ -90,24 +114,33 @@ export async function POST(request: Request) {
       ?.toLowerCase()
       .includes("application/json")
   ) {
-    return errorResponse(
-      502,
-      "invalid_resume_response",
-      "The resume service returned an unexpected response.",
+    return attachSessionHeaders(
+      errorResponse(
+        502,
+        "invalid_resume_response",
+        "The resume service returned an unexpected response.",
+      ),
+      identity,
     );
   }
 
   try {
     const payload: unknown = await upstreamResponse.json();
-    return Response.json(payload, {
-      status: upstreamResponse.status,
-      headers: { "Cache-Control": "no-store" },
-    });
+    return attachSessionHeaders(
+      Response.json(payload, {
+        status: upstreamResponse.status,
+        headers: { "Cache-Control": "no-store" },
+      }),
+      identity,
+    );
   } catch {
-    return errorResponse(
-      502,
-      "invalid_resume_response",
-      "The resume service returned an unexpected response.",
+    return attachSessionHeaders(
+      errorResponse(
+        502,
+        "invalid_resume_response",
+        "The resume service returned an unexpected response.",
+      ),
+      identity,
     );
   }
 }

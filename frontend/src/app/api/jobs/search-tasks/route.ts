@@ -9,5 +9,6 @@ export async function POST(request: Request) {
     maxBytes: 16 * 1024,
     serviceName: "job_search",
     forwardedHeaders: ["Idempotency-Key"],
+    forwardIdentity: true,
   });
 }

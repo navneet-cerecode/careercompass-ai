@@ -63,7 +63,7 @@ describe("resume parsing route", () => {
   });
 
   it("forwards the upload and preserves typed backend failures", async () => {
-    vi.stubEnv("CAREERCOMPASS_API_URL", "https://api.example.test/");
+    vi.stubEnv("SOLARAHIRE_API_URL", "https://api.example.test/");
     const fetchMock = vi.fn().mockResolvedValue(
       Response.json(
         {
