@@ -29,3 +29,19 @@ export async function GET(
       "Your application tracker is temporarily unavailable. Try again shortly.",
   });
 }
+
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ applicationId: string }> },
+) {
+  const { applicationId } = await context.params;
+  if (!UUID_PATTERN.test(applicationId)) return notFound();
+  return forwardAuthenticatedRequest(request, {
+    path: `/api/v1/applications/${applicationId}`,
+    method: "PATCH",
+    maxBytes: 8_192,
+    unavailableCode: "applications_unavailable",
+    unavailableMessage:
+      "Your application tracker is temporarily unavailable. Try again shortly.",
+  });
+}

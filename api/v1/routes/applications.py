@@ -18,6 +18,7 @@ from api.schemas.applications import (
     ApplicationResponse,
     CreateApplicationRequest,
     TransitionApplicationRequest,
+    UpdateApplicationPlanRequest,
 )
 from api.services.applications import ApplicationSnapshot, ApplicationTrackingService
 from database.repositories.applications import (
@@ -161,6 +162,37 @@ def get_application(
     snapshot = applications.get(
         user_id=principal.user_id,
         application_id=application_id,
+    )
+    if snapshot is None:
+        raise APIError(
+            404,
+            "application_not_found",
+            "The requested application was not found.",
+        )
+    return _map_application_detail(snapshot)
+
+
+@router.patch(
+    "/{application_id}",
+    response_model=ApplicationDetailResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Update application planning details",
+)
+def update_application_plan(
+    application_id: UUID,
+    request: UpdateApplicationPlanRequest,
+    principal: PrincipalDependency,
+    applications: ApplicationServiceDependency,
+) -> ApplicationDetailResponse:
+    snapshot = applications.update_plan(
+        user_id=principal.user_id,
+        application_id=application_id,
+        notes=request.notes,
+        next_action=request.next_action,
+        next_action_due_at=request.next_action_due_at,
     )
     if snapshot is None:
         raise APIError(

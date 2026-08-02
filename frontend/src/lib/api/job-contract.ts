@@ -30,6 +30,8 @@ export type CreateApplicationRequest =
   components["schemas"]["CreateApplicationRequest"];
 export type TransitionApplicationRequest =
   components["schemas"]["TransitionApplicationRequest"];
+export type UpdateApplicationPlanRequest =
+  components["schemas"]["UpdateApplicationPlanRequest"];
 export type EmploymentType = components["schemas"]["EmploymentType"];
 export type DatePosted = components["schemas"]["DatePosted"];
 

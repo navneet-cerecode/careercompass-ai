@@ -36,7 +36,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update application planning details */
+        patch: operations["update_application_plan_api_v1_applications__application_id__patch"];
         trace?: never;
     };
     "/api/v1/applications/{application_id}/status": {
@@ -371,7 +372,7 @@ export interface components {
          * @description User-visible stages in the assisted application workflow.
          * @enum {string}
          */
-        ApplicationStatus: "Discovered" | "Saved" | "Preparing" | "Ready to apply" | "Applied" | "Assessment" | "Interview" | "Offer" | "Rejected" | "Withdrawn";
+        ApplicationStatus: "Discovered" | "Saved" | "Preparing" | "Ready to apply" | "Applied" | "Under review" | "Assessment" | "Interview" | "Offer" | "Rejected" | "Withdrawn";
         /** AuthenticatedUserResponse */
         AuthenticatedUserResponse: {
             /**
@@ -853,6 +854,15 @@ export interface components {
             note?: string | null;
             status: components["schemas"]["ApplicationStatus"];
         };
+        /** UpdateApplicationPlanRequest */
+        UpdateApplicationPlanRequest: {
+            /** Next Action */
+            next_action?: string | null;
+            /** Next Action Due At */
+            next_action_due_at?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -983,6 +993,59 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationDetailResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_application_plan_api_v1_applications__application_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateApplicationPlanRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -55,6 +55,7 @@ class ApplicationStatus(str, Enum):
     PREPARING = "Preparing"
     READY_TO_APPLY = "Ready to apply"
     APPLIED = "Applied"
+    UNDER_REVIEW = "Under review"
     ASSESSMENT = "Assessment"
     INTERVIEW = "Interview"
     OFFER = "Offer"

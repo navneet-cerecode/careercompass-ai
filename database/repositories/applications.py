@@ -34,6 +34,15 @@ ALLOWED_TRANSITIONS: dict[ApplicationStatus, frozenset[ApplicationStatus]] = {
     ),
     ApplicationStatus.APPLIED: frozenset(
         {
+            ApplicationStatus.UNDER_REVIEW,
+            ApplicationStatus.ASSESSMENT,
+            ApplicationStatus.INTERVIEW,
+            ApplicationStatus.REJECTED,
+            ApplicationStatus.WITHDRAWN,
+        }
+    ),
+    ApplicationStatus.UNDER_REVIEW: frozenset(
+        {
             ApplicationStatus.ASSESSMENT,
             ApplicationStatus.INTERVIEW,
             ApplicationStatus.REJECTED,
@@ -212,6 +221,26 @@ class ApplicationRepository:
             new_status=new_status,
             note=note,
         )
+        self.session.flush()
+        self.session.refresh(record)
+        return self._to_domain(record)
+
+    def update_plan(
+        self,
+        *,
+        user_id: UUID,
+        application_id: UUID,
+        notes: str | None = None,
+        next_action: str | None = None,
+        next_action_due_at: datetime | None = None,
+    ) -> JobApplication | None:
+        record = self._get_record(user_id=user_id, application_id=application_id)
+        if record is None:
+            return None
+        record.notes = notes
+        record.next_action = next_action
+        record.next_action_due_at = next_action_due_at
+        record.updated_at = datetime.now(timezone.utc)
         self.session.flush()
         self.session.refresh(record)
         return self._to_domain(record)

@@ -131,3 +131,35 @@ class ApplicationTrackingService:
                     application_id=application_id,
                 ),
             )
+
+    def update_plan(
+        self,
+        *,
+        user_id: UUID,
+        application_id: UUID,
+        notes: str | None = None,
+        next_action: str | None = None,
+        next_action_due_at: datetime | None = None,
+    ) -> ApplicationSnapshot | None:
+        with self.database.session() as session:
+            repository = ApplicationRepository(session)
+            application = repository.update_plan(
+                user_id=user_id,
+                application_id=application_id,
+                notes=notes,
+                next_action=next_action,
+                next_action_due_at=next_action_due_at,
+            )
+            if application is None:
+                return None
+            job = JobRepository(session).get(application.job_id)
+            if job is None:
+                raise RuntimeError("An application references a missing catalog entry.")
+            return ApplicationSnapshot(
+                application=application,
+                job=job,
+                events=repository.events(
+                    user_id=user_id,
+                    application_id=application_id,
+                ),
+            )

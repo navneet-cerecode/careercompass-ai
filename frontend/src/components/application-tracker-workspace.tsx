@@ -12,6 +12,7 @@ import type {
   ApplicationResponse,
   ApplicationStatus,
   TransitionApplicationRequest,
+  UpdateApplicationPlanRequest,
 } from "@/lib/api/job-contract";
 import { getApiErrorMessage } from "@/lib/api/resume-contract";
 
@@ -38,7 +39,7 @@ const TRACKER_GROUPS: TrackerGroup[] = [
     id: "active",
     eyebrow: "In motion",
     title: "Active",
-    statuses: ["Applied", "Assessment", "Interview"],
+    statuses: ["Applied", "Under review", "Assessment", "Interview"],
   },
   {
     id: "outcomes",
@@ -96,6 +97,13 @@ function dueLabel(value: string) {
   };
 }
 
+function toDateTimeInput(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+}
+
 function statusKey(status: ApplicationStatus) {
   return status.toLowerCase().replaceAll(" ", "-");
 }
@@ -108,6 +116,7 @@ export function ApplicationTrackerWorkspace() {
   >({});
   const [detailLoading, setDetailLoading] = useState<Set<string>>(new Set());
   const [transitioning, setTransitioning] = useState<Set<string>>(new Set());
+  const [savingPlan, setSavingPlan] = useState<Set<string>>(new Set());
   const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
@@ -188,12 +197,11 @@ export function ApplicationTrackerWorkspace() {
       return;
     }
     const note = String(form.get("note") ?? "").trim();
-    const nextAction = String(form.get("next_action") ?? "").trim();
     const request: TransitionApplicationRequest = {
       status: requestedStatus,
       note: note || null,
-      next_action: nextAction || null,
-      next_action_due_at: null,
+      next_action: item.next_action ?? null,
+      next_action_due_at: item.next_action_due_at ?? null,
     };
 
     setTransitioning((current) => new Set(current).add(item.id));
@@ -240,9 +248,70 @@ export function ApplicationTrackerWorkspace() {
     }
   };
 
+  const saveApplicationPlan = async (
+    event: FormEvent<HTMLFormElement>,
+    item: ApplicationResponse,
+  ) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const notes = String(form.get("notes") ?? "").trim();
+    const nextAction = String(form.get("next_action") ?? "").trim();
+    const dueAt = String(form.get("next_action_due_at") ?? "").trim();
+    const request: UpdateApplicationPlanRequest = {
+      notes: notes || null,
+      next_action: nextAction || null,
+      next_action_due_at: dueAt ? new Date(dueAt).toISOString() : null,
+    };
+
+    setSavingPlan((current) => new Set(current).add(item.id));
+    setAnnouncement("");
+    try {
+      const response = await fetch(`/api/applications/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok || !isApplicationDetail(payload)) {
+        throw new Error(
+          getApiErrorMessage(payload) ??
+            "Solara Hire could not update this application plan.",
+        );
+      }
+      setDetails((current) => ({ ...current, [item.id]: payload }));
+      setState((current) =>
+        current.status === "ready"
+          ? {
+              status: "ready",
+              items: current.items.map((application) =>
+                application.id === item.id ? payload : application,
+              ),
+            }
+          : current,
+      );
+      setAnnouncement(
+        `${item.job.title} planning details were updated. Its employer-status history is unchanged.`,
+      );
+    } catch (error) {
+      setAnnouncement(
+        error instanceof Error
+          ? error.message
+          : "Solara Hire could not update this application plan.",
+      );
+    } finally {
+      setSavingPlan((current) => {
+        const next = new Set(current);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  };
+
   const items = state.status === "ready" ? state.items : [];
   const activeCount = items.filter((item) =>
-    ["Applied", "Assessment", "Interview"].includes(item.status),
+    ["Applied", "Under review", "Assessment", "Interview"].includes(
+      item.status,
+    ),
   ).length;
   const interviewCount = items.filter(
     (item) => item.status === "Interview",
@@ -269,7 +338,7 @@ export function ApplicationTrackerWorkspace() {
           <span aria-hidden="true">✓</span>
           <div>
             <strong>Nothing moves without you.</strong>
-            <span>Transitions are explicit, reviewed, and recorded.</span>
+            <span>You confirm employer updates; Solara Hire records them.</span>
           </div>
         </div>
       </section>
@@ -388,7 +457,9 @@ export function ApplicationTrackerWorkspace() {
                               >
                                 {item.status}
                               </span>
-                              <small>Updated {displayDate(item.updated_at)}</small>
+                              <small>
+                                User confirmed · {displayDate(item.updated_at)}
+                              </small>
                             </div>
                             <span className="job-source">
                               {item.job.source_name ?? item.job.source}
@@ -436,6 +507,63 @@ export function ApplicationTrackerWorkspace() {
                                   <p>Loading your recorded history…</p>
                                 ) : detail ? (
                                   <>
+                                    <form
+                                      className="tracker-plan-form"
+                                      onSubmit={(event) =>
+                                        saveApplicationPlan(event, item)
+                                      }
+                                    >
+                                      <div>
+                                        <span className="micro-label">
+                                          Personal plan
+                                        </span>
+                                        <p>
+                                          These fields guide your work. They do
+                                          not claim the employer changed your
+                                          status.
+                                        </p>
+                                      </div>
+                                      <label>
+                                        Next action
+                                        <input
+                                          name="next_action"
+                                          maxLength={500}
+                                          defaultValue={
+                                            detail.next_action ?? ""
+                                          }
+                                          placeholder="Follow up, prepare, or review"
+                                        />
+                                      </label>
+                                      <label>
+                                        Deadline
+                                        <input
+                                          name="next_action_due_at"
+                                          type="datetime-local"
+                                          defaultValue={toDateTimeInput(
+                                            detail.next_action_due_at,
+                                          )}
+                                        />
+                                      </label>
+                                      <label>
+                                        Private notes
+                                        <textarea
+                                          name="notes"
+                                          maxLength={4000}
+                                          defaultValue={detail.notes ?? ""}
+                                          placeholder="Context you want to remember"
+                                        />
+                                      </label>
+                                      <button
+                                        className="tracker-plan-save"
+                                        type="submit"
+                                        disabled={savingPlan.has(item.id)}
+                                      >
+                                        {savingPlan.has(item.id)
+                                          ? "Saving plan"
+                                          : "Save plan"}
+                                      </button>
+                                    </form>
+
                                     {item.allowed_next_statuses.length > 0 ? (
                                       <form
                                         className="tracker-transition-form"
@@ -472,14 +600,6 @@ export function ApplicationTrackerWorkspace() {
                                             name="note"
                                             maxLength={2000}
                                             placeholder="Optional note for your history"
-                                          />
-                                        </label>
-                                        <label>
-                                          Next action
-                                          <input
-                                            name="next_action"
-                                            maxLength={500}
-                                            placeholder="Optional follow-up"
                                           />
                                         </label>
                                         <button

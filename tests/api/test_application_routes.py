@@ -229,3 +229,55 @@ def test_transition_to_applied_sets_timestamp_and_preserves_audit_history():
         "Applied",
     ]
     assert applied.json()["events"][-1]["note"] == "Submitted after final review."
+
+    under_review = client.patch(
+        f"/api/v1/applications/{application_id}/status",
+        json={"status": "Under review", "note": "Employer acknowledged receipt."},
+    )
+    assert under_review.status_code == 200
+    assert under_review.json()["status"] == "Under review"
+    assert under_review.json()["allowed_next_statuses"] == [
+        "Assessment",
+        "Interview",
+        "Rejected",
+        "Withdrawn",
+    ]
+
+
+def test_application_plan_updates_without_inventing_a_status_event():
+    application, client, database, owner, other, job, _, _ = make_authenticated_client()
+    created = client.post(
+        "/api/v1/applications",
+        json={"job_id": str(job.id)},
+    ).json()
+    application_id = created["id"]
+
+    updated = client.patch(
+        f"/api/v1/applications/{application_id}",
+        json={
+            "notes": "Waiting for the recruiter response.",
+            "next_action": "Follow up with the recruiter",
+            "next_action_due_at": "2026-08-12T09:30:00Z",
+        },
+    )
+
+    assert updated.status_code == 200
+    assert updated.json()["status"] == "Preparing"
+    assert updated.json()["notes"] == "Waiting for the recruiter response."
+    assert updated.json()["next_action"] == "Follow up with the recruiter"
+    assert updated.json()["next_action_due_at"].startswith("2026-08-12T09:30:00")
+    assert len(updated.json()["events"]) == 1
+
+    with database.session() as session:
+        events = ApplicationRepository(session).events(
+            user_id=owner.id,
+            application_id=UUID(application_id),
+        )
+        assert len(events) == 1
+
+    application.dependency_overrides[get_required_principal] = lambda: make_principal(other)
+    hidden = client.patch(
+        f"/api/v1/applications/{application_id}",
+        json={"next_action": "Should stay hidden"},
+    )
+    assert hidden.status_code == 404

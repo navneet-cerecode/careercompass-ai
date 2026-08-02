@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -113,6 +113,48 @@ describe("ApplicationTrackerWorkspace", () => {
     ).toBeVisible();
     expect(fetchMock).toHaveBeenLastCalledWith(
       `/api/applications/${application.id}/status`,
+      expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("updates planning fields without changing employer status", async () => {
+    const user = userEvent.setup();
+    const planned = {
+      ...detail,
+      notes: "Recruiter context",
+      next_action: "Follow up with the recruiter",
+      next_action_due_at: "2026-08-12T09:30:00Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ items: [application] }))
+      .mockResolvedValueOnce(Response.json(detail))
+      .mockResolvedValueOnce(Response.json(planned));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<ApplicationTrackerWorkspace />);
+
+    await user.click(
+      await screen.findByRole("button", { name: "History & next step" }),
+    );
+    await user.clear(await screen.findByLabelText("Next action"));
+    await user.type(
+      screen.getByLabelText("Next action"),
+      "Follow up with the recruiter",
+    );
+    fireEvent.change(screen.getByLabelText("Deadline"), {
+      target: { value: "2026-08-12T09:30" },
+    });
+    await user.type(screen.getByLabelText("Private notes"), "Recruiter context");
+    await user.click(screen.getByRole("button", { name: "Save plan" }));
+
+    expect(
+      await screen.findByText(
+        "AI Engineer planning details were updated. Its employer-status history is unchanged.",
+      ),
+    ).toBeVisible();
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `/api/applications/${application.id}`,
       expect.objectContaining({ method: "PATCH" }),
     );
   });

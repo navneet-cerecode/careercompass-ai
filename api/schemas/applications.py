@@ -25,6 +25,12 @@ class TransitionApplicationRequest(APIModel):
     next_action_due_at: datetime | None = None
 
 
+class UpdateApplicationPlanRequest(APIModel):
+    notes: str | None = Field(default=None, max_length=4_000)
+    next_action: str | None = Field(default=None, max_length=500)
+    next_action_due_at: datetime | None = None
+
+
 class ApplicationEventResponse(APIModel):
     id: UUID
     previous_status: ApplicationStatus | None
