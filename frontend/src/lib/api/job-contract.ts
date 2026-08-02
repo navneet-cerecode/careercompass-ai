@@ -14,6 +14,10 @@ export type RecommendationBatchResponse =
   components["schemas"]["RecommendationBatchResponse"];
 export type JobRecommendation =
   components["schemas"]["JobRecommendationResponse"];
+export type SaveJobRequest = components["schemas"]["SaveJobRequest"];
+export type SavedJobResponse = components["schemas"]["SavedJobResponse"];
+export type SavedJobListResponse =
+  components["schemas"]["SavedJobListResponse"];
 export type EmploymentType = components["schemas"]["EmploymentType"];
 export type DatePosted = components["schemas"]["DatePosted"];
 

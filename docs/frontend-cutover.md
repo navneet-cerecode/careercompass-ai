@@ -12,7 +12,8 @@ when an Auth0 session is present:
 4. discover normalized, deduplicated jobs through FastAPI;
 5. rank those jobs against the reviewed profile;
 6. inspect score components, matched skills, missing skills, and preparation guidance;
-7. open the verified job page for user review.
+7. save promising roles to a private, owner-scoped shortlist;
+8. open the verified job page for user review.
 
 FastAPI remains the source of truth for transport contracts and Python application services
 remain the source of truth for parsing, discovery, normalization, persistence, and ranking.
@@ -44,7 +45,8 @@ window and every required fallback-only capability has a replacement.
 | External application review | Complete | Complete | Assisted workflow only |
 | On-demand Groq recruiter narrative | Not exposed in the web workflow | Available in AI Inspector | Compatibility exception |
 | Verified browser identity and owner-scoped resume/search persistence | Complete | Not available | Next.js canonical |
-| Saved jobs and application tracking | Backend foundation only | Not production-ready | Later Phase 6 |
+| Saved jobs | Complete for verified accounts | Not production-ready | Next.js canonical |
+| Application tracking | Backend foundation only | Not production-ready | Later Phase 6 |
 | Tailored resumes and cover letters | Not implemented | Not implemented | Later product phase |
 
 The Streamlit-only Groq narrative is not part of the anonymous cutover gate. Moving long-running

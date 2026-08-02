@@ -1,14 +1,21 @@
+"use client";
+
+import { useEffect, useState, type CSSProperties } from "react";
+
 import type {
   JobSearchResponse,
   RecommendationBatchResponse,
   RolePreferences,
+  SavedJobListResponse,
 } from "@/lib/api/job-contract";
+import { getApiErrorMessage } from "@/lib/api/resume-contract";
 
 type RecommendationResultsProps = {
   preferences: RolePreferences;
   search: JobSearchResponse;
   results: RecommendationBatchResponse;
   onRefine: () => void;
+  saveAccess: "enabled" | "sign-in" | "verify-email";
 };
 
 function scoreLabel(score: number) {
@@ -22,12 +29,100 @@ function safeScore(score: number) {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
+function isSavedJobList(value: unknown): value is SavedJobListResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "items" in value &&
+    Array.isArray(value.items) &&
+    value.items.every(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        "job" in item &&
+        typeof item.job === "object" &&
+        item.job !== null &&
+        "id" in item.job &&
+        typeof item.job.id === "string",
+    )
+  );
+}
+
 export function RecommendationResults({
   preferences,
   search,
   results,
   onRefine,
+  saveAccess,
 }: RecommendationResultsProps) {
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
+  const [savingJobIds, setSavingJobIds] = useState<Set<string>>(new Set());
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (saveAccess !== "enabled") return;
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const response = await fetch("/api/saved-jobs", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const payload: unknown = await response.json();
+        if (response.ok && isSavedJobList(payload)) {
+          setSavedJobIds(new Set(payload.items.map((item) => item.job.id)));
+        }
+      } catch {
+        // Recommendations stay usable when saved-job state cannot be loaded.
+      }
+    })();
+    return () => controller.abort();
+  }, [saveAccess]);
+
+  const toggleSavedJob = async (jobId: string, title: string) => {
+    const isSaved = savedJobIds.has(jobId);
+    setSavingJobIds((current) => new Set(current).add(jobId));
+    setSaveMessage(null);
+    try {
+      const response = await fetch(`/api/saved-jobs/${jobId}`, {
+        method: isSaved ? "DELETE" : "PUT",
+        headers: isSaved ? undefined : { "Content-Type": "application/json" },
+        body: isSaved ? undefined : JSON.stringify({ notes: null }),
+      });
+      const payload: unknown =
+        response.status === 204 ? null : await response.json();
+      if (!response.ok) {
+        throw new Error(
+          getApiErrorMessage(payload) ??
+            `Solara Hire could not ${isSaved ? "remove" : "save"} this role.`,
+        );
+      }
+      setSavedJobIds((current) => {
+        const next = new Set(current);
+        if (isSaved) next.delete(jobId);
+        else next.add(jobId);
+        return next;
+      });
+      setSaveMessage(
+        isSaved
+          ? `${title} was removed from saved roles.`
+          : `${title} is now in your saved roles.`,
+      );
+    } catch (error) {
+      setSaveMessage(
+        error instanceof Error
+          ? error.message
+          : "Solara Hire could not update this saved role.",
+      );
+    } finally {
+      setSavingJobIds((current) => {
+        const next = new Set(current);
+        next.delete(jobId);
+        return next;
+      });
+    }
+  };
+
   return (
     <section className="recommendation-results" aria-labelledby="matches-title">
       <div className="results-heading">
@@ -45,6 +140,12 @@ export function RecommendationResults({
         </div>
         <div className="results-heading-actions">
           <span className="results-assurance">Review-first · No auto-apply</span>
+          {saveAccess === "enabled" && (
+            <a className="results-saved-link" href="/saved">
+              Saved roles
+              <span>{savedJobIds.size}</span>
+            </a>
+          )}
           <button
             className="button results-refine"
             type="button"
@@ -54,6 +155,10 @@ export function RecommendationResults({
           </button>
         </div>
       </div>
+
+      <p className="save-feedback" role="status" aria-live="polite">
+        {saveMessage}
+      </p>
 
       <div className="results-overview" aria-label="Search summary">
         <div>
@@ -125,7 +230,7 @@ export function RecommendationResults({
                   <div
                     className="result-score"
                     aria-label={`${score} percent match`}
-                    style={{ "--score": `${score}%` } as React.CSSProperties}
+                    style={{ "--score": `${score}%` } as CSSProperties}
                   >
                     <strong>{score}</strong>
                     <span>match</span>
@@ -202,6 +307,46 @@ export function RecommendationResults({
                 </details>
 
                 <div className="job-actions">
+                  {saveAccess === "enabled" ? (
+                    <button
+                      className={`button save-job-button ${
+                        savedJobIds.has(job.id) ? "is-saved" : ""
+                      }`}
+                      type="button"
+                      aria-pressed={savedJobIds.has(job.id)}
+                      aria-label={`${
+                        savedJobIds.has(job.id) ? "Remove" : "Save"
+                      } ${job.title}`}
+                      disabled={savingJobIds.has(job.id)}
+                      onClick={() => toggleSavedJob(job.id, job.title)}
+                    >
+                      <span aria-hidden="true">
+                        {savedJobIds.has(job.id) ? "✓" : "+"}
+                      </span>
+                      {savingJobIds.has(job.id)
+                        ? "Updating"
+                        : savedJobIds.has(job.id)
+                          ? "Saved"
+                          : "Save role"}
+                    </button>
+                  ) : saveAccess === "sign-in" ? (
+                    <a
+                      className="button save-job-button"
+                      href="/auth/login"
+                    >
+                      <span aria-hidden="true">+</span>
+                      Sign in to save
+                    </a>
+                  ) : (
+                    <button
+                      className="button save-job-button"
+                      type="button"
+                      disabled
+                      title="Verify your email, then sign out and back in."
+                    >
+                      Verify email to save
+                    </button>
+                  )}
                   <a
                     className="button apply-button"
                     href={job.url}

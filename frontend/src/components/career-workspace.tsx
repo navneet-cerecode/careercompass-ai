@@ -541,6 +541,13 @@ export function CareerWorkspace({
               search={matchState.search}
               results={matchState.results}
               onRefine={() => setStep("preferences")}
+              saveAccess={
+                user
+                  ? user.emailVerified
+                    ? "enabled"
+                    : "verify-email"
+                  : "sign-in"
+              }
             />
           ) : (
             <section
