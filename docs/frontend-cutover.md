@@ -46,7 +46,7 @@ window and every required fallback-only capability has a replacement.
 | On-demand Groq recruiter narrative | Not exposed in the web workflow | Available in AI Inspector | Compatibility exception |
 | Verified browser identity and owner-scoped resume/search persistence | Complete | Not available | Next.js canonical |
 | Saved jobs | Complete for verified accounts | Not production-ready | Next.js canonical |
-| Application tracking | Backend foundation only | Not production-ready | Later Phase 6 |
+| Application tracking | Authenticated API complete; UI pending | Not production-ready | Later Phase 6 |
 | Tailored resumes and cover letters | Not implemented | Not implemented | Later product phase |
 
 The Streamlit-only Groq narrative is not part of the anonymous cutover gate. Moving long-running

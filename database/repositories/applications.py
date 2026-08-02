@@ -64,6 +64,14 @@ class InvalidApplicationTransition(ValueError):
     """Raised when an application status change violates the workflow."""
 
 
+class ApplicationAlreadyTracked(ValueError):
+    """Raised when a user already tracks the requested job."""
+
+
+class InvalidResumeSelection(ValueError):
+    """Raised when a selected resume is not owned by the application owner."""
+
+
 class SavedJobRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
@@ -140,7 +148,7 @@ class ApplicationRepository:
             )
         )
         if existing is not None:
-            raise ValueError("An application for this job already exists.")
+            raise ApplicationAlreadyTracked("An application for this job already exists.")
 
         record = ApplicationRecord(
             user_id=user_id,
@@ -260,7 +268,7 @@ class ApplicationRepository:
                 )
             )
             if resume is None:
-                raise ValueError("Resume does not belong to the user.")
+                raise InvalidResumeSelection("Resume does not belong to the user.")
 
     def _record_event(
         self,
