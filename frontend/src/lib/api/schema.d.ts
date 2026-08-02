@@ -194,6 +194,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active reminders for the current account */
+        get: operations["list_application_reminders_api_v1_reminders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reminders/{reminder_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update an in-app reminder's user-controlled state */
+        patch: operations["update_application_reminder_api_v1_reminders__reminder_id__patch"];
+        trace?: never;
+    };
     "/api/v1/resumes/current": {
         parameters: {
             query?: never;
@@ -332,6 +366,57 @@ export interface components {
              */
             items: components["schemas"]["ApplicationResponse"][];
         };
+        /** ApplicationReminderListResponse */
+        ApplicationReminderListResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["ApplicationReminderResponse"][];
+        };
+        /** ApplicationReminderResponse */
+        ApplicationReminderResponse: {
+            /**
+             * Application Id
+             * Format: uuid
+             */
+            application_id: string;
+            application_status: components["schemas"]["ApplicationStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Dismissed At */
+            dismissed_at?: string | null;
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            job: components["schemas"]["JobResponse"];
+            /** Next Action */
+            next_action: string;
+            /** Read At */
+            read_at?: string | null;
+            status: components["schemas"]["ApplicationReminderStatus"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * ApplicationReminderStatus
+         * @description User-controlled lifecycle for an in-app application reminder.
+         * @enum {string}
+         */
+        ApplicationReminderStatus: "unread" | "read" | "dismissed";
         /** ApplicationResponse */
         ApplicationResponse: {
             /**
@@ -862,6 +947,10 @@ export interface components {
             next_action_due_at?: string | null;
             /** Notes */
             notes?: string | null;
+        };
+        /** UpdateApplicationReminderRequest */
+        UpdateApplicationReminderRequest: {
+            status: components["schemas"]["ApplicationReminderStatus"];
         };
         /** ValidationError */
         ValidationError: {
@@ -1509,6 +1598,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_application_reminders_api_v1_reminders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationReminderListResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_application_reminder_api_v1_reminders__reminder_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reminder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateApplicationReminderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationReminderResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

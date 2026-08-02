@@ -6,11 +6,16 @@ from database.base import Base
 from database.models.tasks import BackgroundTaskRecord
 from database.models.job_discovery_tasks import JobDiscoveryTaskRecord
 from database.models.tasks import TaskOutboxRecord
+from database.repositories.applications import ApplicationRepository
+from database.repositories.jobs import JobRepository
+from database.repositories.users import UserRepository
 from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
 from database.repositories.task_outbox import TaskOutboxRepository
 from database.repositories.tasks import BackgroundTaskRepository
 from database.session import Database
 from models.enums import BackgroundTaskStatus
+from models.enums import ApplicationStatus
+from models.job import Job
 from workers.maintenance import TaskMaintenance
 from workers.outbox import TaskOutboxDispatcher
 
@@ -127,3 +132,37 @@ def test_maintenance_purges_terminal_task_graph_after_retention():
             .one_or_none()
             is None
         )
+
+
+def test_maintenance_generates_due_application_reminders():
+    database = Database("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(database.engine)
+    now = datetime(2026, 8, 2, 9, tzinfo=UTC)
+    with database.session() as session:
+        user = UserRepository(session).create(email="owner@example.com", name="Owner")
+        job = JobRepository(session).upsert(
+            Job(
+                title="Platform Engineer",
+                company="Example Corp",
+                location="Remote",
+                description="Build systems.",
+                url="https://example.com/jobs/platform",
+            )
+        )
+        ApplicationRepository(session).create(
+            user_id=user.id,
+            job_id=job.id,
+            status=ApplicationStatus.APPLIED,
+            next_action="Follow up",
+            next_action_due_at=now + timedelta(hours=12),
+        )
+
+    result = TaskMaintenance(
+        database=database,
+        dispatcher=TaskOutboxDispatcher(database, RecordingPublisher()),
+        settings=Settings(_env_file=None, application_reminder_lead_hours=24),
+    ).run(now=now)
+
+    assert result.reminders_created == 1
+    assert result.reminders_updated == 0
+    assert result.reminders_dismissed == 0

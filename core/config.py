@@ -160,6 +160,8 @@ class Settings(BaseSettings):
 
     task_maintenance_batch_size: int = Field(default=100, ge=1, le=1_000)
 
+    application_reminder_lead_hours: int = Field(default=24, ge=1, le=168)
+
     # ==========================
     # Authentication
     # ==========================

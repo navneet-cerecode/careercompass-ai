@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from core.config import Settings
+from database.repositories.application_reminders import ApplicationReminderRepository
 from database.repositories.task_outbox import TaskOutboxRepository
 from database.repositories.tasks import BackgroundTaskRepository
 from database.session import Database
@@ -22,6 +23,9 @@ class TaskMaintenanceResult:
     published: int
     publication_failed: int
     purged: int
+    reminders_created: int
+    reminders_updated: int
+    reminders_dismissed: int
 
 
 class TaskMaintenance:
@@ -64,6 +68,12 @@ class TaskMaintenance:
                 cutoff=current - timedelta(days=self.settings.task_retention_days),
                 limit=self.settings.task_maintenance_batch_size,
             )
+            reminders = ApplicationReminderRepository(session).reconcile(
+                now=current,
+                upcoming_before=current
+                + timedelta(hours=self.settings.application_reminder_lead_hours),
+                limit=self.settings.task_maintenance_batch_size,
+            )
 
         result = TaskMaintenanceResult(
             requeued=(
@@ -75,10 +85,14 @@ class TaskMaintenance:
             published=published,
             publication_failed=publication_failed,
             purged=purged,
+            reminders_created=reminders.created,
+            reminders_updated=reminders.updated,
+            reminders_dismissed=reminders.dismissed,
         )
         logger.info(
             "Task maintenance completed; requeued=%s cancelled=%s failed=%s "
-            "expired=%s published=%s publication_failed=%s purged=%s",
+            "expired=%s published=%s publication_failed=%s purged=%s "
+            "reminders_created=%s reminders_updated=%s reminders_dismissed=%s",
             result.requeued,
             result.cancelled,
             result.failed,
@@ -86,5 +100,8 @@ class TaskMaintenance:
             result.published,
             result.publication_failed,
             result.purged,
+            result.reminders_created,
+            result.reminders_updated,
+            result.reminders_dismissed,
         )
         return result

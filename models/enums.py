@@ -63,6 +63,14 @@ class ApplicationStatus(str, Enum):
     WITHDRAWN = "Withdrawn"
 
 
+class ApplicationReminderStatus(str, Enum):
+    """User-controlled lifecycle for an in-app application reminder."""
+
+    UNREAD = "unread"
+    READ = "read"
+    DISMISSED = "dismissed"
+
+
 class BackgroundTaskStatus(str, Enum):
     """Durable lifecycle states for background work."""
 

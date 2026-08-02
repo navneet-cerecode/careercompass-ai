@@ -18,6 +18,10 @@ Production needs all four components:
    python -m workers.enqueue_maintenance
    ```
 
+The maintenance cycle also reconciles durable in-app reminders from user-authored
+application next-action deadlines. It does not send email, infer employer decisions,
+or change application status.
+
 Every API replica must use the same `TASK_TOKEN_SECRET`. Use a random secret of at least 32 bytes
 from the deployment secret manager; never commit it.
 
@@ -37,6 +41,8 @@ details.
 - `TASK_QUEUE_EXPIRY_SECONDS`: maximum total queued lifetime.
 - `TASK_RETENTION_DAYS`: terminal-history retention.
 - `TASK_MAINTENANCE_BATCH_SIZE`: maximum records handled per cycle.
+- `APPLICATION_REMINDER_LEAD_HOURS`: how far ahead an application deadline becomes
+  eligible for an in-app reminder (24 hours by default).
 
 Keep `TASK_STALE_AFTER_SECONDS` comfortably above the heartbeat interval. The defaults use a
 30-second heartbeat and a 10-minute stale threshold.

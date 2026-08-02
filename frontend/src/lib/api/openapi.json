@@ -169,6 +169,109 @@
         "title": "ApplicationListResponse",
         "type": "object"
       },
+      "ApplicationReminderListResponse": {
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ApplicationReminderResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "ApplicationReminderListResponse",
+        "type": "object"
+      },
+      "ApplicationReminderResponse": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "application_status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dismissed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissed At"
+          },
+          "due_at": {
+            "format": "date-time",
+            "title": "Due At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "job": {
+            "$ref": "#/components/schemas/JobResponse"
+          },
+          "next_action": {
+            "title": "Next Action",
+            "type": "string"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationReminderStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "job",
+          "application_status",
+          "next_action",
+          "due_at",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ApplicationReminderResponse",
+        "type": "object"
+      },
+      "ApplicationReminderStatus": {
+        "description": "User-controlled lifecycle for an in-app application reminder.",
+        "enum": [
+          "unread",
+          "read",
+          "dismissed"
+        ],
+        "title": "ApplicationReminderStatus",
+        "type": "string"
+      },
       "ApplicationResponse": {
         "properties": {
           "allowed_next_statuses": {
@@ -1472,6 +1575,18 @@
         "title": "UpdateApplicationPlanRequest",
         "type": "object"
       },
+      "UpdateApplicationReminderRequest": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ApplicationReminderStatus"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "UpdateApplicationReminderRequest",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2390,6 +2505,120 @@
         "summary": "Rank discovered jobs against a reviewed resume",
         "tags": [
           "recommendations"
+        ]
+      }
+    },
+    "/api/v1/reminders": {
+      "get": {
+        "operationId": "list_application_reminders_api_v1_reminders_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationReminderListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List active reminders for the current account",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/api/v1/reminders/{reminder_id}": {
+      "patch": {
+        "operationId": "update_application_reminder_api_v1_reminders__reminder_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "reminder_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Reminder Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationReminderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationReminderResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update an in-app reminder's user-controlled state",
+        "tags": [
+          "reminders"
         ]
       }
     },

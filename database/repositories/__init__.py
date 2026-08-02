@@ -5,6 +5,7 @@ from database.repositories.applications import (
     InvalidApplicationTransition,
     SavedJobRepository,
 )
+from database.repositories.application_reminders import ApplicationReminderRepository
 from database.repositories.jobs import JobRepository
 from database.repositories.history import (
     RecommendationHistoryRepository,
@@ -21,6 +22,7 @@ from database.repositories.users import User, UserRepository
 
 __all__ = [
     "ApplicationRepository",
+    "ApplicationReminderRepository",
     "BackgroundTaskRepository",
     "IdempotencyConflict",
     "InvalidApplicationTransition",

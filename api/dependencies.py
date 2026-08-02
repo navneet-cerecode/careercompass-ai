@@ -10,6 +10,7 @@ from api.services.job_catalog import JobCatalog
 from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from api.services.task_capability import TaskCapability
 from api.services.applications import ApplicationTrackingService
+from api.services.reminders import ApplicationReminderService
 from api.services.saved_jobs import SavedJobService
 from core.config import Settings
 from database.session import Database
@@ -79,6 +80,12 @@ def get_application_tracking_service(
     database: Annotated[Database, Depends(get_database)],
 ) -> ApplicationTrackingService:
     return ApplicationTrackingService(database)
+
+
+def get_application_reminder_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> ApplicationReminderService:
+    return ApplicationReminderService(database)
 
 
 def get_job_discovery_service(request: Request) -> JobDiscoveryService:

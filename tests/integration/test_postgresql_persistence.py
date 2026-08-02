@@ -1,6 +1,7 @@
 """Real PostgreSQL migration and repository integration gate."""
 
 import os
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from alembic import command
@@ -9,6 +10,7 @@ from sqlalchemy.engine import make_url
 
 from database.alembic import build_alembic_config
 from database.repositories.applications import ApplicationRepository, SavedJobRepository
+from database.repositories.application_reminders import ApplicationReminderRepository
 from database.repositories.jobs import JobRepository
 from database.repositories.identities import IdentityRepository
 from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
@@ -46,7 +48,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0009"
+            assert MigrationContext.configure(connection).get_current_revision() == "0010"
         assert database.check_connection() is True
 
         with database.session() as session:
@@ -81,7 +83,15 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
                 user_id=user.id,
                 job_id=job.id,
                 status=ApplicationStatus.SAVED,
+                next_action="Review the role",
+                next_action_due_at=datetime.now(UTC) + timedelta(hours=12),
             )
+            reminder_result = ApplicationReminderRepository(session).reconcile(
+                now=datetime.now(UTC),
+                upcoming_before=datetime.now(UTC) + timedelta(hours=24),
+                limit=100,
+            )
+            assert reminder_result.created == 1
             task_repository = BackgroundTaskRepository(session)
             task = task_repository.create(
                 task_type="job.discovery",
@@ -139,6 +149,9 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
             )
             assert loaded is not None
             assert loaded.status == ApplicationStatus.SAVED
+            reminders = ApplicationReminderRepository(session).list(user_id=user.id)
+            assert len(reminders) == 1
+            assert reminders[0].application_id == application.id
             loaded_task = BackgroundTaskRepository(session).get(
                 task_id=task.id,
                 user_id=user.id,
