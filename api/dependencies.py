@@ -9,6 +9,7 @@ from api.errors import APIError
 from api.services.job_catalog import JobCatalog
 from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from api.services.task_capability import TaskCapability
+from api.services.saved_jobs import SavedJobService
 from core.config import Settings
 from database.session import Database
 from database.repositories.identities import IdentityLinkRequired, IdentityRepository
@@ -65,6 +66,12 @@ def get_database(request: Request) -> Database:
 
 def get_job_catalog(database: Annotated[Database, Depends(get_database)]) -> JobCatalog:
     return JobCatalog(database)
+
+
+def get_saved_job_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> SavedJobService:
+    return SavedJobService(database)
 
 
 def get_job_discovery_service(request: Request) -> JobDiscoveryService:
