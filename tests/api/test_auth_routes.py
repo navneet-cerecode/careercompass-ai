@@ -9,7 +9,7 @@ from database.base import Base
 from database.session import Database
 from models.identity import AuthenticatedPrincipal
 from models.identity import VerifiedIdentity
-from services.auth.oidc import TokenValidationError
+from services.auth.oidc import IdentityProviderUnavailableError, TokenValidationError
 
 
 def test_current_account_requires_authentication():
@@ -118,4 +118,37 @@ def test_invalid_bearer_token_uses_generic_challenge(tmp_path):
     assert response.status_code == 401
     assert response.headers["www-authenticate"] == "Bearer"
     assert response.json()["code"] == "invalid_access_token"
+    assert "sensitive" not in response.text
+
+
+def test_identity_provider_outage_is_retryable_not_an_invalid_session(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'unavailable-auth.db'}"
+    database = Database(database_url)
+    Base.metadata.create_all(database.engine)
+    application = create_app(
+        Settings(
+            _env_file=None,
+            database_url=database_url,
+            auth_issuer="https://identity.example.test/",
+            auth_audience="careercompass-api",
+            auth_jwks_url="https://identity.example.test/jwks.json",
+        )
+    )
+
+    class UnavailableVerifier:
+        def verify(self, _token):
+            raise IdentityProviderUnavailableError("sensitive outage detail")
+
+    application.state.oidc_verifier = UnavailableVerifier()
+    response = TestClient(application).get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer valid-looking-token"},
+    )
+
+    assert response.status_code == 503
+    assert response.headers["retry-after"] == "5"
+    assert response.json() == {
+        "code": "identity_provider_unavailable",
+        "message": "Sign-in verification is temporarily unavailable. Try again shortly.",
+    }
     assert "sensitive" not in response.text

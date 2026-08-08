@@ -16,6 +16,10 @@ class TokenValidationError(ValueError):
     """Safe signal for any rejected access token."""
 
 
+class IdentityProviderUnavailableError(RuntimeError):
+    """Safe signal when token verification cannot reach the identity provider."""
+
+
 class SigningKey(Protocol):
     key: object
 
@@ -125,10 +129,19 @@ class OIDCTokenVerifier:
             )
         except TokenValidationError:
             raise
+        except jwt.PyJWKClientConnectionError as error:
+            raise IdentityProviderUnavailableError(
+                "The identity provider is temporarily unavailable."
+            ) from error
+        except requests.RequestException as error:
+            if error.response is None or error.response.status_code >= 500:
+                raise IdentityProviderUnavailableError(
+                    "The identity provider is temporarily unavailable."
+                ) from error
+            raise TokenValidationError("Access token is invalid.") from error
         except (
             jwt.PyJWTError,
             jwt.PyJWKClientError,
-            requests.RequestException,
             ValidationError,
             ValueError,
         ) as error:

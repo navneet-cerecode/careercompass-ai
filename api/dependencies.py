@@ -26,7 +26,11 @@ from database.session import Database
 from database.repositories.identities import IdentityLinkRequired, IdentityRepository
 from database.repositories.users import UserRepository
 from models.identity import AuthenticatedPrincipal
-from services.auth.oidc import OIDCTokenVerifier, TokenValidationError
+from services.auth.oidc import (
+    IdentityProviderUnavailableError,
+    OIDCTokenVerifier,
+    TokenValidationError,
+)
 from services.job_discovery.discovery_service import JobDiscoveryService
 from services.recommendation.recommendation_service import RecommendationService
 from services.resume.extractor import ResumeExtractor
@@ -239,6 +243,14 @@ def _resolve_principal(
 ) -> AuthenticatedPrincipal:
     try:
         identity = get_oidc_verifier(request).verify(token)
+    except IdentityProviderUnavailableError as error:
+        logger.warning("Identity provider unavailable during token verification.")
+        raise APIError(
+            503,
+            "identity_provider_unavailable",
+            "Sign-in verification is temporarily unavailable. Try again shortly.",
+            headers={"Retry-After": "5"},
+        ) from error
     except TokenValidationError as error:
         logger.warning(
             "Access token rejected (%s).",

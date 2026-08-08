@@ -5,6 +5,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from services.auth.oidc import (
+    IdentityProviderUnavailableError,
     SOLARA_IDENTITY_NAMESPACE,
     OIDCTokenVerifier,
     TokenValidationError,
@@ -22,6 +23,11 @@ class StaticKeyResolver:
 
     def get_signing_key_from_jwt(self, _token):
         return self.key
+
+
+class UnavailableKeyResolver:
+    def get_signing_key_from_jwt(self, _token):
+        raise jwt.PyJWKClientConnectionError("identity endpoint unavailable")
 
 
 class StaticUserInfoResolver:
@@ -71,6 +77,14 @@ def test_oidc_verifier_accepts_required_verified_claims():
     assert identity.subject == "provider-user-123"
     assert str(identity.email) == "ada@example.com"
     assert identity.name == "Ada Lovelace"
+
+
+def test_oidc_verifier_distinguishes_key_service_outage_from_invalid_token():
+    verifier, private_key = build_verifier_and_key()
+    verifier.key_resolver = UnavailableKeyResolver()
+
+    with pytest.raises(IdentityProviderUnavailableError):
+        verifier.verify(encode_token(private_key))
 
 
 def test_oidc_verifier_accepts_namespaced_solara_hire_identity_claims():
