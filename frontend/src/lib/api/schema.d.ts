@@ -91,6 +91,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cover-letters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or load the latest cover letter draft */
+        post: operations["create_cover_letter_api_v1_cover_letters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cover-letters/{cover_letter_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an owner-scoped cover letter version */
+        get: operations["get_cover_letter_api_v1_cover_letters__cover_letter_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cover-letters/{cover_letter_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm factual accuracy for the latest cover letter version */
+        post: operations["approve_cover_letter_api_v1_cover_letters__cover_letter_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cover-letters/{cover_letter_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export a user-verified cover letter */
+        get: operations["export_cover_letter_api_v1_cover_letters__cover_letter_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cover-letters/{cover_letter_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save edited cover letter content as a new version */
+        post: operations["revise_cover_letter_api_v1_cover_letters__cover_letter_id__revisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cover-letters/{cover_letter_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the version history for a cover letter */
+        get: operations["list_cover_letter_versions_api_v1_cover_letters__cover_letter_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/live": {
         parameters: {
             query?: never;
@@ -314,6 +416,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tailored-resumes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or load the latest tailored resume draft */
+        post: operations["create_tailored_resume_api_v1_tailored_resumes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailored-resumes/{tailored_resume_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an owner-scoped tailored resume version */
+        get: operations["get_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailored-resumes/{tailored_resume_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm factual accuracy for the latest tailored resume version */
+        post: operations["approve_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailored-resumes/{tailored_resume_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export a user-verified tailored resume */
+        get: operations["export_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailored-resumes/{tailored_resume_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save reviewed section choices as a new version */
+        post: operations["revise_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__revisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailored-resumes/{tailored_resume_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the version history for a tailored resume */
+        get: operations["list_tailored_resume_versions_api_v1_tailored_resumes__tailored_resume_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailoring-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a factual tailoring plan for a selected job */
+        post: operations["create_tailoring_plan_api_v1_tailoring_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tailoring-plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an owner-scoped factual tailoring plan */
+        get: operations["get_tailoring_plan_api_v1_tailoring_plans__plan_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -475,6 +713,22 @@ export interface components {
          * @enum {string}
          */
         ApplicationStatus: "Discovered" | "Saved" | "Preparing" | "Ready to apply" | "Applied" | "Under review" | "Assessment" | "Interview" | "Offer" | "Rejected" | "Withdrawn";
+        /** ApproveCoverLetterRequest */
+        ApproveCoverLetterRequest: {
+            /**
+             * Confirm Factual Accuracy
+             * @constant
+             */
+            confirm_factual_accuracy: true;
+        };
+        /** ApproveTailoredResumeRequest */
+        ApproveTailoredResumeRequest: {
+            /**
+             * Confirm Factual Accuracy
+             * @constant
+             */
+            confirm_factual_accuracy: true;
+        };
         /** AuthenticatedUserResponse */
         AuthenticatedUserResponse: {
             /**
@@ -521,6 +775,100 @@ export interface components {
              */
             file: string;
         };
+        /** CoverLetterContentRequest */
+        CoverLetterContentRequest: {
+            /** Candidate Email */
+            candidate_email?: string | null;
+            /** Candidate Name */
+            candidate_name: string;
+            /** Closing Paragraph */
+            closing_paragraph: string;
+            /** Company Name */
+            company_name: string;
+            /** Evidence Paragraph */
+            evidence_paragraph: string;
+            /** Job Title */
+            job_title: string;
+            /** Motivation Paragraph */
+            motivation_paragraph: string;
+            /** Opening */
+            opening: string;
+            /** Salutation */
+            salutation: string;
+            /** Sign Off */
+            sign_off: string;
+        };
+        /** CoverLetterEvidenceResponse */
+        CoverLetterEvidenceResponse: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "skill" | "experience" | "project";
+            /** Source Index */
+            source_index: number;
+            /** Source Text */
+            source_text: string;
+        };
+        /** CoverLetterResponse */
+        CoverLetterResponse: {
+            accepted: components["schemas"]["CoverLetterContentRequest"];
+            /** Approved At */
+            approved_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Evidence
+             * @default []
+             */
+            evidence: components["schemas"]["CoverLetterEvidenceResponse"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /**
+             * Source Resume Id
+             * Format: uuid
+             */
+            source_resume_id: string;
+            suggested: components["schemas"]["CoverLetterContentRequest"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** User Review Required */
+            user_review_required: boolean;
+            /**
+             * Verification Status
+             * @enum {string}
+             */
+            verification_status: "pending_review" | "user_verified";
+            /** Version */
+            version: number;
+        };
+        /** CoverLetterVersionListResponse */
+        CoverLetterVersionListResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["CoverLetterResponse"][];
+        };
         /** CreateApplicationRequest */
         CreateApplicationRequest: {
             /**
@@ -534,6 +882,32 @@ export interface components {
             next_action_due_at?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Resume Id */
+            resume_id?: string | null;
+        };
+        /** CreateCoverLetterRequest */
+        CreateCoverLetterRequest: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+        };
+        /** CreateTailoredResumeRequest */
+        CreateTailoredResumeRequest: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+        };
+        /** CreateTailoringPlanRequest */
+        CreateTailoringPlanRequest: {
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
             /** Resume Id */
             resume_id?: string | null;
         };
@@ -988,6 +1362,205 @@ export interface components {
          * @enum {string}
          */
         SubscriptionStatus: "active" | "trialing" | "past_due" | "cancelled" | "incomplete";
+        /** TailoredResumeContentResponse */
+        TailoredResumeContentResponse: {
+            /**
+             * Achievements
+             * @default []
+             */
+            achievements: string[];
+            /**
+             * Certifications
+             * @default []
+             */
+            certifications: string[];
+            /**
+             * Education
+             * @default []
+             */
+            education: string[];
+            /** Email */
+            email?: string | null;
+            /**
+             * Experience
+             * @default []
+             */
+            experience: string[];
+            /** Github */
+            github?: string | null;
+            /** Linkedin */
+            linkedin?: string | null;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone?: string | null;
+            /**
+             * Projects
+             * @default []
+             */
+            projects: string[];
+            /**
+             * Skills
+             * @default []
+             */
+            skills: components["schemas"]["SkillResponse"][];
+        };
+        /** TailoredResumeResponse */
+        TailoredResumeResponse: {
+            accepted: components["schemas"]["TailoredResumeContentResponse"];
+            /** Approved At */
+            approved_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            original: components["schemas"]["TailoredResumeContentResponse"];
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            selections: components["schemas"]["TailoredResumeSelectionsRequest"];
+            /**
+             * Source Resume Id
+             * Format: uuid
+             */
+            source_resume_id: string;
+            suggested: components["schemas"]["TailoredResumeContentResponse"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** User Review Required */
+            user_review_required: boolean;
+            /**
+             * Verification Status
+             * @enum {string}
+             */
+            verification_status: "pending_review" | "user_verified";
+            /** Version */
+            version: number;
+        };
+        /** TailoredResumeSelectionsRequest */
+        TailoredResumeSelectionsRequest: {
+            /**
+             * Experience
+             * @default suggested
+             * @enum {string}
+             */
+            experience: "original" | "suggested";
+            /**
+             * Projects
+             * @default suggested
+             * @enum {string}
+             */
+            projects: "original" | "suggested";
+            /**
+             * Skills
+             * @default suggested
+             * @enum {string}
+             */
+            skills: "original" | "suggested";
+        };
+        /** TailoredResumeVersionListResponse */
+        TailoredResumeVersionListResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["TailoredResumeResponse"][];
+        };
+        /** TailoringEvidenceResponse */
+        TailoringEvidenceResponse: {
+            /**
+             * Matched Terms
+             * @default []
+             */
+            matched_terms: string[];
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "experience" | "project";
+            /** Source Index */
+            source_index: number;
+            /** Source Text */
+            source_text: string;
+        };
+        /** TailoringPlanResponse */
+        TailoringPlanResponse: {
+            /** Algorithm Version */
+            algorithm_version: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Evidence
+             * @default []
+             */
+            evidence: components["schemas"]["TailoringEvidenceResponse"][];
+            /**
+             * Experience
+             * @default []
+             */
+            experience: string[];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /**
+             * Matched Skills
+             * @default []
+             */
+            matched_skills: components["schemas"]["SkillResponse"][];
+            /**
+             * Missing Skills
+             * @default []
+             */
+            missing_skills: components["schemas"]["SkillResponse"][];
+            /**
+             * Projects
+             * @default []
+             */
+            projects: string[];
+            /**
+             * Skills
+             * @default []
+             */
+            skills: components["schemas"]["SkillResponse"][];
+            /**
+             * Source Resume Id
+             * Format: uuid
+             */
+            source_resume_id: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** User Review Required */
+            user_review_required: boolean;
+        };
         /** TransitionApplicationRequest */
         TransitionApplicationRequest: {
             /** Next Action */
@@ -1376,6 +1949,375 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_cover_letter_api_v1_cover_letters_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCoverLetterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverLetterResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cover_letter_api_v1_cover_letters__cover_letter_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cover_letter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverLetterResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_cover_letter_api_v1_cover_letters__cover_letter_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cover_letter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveCoverLetterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverLetterResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_cover_letter_api_v1_cover_letters__cover_letter_id__export_get: {
+        parameters: {
+            query?: {
+                format?: "docx" | "pdf";
+            };
+            header?: never;
+            path: {
+                cover_letter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revise_cover_letter_api_v1_cover_letters__cover_letter_id__revisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cover_letter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoverLetterContentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverLetterResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_cover_letter_versions_api_v1_cover_letters__cover_letter_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cover_letter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverLetterVersionListResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1960,6 +2902,484 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tailored_resume_api_v1_tailored_resumes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTailoredResumeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoredResumeResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tailored_resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoredResumeResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tailored_resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveTailoredResumeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoredResumeResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__export_get: {
+        parameters: {
+            query?: {
+                format?: "docx" | "pdf";
+            };
+            header?: never;
+            path: {
+                tailored_resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revise_tailored_resume_api_v1_tailored_resumes__tailored_resume_id__revisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tailored_resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TailoredResumeSelectionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoredResumeResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tailored_resume_versions_api_v1_tailored_resumes__tailored_resume_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tailored_resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoredResumeVersionListResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tailoring_plan_api_v1_tailoring_plans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTailoringPlanRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoringPlanResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tailoring_plan_api_v1_tailoring_plans__plan_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TailoringPlanResponse"];
+                };
             };
             /** @description Unauthorized */
             401: {

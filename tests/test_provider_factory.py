@@ -2,6 +2,8 @@ import pytest
 from pydantic import SecretStr
 
 from services.job_discovery.providers.api_provider import APIProvider
+from services.job_discovery.providers.adzuna_provider import AdzunaProvider
+from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvider
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
 from services.job_discovery.providers.provider_factory import ProviderFactory
 from services.job_discovery.providers.workday_provider import WorkdayProvider
@@ -18,6 +20,32 @@ def test_provider_factory_creates_workday_provider():
     provider = ProviderFactory.create(company)
 
     assert isinstance(provider, WorkdayProvider)
+    assert provider.company is company
+
+
+def test_provider_factory_creates_arbeitnow_provider():
+    company = {
+        "id": "arbeitnow",
+        "name": "Arbeitnow",
+        "platform": "arbeitnow",
+    }
+
+    provider = ProviderFactory.create(company)
+
+    assert isinstance(provider, ArbeitnowProvider)
+    assert provider.company is company
+
+
+def test_provider_factory_creates_adzuna_provider(monkeypatch):
+    from services.job_discovery.providers import adzuna_provider
+
+    monkeypatch.setattr(adzuna_provider.settings, "adzuna_app_id", SecretStr("test-id"))
+    monkeypatch.setattr(adzuna_provider.settings, "adzuna_app_key", SecretStr("test-key"))
+    company = {"id": "adzuna", "name": "Adzuna", "platform": "adzuna"}
+
+    provider = ProviderFactory.create(company)
+
+    assert isinstance(provider, AdzunaProvider)
     assert provider.company is company
 
 

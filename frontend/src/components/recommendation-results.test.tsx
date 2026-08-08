@@ -46,6 +46,52 @@ afterEach(() => {
 });
 
 describe("RecommendationResults saved jobs", () => {
+  it("shows required attribution for every Adzuna recommendation", () => {
+    const adzunaJob = {
+      ...job,
+      source: "Adzuna" as const,
+      source_name: "adzuna",
+      source_url: "https://www.adzuna.in/jobs/details/123",
+    };
+    render(
+      <RecommendationResults
+        preferences={{
+          role: "AI Engineer",
+          location: "India",
+          remoteOnly: false,
+          employmentTypes: ["Full Time"],
+          datePosted: "month",
+        }}
+        search={{
+          status: "complete",
+          jobs: [adzunaJob],
+          provider_failures: [],
+          providers_attempted: 1,
+          providers_succeeded: 1,
+        }}
+        results={{
+          recommendations: [
+            {
+              ...results.recommendations[0],
+              assessment: {
+                ...results.recommendations[0].assessment,
+                job: adzunaJob,
+              },
+            },
+          ],
+        }}
+        onRefine={() => undefined}
+        saveAccess="sign-in"
+      />,
+    );
+
+    expect(screen.getByLabelText("Jobs by Adzuna")).toBeVisible();
+    expect(screen.getByAltText("Adzuna")).toHaveAttribute(
+      "src",
+      "/providers/adzuna-logo.png",
+    );
+  });
+
   it("saves a recommended role for a verified account", async () => {
     const user = userEvent.setup();
     const fetchMock = vi
@@ -122,6 +168,37 @@ describe("RecommendationResults saved jobs", () => {
       "href",
       "/auth/login",
     );
+    expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
+  });
+
+  it("names unavailable providers without blocking partial results", () => {
+    render(
+      <RecommendationResults
+        preferences={{
+          role: "AI Engineer",
+          location: "India",
+          remoteOnly: false,
+          employmentTypes: ["Full Time"],
+          datePosted: "month",
+        }}
+        search={{
+          status: "partial",
+          jobs: [job],
+          provider_failures: [
+            { provider_name: "jsearch", code: "provider_failed" },
+          ],
+          providers_attempted: 4,
+          providers_succeeded: 3,
+        }}
+        results={results}
+        onRefine={() => undefined}
+        saveAccess="sign-in"
+      />,
+    );
+
+    expect(
+      screen.getByText(/JSearch did not respond after safe retries/),
+    ).toBeVisible();
     expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
   });
 });

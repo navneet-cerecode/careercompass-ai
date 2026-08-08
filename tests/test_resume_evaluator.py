@@ -1,6 +1,7 @@
 from models.job import Job
 from models.resume import Resume
 from services.llm.evaluator import ResumeEvaluator
+from services.llm.prompts import build_match_prompt
 
 
 class StubGroqClient:
@@ -41,3 +42,20 @@ def test_resume_evaluator_returns_versioned_match_assessment_without_logging(cap
     assert [skill.name for skill in assessment.matched_skills] == ["Python", "SQL"]
     assert [skill.name for skill in assessment.missing_skills] == ["Docker"]
     assert capsys.readouterr().out == ""
+
+
+def test_match_prompt_requires_factual_industry_neutral_evidence():
+    resume = Resume(name="Asha Patel", raw_text="Asha Patel\nPatient assessment")
+    job = Job(
+        title="Registered Nurse",
+        company="Example Hospital",
+        location="India",
+        description="Patient assessment and CPR certification required",
+        url="https://example.com/jobs/nurse",
+    )
+
+    prompt = build_match_prompt(resume, job)
+
+    assert "non-technical occupations" in prompt
+    assert "Never invent experience" in prompt
+    assert "TECHNICAL skills" not in prompt

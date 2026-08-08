@@ -1,6 +1,7 @@
 """Workday job provider."""
 
 from collections.abc import Mapping
+import re
 from typing import Any
 
 import requests
@@ -21,6 +22,7 @@ class WorkdayProvider(BaseProvider):
     """Provider for configured Workday career portals."""
 
     CAPABILITIES = ProviderCapabilities(
+        location_filter=True,
         pagination=True,
     )
 
@@ -60,7 +62,21 @@ class WorkdayProvider(BaseProvider):
         if not isinstance(raw_jobs, list):
             raise ProviderPayloadError("Workday returned an invalid jobs collection.")
 
-        return [self.normalize_job(item) for item in raw_jobs]
+        jobs = [self.normalize_job(item) for item in raw_jobs]
+        return [job for job in jobs if self._matches_location(job.location, query)]
+
+    @staticmethod
+    def _matches_location(location: str, query: JobSearchQuery) -> bool:
+        normalized_location = location.casefold()
+        requested_location = query.location.casefold()
+        if requested_location in normalized_location:
+            return True
+        if query.country:
+            return re.search(
+                rf"(?<!\w){re.escape(query.country)}(?!\w)",
+                normalized_location,
+            ) is not None
+        return False
 
     def normalize_job(
         self,

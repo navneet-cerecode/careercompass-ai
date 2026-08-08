@@ -21,7 +21,7 @@ const signals = [
     number: "03",
     title: "Act with context",
     description:
-      "Every recommendation shows its signals, missing skills, and the next sensible move.",
+      "Every recommendation shows its evidence, unmet requirements, and the next sensible move.",
   },
 ];
 
@@ -94,7 +94,7 @@ export default async function Home() {
                 <div className="match-card-top">
                   <div>
                     <span className="micro-label">Your strongest lane</span>
-                    <h2>Product-minded AI Engineer</h2>
+                    <h2>Operations Manager</h2>
                   </div>
                   <div className="match-orbit" aria-label="Strong match preview">
                     <span>86</span>
@@ -103,15 +103,15 @@ export default async function Home() {
                 </div>
 
                 <div className="role-meta">
-                  <span>Remote-friendly</span>
-                  <span>Early career</span>
+                  <span>Bengaluru</span>
+                  <span>3+ years</span>
                   <span>Full time</span>
                 </div>
 
                 <div className="signal-grid">
                   <div className="signal-row">
                     <div>
-                      <span>Skill evidence</span>
+                      <span>Relevant experience</span>
                       <strong>Strong</strong>
                     </div>
                     <div className="signal-track">
@@ -130,7 +130,7 @@ export default async function Home() {
                   <div className="signal-row">
                     <div>
                       <span>Growth edge</span>
-                      <strong>2 skills</strong>
+                      <strong>1 requirement</strong>
                     </div>
                     <div className="signal-track signal-track-warm">
                       <span style={{ width: "42%" }} />
@@ -144,7 +144,7 @@ export default async function Home() {
                   </span>
                   <div>
                     <span className="micro-label">Recommended next move</span>
-                    <strong>Review the two missing skills before applying</strong>
+                    <strong>Confirm shift availability before applying</strong>
                   </div>
                 </div>
               </div>

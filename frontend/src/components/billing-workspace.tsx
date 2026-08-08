@@ -39,7 +39,7 @@ const capabilityLabels: Array<{
   {
     key: "tailored_documents",
     label: "Tailored documents",
-    detail: "Factual resume and cover-letter assistance is planned for Pro.",
+    detail: "Reviewed resume and cover-letter tools are included during the beta.",
   },
 ];
 

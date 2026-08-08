@@ -11,12 +11,25 @@ from api.v1.routes.recommendations import router as recommendations_router
 from api.v1.routes.reminders import router as reminders_router
 from api.v1.routes.resumes import router as resumes_router
 from api.v1.routes.saved_jobs import router as saved_jobs_router
+from api.v1.routes.tailoring import router as tailoring_router
+from api.v1.routes.tailored_resumes import router as tailored_resumes_router
+from api.v1.routes.cover_letters import router as cover_letters_router
 
 api_router = APIRouter()
+api_router.include_router(
+    cover_letters_router,
+    prefix="/cover-letters",
+    tags=["cover letters"],
+)
 api_router.include_router(
     applications_router,
     prefix="/applications",
     tags=["applications"],
+)
+api_router.include_router(
+    tailored_resumes_router,
+    prefix="/tailored-resumes",
+    tags=["tailored resumes"],
 )
 api_router.include_router(reminders_router, prefix="/reminders", tags=["reminders"])
 api_router.include_router(auth_router, prefix="/auth", tags=["authentication"])
@@ -33,4 +46,9 @@ api_router.include_router(
     saved_jobs_router,
     prefix="/saved-jobs",
     tags=["saved jobs"],
+)
+api_router.include_router(
+    tailoring_router,
+    prefix="/tailoring-plans",
+    tags=["tailoring plans"],
 )

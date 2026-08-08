@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Plans · Solara Hire",
-  description: "See what Solara Hire offers today and what is planned for Pro.",
+  description: "See what Solara Hire includes during the beta and what is planned for Pro.",
 };
 
 const freeCapabilities = [
@@ -18,11 +18,12 @@ const freeCapabilities = [
   "Review explainable match evidence",
   "Save roles and track applications",
   "Set next actions and reminders",
+  "Create reviewed tailored resumes and cover letters",
 ];
 
 const plannedCapabilities = [
-  "Tailored resume assistance with factual safeguards",
-  "Cover-letter drafting with user review",
+  "Higher search and document limits",
+  "Evidence-bound AI wording suggestions",
   "A secure payment and plan-management flow",
 ];
 
@@ -68,7 +69,7 @@ export default async function PricingPage() {
                 <span className="plan-state">Planned</span>
                 <h2>Pro</h2>
                 <p>
-                  A future paid plan for document assistance and expanded career workflows.
+                  A future paid plan for expanded limits and advanced career workflows.
                   Pricing has not been set.
                 </p>
                 <button className="button button-muted" type="button" disabled>

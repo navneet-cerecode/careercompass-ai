@@ -162,10 +162,49 @@ def test_subscription_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'subscriptions.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0011")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0011"
     assert "subscriptions" in inspect(engine).get_table_names()
 
     command.downgrade(config, "0010")
     assert "subscriptions" not in inspect(engine).get_table_names()
+
+
+def test_tailoring_plan_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'tailoring.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "0012")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0012"
+    assert "tailoring_plans" in inspect(engine).get_table_names()
+
+    command.downgrade(config, "0011")
+    assert "tailoring_plans" not in inspect(engine).get_table_names()
+
+
+def test_tailored_resume_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'tailored-resumes.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "0013")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0013"
+    assert "tailored_resumes" in inspect(engine).get_table_names()
+
+    command.downgrade(config, "0012")
+    assert "tailored_resumes" not in inspect(engine).get_table_names()
+
+
+def test_cover_letter_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'cover-letters.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0014"
+    assert "cover_letters" in inspect(engine).get_table_names()
+
+    command.downgrade(config, "0013")
+    assert "cover_letters" not in inspect(engine).get_table_names()

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, selectinload
 from database.models.jobs import JobRecord, JobSourceRecord
 from models.enums import EmploymentType, ExperienceLevel, JobSource
 from models.job import Job
+from models.skill import Skill
 from services.job_discovery.fingerprint import (
     job_fingerprint,
     normalize_fingerprint_text,
@@ -42,6 +43,7 @@ class JobRepository:
                 location=job.location,
                 normalized_location=normalize_fingerprint_text(job.location),
                 description=job.description,
+                required_skills=[skill.model_dump(mode="json") for skill in job.required_skills],
                 experience_level=job.experience_level.value,
                 employment_type=job.employment_type.value,
                 primary_source=job.source.value,
@@ -53,6 +55,10 @@ class JobRepository:
             record.is_active = True
             if len(job.description) > len(record.description):
                 record.description = job.description
+            if job.required_skills:
+                record.required_skills = [
+                    skill.model_dump(mode="json") for skill in job.required_skills
+                ]
             if record.apply_url != str(job.url) and job.source != JobSource.OTHER:
                 record.apply_url = str(job.url)
 
@@ -80,14 +86,25 @@ class JobRepository:
     def _upsert_source(self, record: JobRecord, job: Job) -> None:
         provider_name = job.source_name or job.source.value.casefold()
         source_url = str(job.source_url or job.url)
-        source = next(
-            (
-                item
-                for item in record.sources
-                if item.provider_name == provider_name and item.source_url == source_url
-            ),
-            None,
-        )
+        source = None
+        if job.external_id is not None:
+            source = next(
+                (
+                    item
+                    for item in record.sources
+                    if item.provider_name == provider_name and item.external_id == job.external_id
+                ),
+                None,
+            )
+        if source is None:
+            source = next(
+                (
+                    item
+                    for item in record.sources
+                    if item.provider_name == provider_name and item.source_url == source_url
+                ),
+                None,
+            )
         if source is None:
             record.sources.append(
                 JobSourceRecord(
@@ -99,6 +116,7 @@ class JobRepository:
         else:
             source.last_seen_at = datetime.now(UTC)
             source.external_id = job.external_id or source.external_id
+            source.source_url = source_url
 
     @staticmethod
     def _to_domain(record: JobRecord, preferred_job: Job | None = None) -> Job:
@@ -118,6 +136,7 @@ class JobRepository:
             company=record.company,
             location=record.location,
             description=record.description,
+            required_skills=[Skill.model_validate(value) for value in record.required_skills],
             experience_level=ExperienceLevel(record.experience_level),
             employment_type=EmploymentType(record.employment_type),
             source=JobSource(record.primary_source),

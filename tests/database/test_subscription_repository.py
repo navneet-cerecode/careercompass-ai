@@ -23,4 +23,4 @@ def test_free_subscription_is_created_once_with_effective_entitlements():
         assert entitlements.reminders is True
         assert entitlements.job_discovery is True
         assert entitlements.explainable_recommendations is True
-        assert entitlements.tailored_documents is False
+        assert entitlements.tailored_documents is True

@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 
+import { ProviderAttribution } from "@/components/provider-attribution";
 import type {
   ApplicationDetailResponse,
   ApplicationListResponse,
@@ -481,9 +482,7 @@ export function ApplicationTrackerWorkspace() {
                                 User confirmed · {displayDate(item.updated_at)}
                               </small>
                             </div>
-                            <span className="job-source">
-                              {item.job.source_name ?? item.job.source}
-                            </span>
+                            <ProviderAttribution {...item.job} />
                             <h3>{item.job.title}</h3>
                             <p>
                               {item.job.company} · {item.job.location}

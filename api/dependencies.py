@@ -13,6 +13,9 @@ from api.services.applications import ApplicationTrackingService
 from api.services.billing import BillingService
 from api.services.reminders import ApplicationReminderService
 from api.services.saved_jobs import SavedJobService
+from api.services.tailoring_plans import TailoringPlanService
+from api.services.tailored_resumes import TailoredResumeService
+from api.services.cover_letters import CoverLetterService
 from core.config import Settings
 from core.observability import ProductAnalytics
 from database.session import Database
@@ -98,6 +101,24 @@ def get_billing_service(
     database: Annotated[Database, Depends(get_database)],
 ) -> BillingService:
     return BillingService(database)
+
+
+def get_tailoring_plan_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> TailoringPlanService:
+    return TailoringPlanService(database)
+
+
+def get_tailored_resume_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> TailoredResumeService:
+    return TailoredResumeService(database)
+
+
+def get_cover_letter_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> CoverLetterService:
+    return CoverLetterService(database)
 
 
 def get_job_discovery_service(request: Request) -> JobDiscoveryService:

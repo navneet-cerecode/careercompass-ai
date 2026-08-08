@@ -1,12 +1,11 @@
-"""Extract technical skills from a job description through Groq."""
+"""Extract job-relevant capabilities from a job description through Groq."""
 
 from services.llm.groq_client import GroqClient
 
 
 class JobSkillExtractor:
     """
-    Extracts technical skills from
-    a job description.
+    Extracts capabilities from a job description.
     """
 
     def __init__(self, client: GroqClient | None = None) -> None:
@@ -20,17 +19,18 @@ class JobSkillExtractor:
             return []
 
         prompt = f"""
-You are an expert technical recruiter.
+You are an expert recruiter across technical and non-technical occupations.
 
-Extract ONLY technical skills from the following job description.
+Extract concise, job-relevant capabilities and explicit qualifications from the
+following job description. Include occupational knowledge, tools, methods,
+certifications, licences, languages, and interpersonal capabilities only when
+the employer explicitly requires them.
 
 Ignore:
 - years of experience
-- soft skills
-- communication
-- leadership
-- education
 - locations
+- benefits
+- generic company marketing
 
 Return ONLY valid JSON.
 
@@ -38,10 +38,10 @@ Example:
 
 {{
     "skills": [
-        "Python",
-        "PyTorch",
-        "Docker",
-        "SQL"
+        "Patient assessment",
+        "CPR certification",
+        "Electronic health records",
+        "English"
     ]
 }}
 

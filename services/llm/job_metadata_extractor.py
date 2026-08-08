@@ -26,7 +26,6 @@ class JobMetadataExtractor:
     ) -> dict:
 
         if not description.strip():
-
             return {
                 "skills": [],
                 "experience": None,
@@ -35,23 +34,20 @@ class JobMetadataExtractor:
             }
 
         prompt = f"""
-You are an expert technical recruiter.
+You are an expert recruiter across technical and non-technical occupations.
 
 Read the following job description.
 
 Extract:
 
-1. Technical skills only
+1. Job-relevant capabilities and explicit qualifications
 2. Required experience
 3. Salary if mentioned
 4. Whether the job is remote
 
-Ignore:
-- communication
-- teamwork
-- leadership
-- education
-- benefits
+Include tools, occupational knowledge, methods, certifications, licences,
+languages, and interpersonal capabilities only when explicitly required.
+Ignore benefits and generic company marketing.
 
 Return ONLY JSON.
 
@@ -59,10 +55,9 @@ Example:
 
 {{
     "skills":[
-        "Python",
-        "PyTorch",
-        "Docker",
-        "SQL"
+        "Inventory management",
+        "Forklift licence",
+        "Team supervision"
     ],
 
     "experience":"3-5 years",
@@ -77,38 +72,24 @@ Job Description
 {description}
 """
 
-        result = self.llm.chat(
-            prompt
-        )
+        result = self.llm.chat(prompt)
 
         skills = [
-
             Skill(
                 name=name,
             )
-
             for name in result.get(
                 "skills",
                 [],
             )
-
         ]
 
         return {
-
             "skills": skills,
-
-            "experience": result.get(
-                "experience"
-            ),
-
-            "salary": result.get(
-                "salary"
-            ),
-
+            "experience": result.get("experience"),
+            "salary": result.get("salary"),
             "remote": result.get(
                 "remote",
                 False,
             ),
-
         }

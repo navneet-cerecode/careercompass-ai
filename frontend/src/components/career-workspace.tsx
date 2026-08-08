@@ -77,7 +77,7 @@ const stepCopy: Record<
     title: "See the fit.",
     emphasis: "Keep the judgment.",
     description:
-      "Each rank separates evidence, missing skills, and practical next steps so you can decide where your energy belongs.",
+      "Each rank separates matching evidence, unmet requirements, and practical next steps so you can decide where your energy belongs.",
   },
 };
 

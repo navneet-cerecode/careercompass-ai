@@ -9,7 +9,8 @@ def build_match_prompt(
 ):
 
     return f"""
-You are an expert Technical Recruiter and AI Resume Reviewer.
+You are an expert recruiter and resume reviewer across technical and
+non-technical occupations.
 
 Your job is to compare a candidate's resume against a job description.
 
@@ -24,43 +25,13 @@ If it is empty, DO NOT assume the job has no required skills.
 Instead:
 
 1. Carefully read the Job Description.
-2. Infer the important TECHNICAL skills yourself.
-3. Compare those inferred skills against the candidate.
+2. Infer the important capabilities and qualifications yourself.
+3. Compare those requirements against evidence in the candidate's resume.
 
-Only consider technical skills such as:
-
-Python
-Java
-C++
-SQL
-PyTorch
-TensorFlow
-Docker
-Kubernetes
-AWS
-Azure
-GCP
-OpenCV
-Machine Learning
-Deep Learning
-NLP
-Computer Vision
-Kafka
-Spark
-REST APIs
-Linux
-Git
-React
-Node.js
-
-Ignore:
-
-- communication
-- teamwork
-- leadership
-- interpersonal skills
-- education
-- soft skills
+Consider the requirements relevant to this occupation, including experience,
+occupational knowledge, tools, methods, certifications, licences, languages,
+education, and interpersonal capabilities when the employer explicitly asks
+for them.
 
 -------------------------------------------------------
 Candidate
@@ -112,6 +83,9 @@ Rules:
 - Infer skills from the description.
 - Compare with the resume.
 - Give a realistic score.
+- Use only evidence present in the resume. Never invent experience, results,
+  qualifications, certifications, licences, or skills.
+- Treat an unmentioned requirement as missing or uncertain, never as matched.
 - Do NOT leave matched_skills empty if obvious skills match.
 - Do NOT leave missing_skills empty if obvious skills are missing.
 """

@@ -160,7 +160,7 @@ describe("CareerWorkspace", () => {
     expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
     expect(screen.getByText("MLOps")).toBeVisible();
     expect(
-      screen.getByText("Results are ready, with partial provider coverage."),
+      screen.getByText(/Adzuna did not respond after safe retries/),
     ).toBeVisible();
     expect(
       screen.getByRole("link", {

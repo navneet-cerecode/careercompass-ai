@@ -14,7 +14,12 @@ when an Auth0 session is present:
 6. inspect score components, matched skills, missing skills, and preparation guidance;
 7. save promising roles to a private, owner-scoped shortlist;
 8. explicitly start and update an owner-scoped application tracker;
-9. open the verified job page for user review.
+9. compare original, suggested, and accepted tailored-resume sections;
+10. save versioned review decisions and confirm factual accuracy;
+11. export an approved tailored resume as PDF or DOCX;
+12. draft a cover letter from verified resume and job evidence;
+13. edit, version, fact-check, and export the approved cover letter;
+14. open the verified job page for user review.
 
 FastAPI remains the source of truth for transport contracts and Python application services
 remain the source of truth for parsing, discovery, normalization, persistence, and ranking.
@@ -48,7 +53,8 @@ window and every required fallback-only capability has a replacement.
 | Verified browser identity and owner-scoped resume/search persistence | Complete | Not available | Next.js canonical |
 | Saved jobs | Complete for verified accounts | Not production-ready | Next.js canonical |
 | Application tracking | Complete for verified accounts | Not production-ready | Next.js canonical |
-| Tailored resumes and cover letters | Not implemented | Not implemented | Later product phase |
+| Reviewed, versioned tailored resumes | Complete for entitled verified accounts | Not available | Next.js canonical |
+| Reviewed, versioned cover letters | Complete for entitled verified accounts | Not available | Next.js canonical |
 
 The Streamlit-only Groq narrative is not part of the anonymous cutover gate. Moving long-running
 AI generation into the web product should use the Phase 5 worker boundary rather than blocking a

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { ProviderAttribution } from "@/components/provider-attribution";
 import type {
   SavedJobListResponse,
   SavedJobResponse,
@@ -246,9 +247,7 @@ export function SavedJobsWorkspace() {
                   <small>Saved {savedDate(item.created_at)}</small>
                 </div>
                 <div className="saved-role-content">
-                  <span className="job-source">
-                    {item.job.source_name ?? item.job.source}
-                  </span>
+                  <ProviderAttribution {...item.job} />
                   <h3>{item.job.title}</h3>
                   <p>
                     {item.job.company} · {item.job.location}

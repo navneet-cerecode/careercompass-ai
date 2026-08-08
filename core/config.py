@@ -35,6 +35,9 @@ class Settings(BaseSettings):
         alias="RAPIDAPI_KEY",
     )
 
+    adzuna_app_id: SecretStr | None = Field(default=None, alias="ADZUNA_APP_ID")
+    adzuna_app_key: SecretStr | None = Field(default=None, alias="ADZUNA_APP_KEY")
+
     # ==========================
     # LLM Configuration
     # ==========================

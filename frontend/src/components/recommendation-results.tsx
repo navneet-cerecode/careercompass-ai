@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 
+import { ProviderAttribution } from "@/components/provider-attribution";
+import { TailoringPlanAction } from "@/components/tailoring-plan-action";
 import type {
   JobSearchResponse,
   RecommendationBatchResponse,
@@ -27,6 +29,17 @@ function scoreLabel(score: number) {
 
 function safeScore(score: number) {
   return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function providerLabel(providerName: string) {
+  if (providerName === "jsearch") return "JSearch";
+  if (providerName === "adzuna") return "Adzuna";
+  if (providerName === "arbeitnow") return "Arbeitnow";
+  if (providerName.startsWith("workday:")) {
+    const company = providerName.slice("workday:".length);
+    return `${company.charAt(0).toUpperCase()}${company.slice(1)} careers`;
+  }
+  return providerName;
 }
 
 function isSavedJobList(value: unknown): value is SavedJobListResponse {
@@ -58,6 +71,14 @@ export function RecommendationResults({
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
   const [savingJobIds, setSavingJobIds] = useState<Set<string>>(new Set());
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const unavailableProviders = new Intl.ListFormat("en", {
+    style: "long",
+    type: "conjunction",
+  }).format(
+    search.provider_failures.map((failure) =>
+      providerLabel(failure.provider_name),
+    ),
+  );
 
   useEffect(() => {
     if (saveAccess !== "enabled") return;
@@ -189,11 +210,17 @@ export function RecommendationResults({
         <div className="provider-notice" role="status">
           <span aria-hidden="true">i</span>
           <div>
-            <strong>Results are ready, with partial provider coverage.</strong>
+            <strong>
+              Results are ready. {" "}
+              {search.provider_failures.length === 1
+                ? "One source needs another pass."
+                : `${search.provider_failures.length} sources need another pass.`}
+            </strong>
             <span>
-              {search.providers_succeeded} of {search.providers_attempted}{" "}
-              sources responded. Ranking uses only verified jobs returned in
-              this search.
+              {unavailableProviders || "A job source"} did not respond after
+              safe retries. These rankings use only the verified jobs returned
+              by the other {search.providers_succeeded} source
+              {search.providers_succeeded === 1 ? "" : "s"}.
             </span>
           </div>
         </div>
@@ -219,9 +246,7 @@ export function RecommendationResults({
               <div className="recommendation-body">
                 <div className="job-heading">
                   <div>
-                    <span className="job-source">
-                      {job.source_name ?? job.source}
-                    </span>
+                    <ProviderAttribution {...job} />
                     <h3>{job.title}</h3>
                     <p>
                       {job.company} · {job.location}
@@ -305,6 +330,12 @@ export function RecommendationResults({
                     </div>
                   )}
                 </details>
+
+                <TailoringPlanAction
+                  jobId={job.id}
+                  jobTitle={job.title}
+                  access={saveAccess}
+                />
 
                 <div className="job-actions">
                   {saveAccess === "enabled" ? (

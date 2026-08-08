@@ -24,6 +24,16 @@ class StaticKeyResolver:
         return self.key
 
 
+class StaticUserInfoResolver:
+    def __init__(self, profile):
+        self.profile = profile
+        self.calls = 0
+
+    def get_user_info(self, _token):
+        self.calls += 1
+        return self.profile
+
+
 def build_verifier_and_key():
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     verifier = OIDCTokenVerifier(
@@ -81,6 +91,41 @@ def test_oidc_verifier_accepts_namespaced_solara_hire_identity_claims():
 
     assert str(identity.email) == "ada@example.com"
     assert identity.name == "Ada Lovelace"
+
+
+def test_oidc_verifier_uses_userinfo_when_standard_access_token_omits_profile_claims():
+    verifier, private_key = build_verifier_and_key()
+    userinfo = StaticUserInfoResolver(
+        {
+            "sub": "provider-user-123",
+            "email": "ada@example.com",
+            "email_verified": True,
+            "name": "Ada Lovelace",
+        }
+    )
+    verifier.userinfo_resolver = userinfo
+
+    identity = verifier.verify(
+        encode_token(private_key, email=None, email_verified=None, name=None)
+    )
+
+    assert str(identity.email) == "ada@example.com"
+    assert identity.name == "Ada Lovelace"
+    assert userinfo.calls == 1
+
+
+def test_oidc_verifier_rejects_userinfo_for_another_subject():
+    verifier, private_key = build_verifier_and_key()
+    verifier.userinfo_resolver = StaticUserInfoResolver(
+        {
+            "sub": "another-user",
+            "email": "ada@example.com",
+            "email_verified": True,
+        }
+    )
+
+    with pytest.raises(TokenValidationError):
+        verifier.verify(encode_token(private_key, email=None, email_verified=None, name=None))
 
 
 @pytest.mark.parametrize(

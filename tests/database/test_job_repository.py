@@ -6,6 +6,7 @@ from database.repositories.jobs import JobRepository
 from database.session import Database
 from models.enums import JobSource
 from models.job import Job
+from models.skill import Skill
 
 
 def make_database() -> Database:
@@ -20,12 +21,14 @@ def make_job(
     source_name: str = "jsearch",
     source_url: str = "https://source.example/jobs/1",
     description: str = "Python",
+    required_skills=None,
 ) -> Job:
     return Job(
         title="Data Engineer",
         company="Example Corp",
         location="India",
         description=description,
+        required_skills=required_skills or [],
         source=source,
         source_name=source_name,
         external_id=f"{source_name}-1",
@@ -81,3 +84,34 @@ def test_repository_returns_jobs_in_requested_order():
         "Machine Learning Engineer",
         "Data Engineer",
     ]
+
+
+def test_repository_tracks_stable_provider_identity_when_source_url_changes():
+    database = make_database()
+    first = make_job(source_url="https://source.example/jobs/old")
+    refreshed = make_job(source_url="https://source.example/jobs/new")
+
+    with database.session() as session:
+        repository = JobRepository(session)
+        persisted_first = repository.upsert(first)
+        persisted_refreshed = repository.upsert(refreshed)
+
+    assert persisted_first.id == persisted_refreshed.id
+    with database.session() as session:
+        sources = session.scalars(select(JobSourceRecord)).all()
+        assert len(sources) == 1
+        assert sources[0].external_id == "jsearch-1"
+        assert sources[0].source_url == "https://source.example/jobs/new"
+
+
+def test_repository_preserves_required_skills():
+    database = make_database()
+    job = make_job(required_skills=[Skill(name="Inventory Planning")])
+
+    with database.session() as session:
+        persisted = JobRepository(session).upsert(job)
+    with database.session() as session:
+        loaded = JobRepository(session).get(persisted.id)
+
+    assert loaded is not None
+    assert [skill.name for skill in loaded.required_skills] == ["Inventory Planning"]

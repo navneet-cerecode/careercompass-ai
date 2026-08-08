@@ -37,7 +37,7 @@ def test_billing_summary_is_authenticated_and_owner_scoped():
         "entitlements": {
             "job_discovery": True,
             "explainable_recommendations": True,
-            "tailored_documents": False,
+            "tailored_documents": True,
             "application_tracking": True,
             "reminders": True,
         },

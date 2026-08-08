@@ -44,6 +44,26 @@ export type BillingSummaryResponse =
   components["schemas"]["BillingSummaryResponse"];
 export type EntitlementsResponse =
   components["schemas"]["EntitlementsResponse"];
+export type CreateTailoringPlanRequest =
+  components["schemas"]["CreateTailoringPlanRequest"];
+export type TailoringPlanResponse =
+  components["schemas"]["TailoringPlanResponse"];
+export type CreateTailoredResumeRequest =
+  components["schemas"]["CreateTailoredResumeRequest"];
+export type TailoredResumeResponse =
+  components["schemas"]["TailoredResumeResponse"];
+export type TailoredResumeSelectionsRequest =
+  components["schemas"]["TailoredResumeSelectionsRequest"];
+export type TailoredResumeVersionListResponse =
+  components["schemas"]["TailoredResumeVersionListResponse"];
+export type CreateCoverLetterRequest =
+  components["schemas"]["CreateCoverLetterRequest"];
+export type CoverLetterContentRequest =
+  components["schemas"]["CoverLetterContentRequest"];
+export type CoverLetterResponse =
+  components["schemas"]["CoverLetterResponse"];
+export type CoverLetterVersionListResponse =
+  components["schemas"]["CoverLetterVersionListResponse"];
 export type SubscriptionPlan = components["schemas"]["SubscriptionPlan"];
 export type SubscriptionStatus = components["schemas"]["SubscriptionStatus"];
 export type EmploymentType = components["schemas"]["EmploymentType"];

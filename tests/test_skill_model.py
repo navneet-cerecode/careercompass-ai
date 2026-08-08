@@ -26,3 +26,8 @@ def test_skill_model_rejects_blank_name():
 )
 def test_skill_model_preserves_canonical_technology_names(raw_name, canonical_name):
     assert Skill(name=raw_name).name == canonical_name
+
+
+@pytest.mark.parametrize("name", ["CPR", "RN", "CPA"])
+def test_skill_model_preserves_occupational_acronyms(name):
+    assert Skill(name=name).name == name

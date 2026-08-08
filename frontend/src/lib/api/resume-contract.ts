@@ -32,6 +32,15 @@ export function getApiErrorMessage(payload: unknown): string | null {
   if (
     typeof payload === "object" &&
     payload !== null &&
+    "code" in payload &&
+    payload.code === "invalid_access_token"
+  ) {
+    return "Your sign-in session could not be verified. Sign out, then sign in again.";
+  }
+
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
     "message" in payload &&
     typeof payload.message === "string"
   ) {

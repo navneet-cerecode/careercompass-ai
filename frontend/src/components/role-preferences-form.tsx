@@ -91,7 +91,7 @@ export function RolePreferencesForm({
             name="role"
             type="text"
             value={preferences.role}
-            placeholder="e.g. AI Engineer"
+            placeholder="e.g. Registered Nurse or Sales Manager"
             autoComplete="organization-title"
             onChange={(event) =>
               setPreferences((current) => ({

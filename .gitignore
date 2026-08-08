@@ -8,6 +8,7 @@ __pycache__/
 .cache/
 .pytest_cache/
 .test-tmp/
+tmp/
 .ruff_cache/
 .coverage
 htmlcov/

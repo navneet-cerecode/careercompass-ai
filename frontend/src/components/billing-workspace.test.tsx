@@ -13,7 +13,7 @@ const summary = {
   entitlements: {
     job_discovery: true,
     explainable_recommendations: true,
-    tailored_documents: false,
+    tailored_documents: true,
     application_tracking: true,
     reminders: true,
   },
@@ -32,8 +32,9 @@ describe("BillingWorkspace", () => {
 
     expect(await screen.findByRole("heading", { name: "Free" })).toBeInTheDocument();
     expect(screen.getByText("No payment method is required. Checkout is not available yet.")).toBeInTheDocument();
-    expect(screen.getByText("Tailored documents")).toBeInTheDocument();
-    expect(screen.getByText("Soon")).toBeInTheDocument();
+    const tailoredDocuments = screen.getByText("Tailored documents").closest("li");
+    expect(tailoredDocuments).toHaveClass("is-enabled");
+    expect(tailoredDocuments).toHaveTextContent("On");
   });
 
   it("recovers from a temporary error", async () => {

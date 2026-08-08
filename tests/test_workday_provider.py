@@ -100,3 +100,39 @@ def test_workday_rejects_invalid_jobs_collection(monkeypatch):
                 location="India",
             )
         )
+
+
+def test_workday_excludes_jobs_outside_requested_location(monkeypatch):
+    monkeypatch.setattr(
+        "services.job_discovery.providers.workday_provider.requests.post",
+        lambda *args, **kwargs: FakeResponse(
+            {
+                "jobPostings": [
+                    {
+                        "title": "Operations Manager",
+                        "locationsText": "India, Bengaluru",
+                        "externalPath": "/job/india/1",
+                    },
+                    {
+                        "title": "Operations Manager",
+                        "locationsText": "US, CA, Santa Clara",
+                        "externalPath": "/job/us/2",
+                    },
+                ]
+            }
+        ),
+    )
+    provider = WorkdayProvider(
+        {
+            "id": "example",
+            "name": "Example Corp",
+            "api_url": "https://example.com/workday/jobs",
+            "careers_url": "https://example.com/careers",
+        }
+    )
+
+    jobs = provider.search_jobs(
+        JobSearchQuery(role="Operations Manager", location="India", country="IN")
+    )
+
+    assert [job.location for job in jobs] == ["India, Bengaluru"]

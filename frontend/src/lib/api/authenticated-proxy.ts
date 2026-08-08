@@ -18,6 +18,8 @@ type AuthenticatedProxyOptions = {
   maxBytes?: number;
   unavailableCode?: string;
   unavailableMessage?: string;
+  responseMode?: "json" | "binary";
+  maxResponseBytes?: number;
 };
 
 function proxyError(status: number, code: string, message: string) {
@@ -118,6 +120,34 @@ export async function forwardAuthenticatedRequest(
         status: 204,
         headers: correlatedResponseHeaders(requestId, upstream),
       }),
+      identity,
+    );
+  }
+  if (options.responseMode === "binary" && upstream.ok) {
+    const declaredLength = Number(upstream.headers.get("content-length") ?? 0);
+    const maxResponseBytes = options.maxResponseBytes ?? 10 * 1024 * 1024;
+    if (declaredLength > maxResponseBytes) {
+      return attachSessionHeaders(
+        proxyError(502, "export_too_large", "The generated document is unexpectedly large."),
+        identity,
+      );
+    }
+    const body = await upstream.arrayBuffer();
+    if (body.byteLength > maxResponseBytes) {
+      return attachSessionHeaders(
+        proxyError(502, "export_too_large", "The generated document is unexpectedly large."),
+        identity,
+      );
+    }
+    const headers = new Headers(correlatedResponseHeaders(requestId, upstream));
+    headers.set(
+      "Content-Type",
+      upstream.headers.get("content-type") ?? "application/octet-stream",
+    );
+    const disposition = upstream.headers.get("content-disposition");
+    if (disposition) headers.set("Content-Disposition", disposition);
+    return attachSessionHeaders(
+      new Response(body, { status: upstream.status, headers }),
       identity,
     );
   }

@@ -11,14 +11,22 @@ the frontend cutover.
 ## Current capabilities
 
 - Upload PDF, DOCX, or TXT resumes.
-- Extract contact details and a limited set of technical skills.
-- Discover jobs from the currently active JSearch and NVIDIA Workday providers.
+- Extract contact details, experience evidence, and cross-industry skills for user review.
+- Discover jobs from configured broad-market aggregators and direct career sources.
 - Normalize results into the current `Job` model and remove simple duplicates.
 - Rank jobs using skill-overlap and semantic-similarity signals.
 - Request an optional Groq-generated recruiter analysis.
+- Save jobs and track applications in authenticated, owner-scoped workspaces.
+- Create versioned factual tailoring drafts for entitled accounts.
+- Compare original, suggested, and accepted resume ordering before approval.
+- Export user-verified tailored resumes as PDF or DOCX.
+- Draft concise cover letters from verified resume evidence and target-job facts.
+- Edit, version, fact-check, and export approved cover letters as PDF or DOCX.
 
-Adzuna, Arbeitnow, The Muse, Greenhouse, SmartRecruiters, and Ashby are part of the product
-roadmap but are not active provider implementations in this repository yet.
+The built-in provider set includes Adzuna, Arbeitnow, JSearch, and NVIDIA Workday. Adzuna is
+enabled only when both of its credentials are configured. Arbeitnow serves its supported Germany
+and UK feeds. The Muse, Greenhouse, SmartRecruiters, and Ashby remain evaluated roadmap sources,
+not active adapters.
 
 ## Requirements
 
@@ -27,6 +35,7 @@ roadmap but are not active provider implementations in this repository yet.
 - Docker Desktop or PostgreSQL 16
 - A Groq API key
 - A RapidAPI key with access to JSearch
+- Optional Adzuna application ID and key for broad-market coverage
 
 ## Local setup
 
@@ -53,6 +62,19 @@ Copy-Item .env.example .env
 
 Populate the required keys in `.env`. Never commit that file or paste credentials into tests,
 logs, screenshots, or issue reports.
+
+Set one stable `TASK_TOKEN_SECRET` of at least 32 random bytes in `.env`. Every API process must use
+the same value so background-search polling tokens remain valid across restarts. Generate a value
+locally with PowerShell, copy it into the ignored `.env`, and clear it from the terminal afterward:
+
+```powershell
+$secretBytes = New-Object byte[] 48
+$random = [Security.Cryptography.RandomNumberGenerator]::Create()
+$random.GetBytes($secretBytes)
+[Convert]::ToBase64String($secretBytes)
+$random.Dispose()
+Remove-Variable secretBytes, random
+```
 
 Authentication uses provider-neutral OIDC access tokens. Configure `AUTH_ISSUER`,
 `AUTH_AUDIENCE`, and `AUTH_JWKS_URL` together when enabling signed-in APIs. Solara Hire stores
@@ -117,6 +139,7 @@ Run FastAPI from the repository root:
 ```powershell
 $env:DATABASE_URL = "postgresql+psycopg://careercompass:careercompass@127.0.0.1:5432/careercompass"
 $env:REDIS_URL = "redis://127.0.0.1:6379/0"
+$env:TASK_TOKEN_SECRET = "the-same-private-value-stored-in-your-env-file"
 .\venv\Scripts\python.exe -m uvicorn api.main:app --reload
 ```
 
@@ -237,7 +260,12 @@ The decision and migration rules are recorded in
 
 `services/job_discovery/providers` is the canonical provider package. Providers accept a typed
 `JobSearchQuery`, declare implemented capabilities, and normalize raw payloads into the shared
-`Job` model. `JSearchProvider` and `WorkdayProvider` are the active production adapters.
+`Job` model. The active adapters are `AdzunaProvider`, `ArbeitnowProvider`, `JSearchProvider`, and
+`WorkdayProvider`; credential and geography checks determine which participate in a search.
+
+JSearch uses `job_uid` as its stable provider identity and retains `job_id` only as a compatibility
+fallback. Provider outages produce explicit partial-coverage results rather than failing the
+complete search. Displayed Adzuna listings carry the required linked source attribution.
 
 The former `APIProvider`, positional `search(role, location)`, and duplicate provider-base import
 remain as compatibility adapters. The provider decision is recorded in

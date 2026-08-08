@@ -37,4 +37,15 @@ describe("resume contract helpers", () => {
     expect(getApiErrorMessage({ message: 42 })).toBeNull();
     expect(getApiErrorMessage(null)).toBeNull();
   });
+
+  it("turns an invalid access token into an actionable recovery message", () => {
+    expect(
+      getApiErrorMessage({
+        code: "invalid_access_token",
+        message: "The access token is invalid.",
+      }),
+    ).toBe(
+      "Your sign-in session could not be verified. Sign out, then sign in again.",
+    );
+  });
 });

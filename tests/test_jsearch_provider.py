@@ -7,8 +7,9 @@ from services.job_discovery.providers.jsearch_provider import JSearchProvider
 
 
 class FakeResponse:
-    def __init__(self, payload):
+    def __init__(self, payload, status_code=200):
         self.payload = payload
+        self.status_code = status_code
         self.raise_called = False
 
     def raise_for_status(self):
@@ -29,6 +30,8 @@ def test_jsearch_search_normalizes_fixture_without_live_network(monkeypatch):
                         "job_location": "Bengaluru, India",
                         "job_description": "Python and SQL",
                         "job_apply_link": "https://example.com/jobs/1",
+                        "job_id": "search-specific-id",
+                        "job_uid": "stable-job-uid",
                     }
                 ]
             }
@@ -76,6 +79,7 @@ def test_jsearch_search_normalizes_fixture_without_live_network(monkeypatch):
     assert len(jobs) == 1
     assert jobs[0].title == "Data Engineer"
     assert jobs[0].source == JobSource.JSEARCH
+    assert jobs[0].external_id == "stable-job-uid"
     assert str(jobs[0].url) == "https://example.com/jobs/1"
 
 
@@ -120,3 +124,30 @@ def test_jsearch_rejects_job_without_apply_url():
                 "job_title": "Data Engineer",
             }
         )
+
+
+def test_jsearch_retries_transient_provider_failure(monkeypatch):
+    responses = [
+        FakeResponse({}, status_code=500),
+        FakeResponse({"data": {"jobs": []}}),
+    ]
+    calls = []
+
+    def fake_get(*args, **kwargs):
+        calls.append((args, kwargs))
+        return responses.pop(0)
+
+    monkeypatch.setattr(
+        "services.job_discovery.providers.jsearch_provider.requests.get",
+        fake_get,
+    )
+    monkeypatch.setattr(
+        "services.job_discovery.providers.jsearch_provider.time.sleep",
+        lambda _: None,
+    )
+    provider = JSearchProvider({"name": "JSearch"}, api_key="test-key")
+
+    jobs = provider.search_jobs(JobSearchQuery(role="Chef", location="India"))
+
+    assert jobs == []
+    assert len(calls) == 2

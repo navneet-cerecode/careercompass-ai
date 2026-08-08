@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -30,6 +31,7 @@ class JobRecord(Base):
     location: Mapped[str] = mapped_column(String(300))
     normalized_location: Mapped[str] = mapped_column(String(300))
     description: Mapped[str] = mapped_column(Text, default="")
+    required_skills: Mapped[list[dict]] = mapped_column(JSON, default=list)
     experience_level: Mapped[str] = mapped_column(String(50))
     employment_type: Mapped[str] = mapped_column(String(50))
     primary_source: Mapped[str] = mapped_column(String(50))
