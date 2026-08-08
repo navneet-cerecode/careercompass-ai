@@ -6,6 +6,10 @@ import {
   resolveApiIdentity,
   type ApiIdentity,
 } from "@/lib/auth/session";
+import {
+  correlatedResponseHeaders,
+  createRequestId,
+} from "@/lib/api/request-correlation";
 
 type JsonProxyOptions = {
   path: string;
@@ -30,6 +34,7 @@ export async function forwardJsonRequest(
   request: Request,
   options: JsonProxyOptions,
 ) {
+  const requestId = createRequestId();
   if (
     !request.headers
       .get("content-type")
@@ -70,6 +75,7 @@ export async function forwardJsonRequest(
   const headers: Record<string, string> = {
     Accept: "application/json",
     "Content-Type": "application/json",
+    "X-Request-ID": requestId,
   };
   let identity: ApiIdentity = {
     authorization: null,
@@ -137,7 +143,7 @@ export async function forwardJsonRequest(
     return attachSessionHeaders(
       Response.json(payload, {
         status: upstreamResponse.status,
-        headers: { "Cache-Control": "no-store" },
+        headers: correlatedResponseHeaders(requestId, upstreamResponse),
       }),
       identity,
     );

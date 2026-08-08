@@ -277,9 +277,10 @@ Streamlit compatibility fallback
      -> optional legacy Groq analysis
 ```
 
-The remaining long-term direction adds durable task records and worker actors on the Redis broker,
-authenticated ownership, subscription billing, production observability, and S3-compatible
-object storage. Migration remains incremental; Streamlit removal requires the separate gate in
+The current foundation includes durable task records, Redis worker actors, authenticated ownership,
+provider-neutral subscriptions, and privacy-bounded request and product telemetry. Payment-provider
+checkout, external analytics delivery, production deployment, and S3-compatible object storage
+remain incremental follow-on work. Streamlit removal requires the separate gate in
 `docs/frontend-cutover.md`.
 
 ## Security and privacy
@@ -290,3 +291,7 @@ to logs. Use synthetic data for tests.
 
 Report suspected credential exposure immediately and rotate the affected key before continuing
 development.
+
+Operational telemetry deliberately excludes request bodies, query strings, raw resource IDs, and
+personal profile data. Deployment guidance and the approved product-event contract are documented
+in `docs/operations/observability.md`.

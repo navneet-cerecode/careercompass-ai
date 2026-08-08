@@ -36,6 +36,20 @@ def test_liveness_endpoint_does_not_require_external_credentials():
         "version": "2.0-test",
         "checks": {},
     }
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+
+
+def test_untrusted_host_is_rejected_before_routing():
+    response = make_client().get(
+        "/api/v1/health/live",
+        headers={"Host": "attacker.example"},
+    )
+
+    assert response.status_code == 400
 
 
 def test_readiness_endpoint_reports_missing_required_dependencies():

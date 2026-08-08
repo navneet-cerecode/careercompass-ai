@@ -74,6 +74,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current account's plan and effective entitlements */
+        get: operations["get_billing_summary_api_v1_billing_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/live": {
         parameters: {
             query?: never;
@@ -479,6 +496,23 @@ export interface components {
          * @enum {string}
          */
         BackgroundTaskStatus: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+        /** BillingSummaryResponse */
+        BillingSummaryResponse: {
+            /** Cancel At Period End */
+            cancel_at_period_end: boolean;
+            /**
+             * Checkout Available
+             * @default false
+             */
+            checkout_available: boolean;
+            /** Current Period End */
+            current_period_end?: string | null;
+            entitlements: components["schemas"]["EntitlementsResponse"];
+            plan: components["schemas"]["SubscriptionPlan"];
+            /** Provider */
+            provider?: string | null;
+            status: components["schemas"]["SubscriptionStatus"];
+        };
         /** Body_parse_resume_api_v1_resumes_parse_post */
         Body_parse_resume_api_v1_resumes_parse_post: {
             /**
@@ -515,6 +549,19 @@ export interface components {
          * @enum {string}
          */
         EmploymentType: "Full Time" | "Part Time" | "Internship" | "Contract" | "Remote";
+        /** EntitlementsResponse */
+        EntitlementsResponse: {
+            /** Application Tracking */
+            application_tracking: boolean;
+            /** Explainable Recommendations */
+            explainable_recommendations: boolean;
+            /** Job Discovery */
+            job_discovery: boolean;
+            /** Reminders */
+            reminders: boolean;
+            /** Tailored Documents */
+            tailored_documents: boolean;
+        };
         /** ErrorResponse */
         ErrorResponse: {
             /** Code */
@@ -929,6 +976,18 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * SubscriptionPlan
+         * @description Commercial plans understood by the product domain.
+         * @enum {string}
+         */
+        SubscriptionPlan: "free" | "pro";
+        /**
+         * SubscriptionStatus
+         * @description Provider-neutral subscription lifecycle states.
+         * @enum {string}
+         */
+        SubscriptionStatus: "active" | "trialing" | "past_due" | "cancelled" | "incomplete";
         /** TransitionApplicationRequest */
         TransitionApplicationRequest: {
             /** Next Action */
@@ -1283,6 +1342,35 @@ export interface operations {
             };
             /** @description Service Unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_billing_summary_api_v1_billing_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingSummaryResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

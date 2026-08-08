@@ -1,0 +1,39 @@
+FROM python:3.13-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HOME=/tmp \
+    HF_HOME=/tmp/huggingface \
+    SENTENCE_TRANSFORMERS_HOME=/tmp/sentence-transformers
+
+WORKDIR /app
+
+RUN addgroup --system solarahire && adduser --system --ingroup solarahire solarahire
+
+COPY requirements.txt requirements-api.txt requirements-db.txt requirements-worker.txt ./
+RUN python -m pip install --upgrade pip \
+    && python -m pip install -r requirements-worker.txt
+
+COPY alembic.ini ./
+COPY agents ./agents
+COPY api ./api
+COPY core ./core
+COPY data ./data
+COPY database ./database
+COPY graph ./graph
+COPY models ./models
+COPY prompts ./prompts
+COPY services ./services
+COPY utils ./utils
+COPY workers ./workers
+
+RUN chown -R solarahire:solarahire /app
+USER solarahire
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/live', timeout=3)"
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

@@ -32,6 +32,20 @@ export type TransitionApplicationRequest =
   components["schemas"]["TransitionApplicationRequest"];
 export type UpdateApplicationPlanRequest =
   components["schemas"]["UpdateApplicationPlanRequest"];
+export type ApplicationReminderStatus =
+  components["schemas"]["ApplicationReminderStatus"];
+export type ApplicationReminderResponse =
+  components["schemas"]["ApplicationReminderResponse"];
+export type ApplicationReminderListResponse =
+  components["schemas"]["ApplicationReminderListResponse"];
+export type UpdateApplicationReminderRequest =
+  components["schemas"]["UpdateApplicationReminderRequest"];
+export type BillingSummaryResponse =
+  components["schemas"]["BillingSummaryResponse"];
+export type EntitlementsResponse =
+  components["schemas"]["EntitlementsResponse"];
+export type SubscriptionPlan = components["schemas"]["SubscriptionPlan"];
+export type SubscriptionStatus = components["schemas"]["SubscriptionStatus"];
 export type EmploymentType = components["schemas"]["EmploymentType"];
 export type DatePosted = components["schemas"]["DatePosted"];
 

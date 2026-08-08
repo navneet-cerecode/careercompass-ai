@@ -1,0 +1,64 @@
+name: solarahire
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - "8000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
+    command: ["python", "-m", "dramatiq", "workers.entrypoint", "--processes", "1", "--threads", "4"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        SOLARAHIRE_SITE_URL: ${SOLARAHIRE_SITE_URL:?SOLARAHIRE_SITE_URL must be configured}
+    env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
+    environment:
+      API_BASE_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

@@ -9,6 +9,7 @@ from api.dependencies import (
     get_resume_parser,
     get_settings,
     get_optional_principal,
+    get_product_analytics,
     get_required_principal,
     get_database,
 )
@@ -18,6 +19,7 @@ from api.schemas.resumes import ParsedResumeResponse, ResumeResponse
 from api.services.resume_profiles import ResumeProfileService
 from api.services.resume_upload import parse_resume_upload
 from core.config import Settings
+from core.observability import ProductAnalytics, ProductEventName
 from services.resume.extractor import ResumeExtractor
 from services.resume.parser_service import ResumeParserService
 from database.session import Database
@@ -36,6 +38,7 @@ PrincipalDependency = Annotated[
     Depends(get_required_principal),
 ]
 DatabaseDependency = Annotated[Database, Depends(get_database)]
+AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 ERROR_RESPONSES = {
     413: {"model": ErrorResponse},
@@ -56,6 +59,7 @@ async def parse_resume(
     settings: SettingsDependency,
     parser: ParserDependency,
     extractor: ExtractorDependency,
+    analytics: AnalyticsDependency,
     principal: OptionalPrincipalDependency,
     file: Annotated[UploadFile, File(description="PDF, DOCX, or UTF-8 text resume")],
 ) -> ParsedResumeResponse:
@@ -72,6 +76,11 @@ async def parse_resume(
             resume=resume,
             original_filename=original_filename,
         )
+    analytics.track(
+        ProductEventName.RESUME_PARSED,
+        user_id=principal.user_id if principal is not None else None,
+        properties={"authenticated": principal is not None},
+    )
     return map_parsed_resume(resume)
 
 

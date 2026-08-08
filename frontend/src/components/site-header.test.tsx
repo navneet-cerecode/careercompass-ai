@@ -23,6 +23,10 @@ describe("SiteHeader", () => {
     expect(
       screen.getByRole("link", { name: "Create account" }),
     ).toHaveAttribute("href", "/auth/login?screen_hint=signup");
+    expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute(
+      "href",
+      "/pricing",
+    );
   });
 
   it("shows a minimal account control without exposing tokens", () => {

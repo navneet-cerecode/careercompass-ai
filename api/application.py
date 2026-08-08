@@ -7,6 +7,7 @@ import secrets
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from api.errors import (
     APIError,
@@ -15,6 +16,7 @@ from api.errors import (
 )
 from api.v1.router import api_router
 from core.config import Settings, settings
+from core.observability import RequestTelemetryMiddleware, build_product_analytics
 
 
 @asynccontextmanager
@@ -50,6 +52,20 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     application.state.task_token_secret = configured_secret
     application.state.oidc_verifier = None
     application.state.oidc_verifier_lock = Lock()
+    analytics_salt = (
+        active_settings.analytics_identity_salt.get_secret_value().encode()
+        if active_settings.analytics_identity_salt is not None
+        else None
+    )
+    application.state.product_analytics = build_product_analytics(
+        enabled=active_settings.analytics_enabled,
+        identity_salt=analytics_salt,
+    )
+    application.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=active_settings.allowed_host_list(),
+    )
+    application.add_middleware(RequestTelemetryMiddleware)
     application.add_exception_handler(APIError, api_error_handler)
     application.add_exception_handler(
         RequestValidationError,

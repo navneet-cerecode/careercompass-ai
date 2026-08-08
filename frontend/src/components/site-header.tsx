@@ -1,13 +1,14 @@
 import Link from "next/link";
 
 import { ConnectionStatus } from "@/components/connection-status";
+import { ReminderCenter } from "@/components/reminder-center";
 import type { ApiConnection } from "@/lib/api/client";
 import type { SiteUser } from "@/lib/auth/session";
 
 type SiteHeaderProps = {
   connection: ApiConnection;
   user: SiteUser | null;
-  activePage?: "home" | "workspace" | "saved" | "applications";
+  activePage?: "home" | "pricing" | "workspace" | "saved" | "applications";
 };
 
 export function SiteHeader({
@@ -33,6 +34,12 @@ export function SiteHeader({
         >
           Workspace
         </Link>
+        <Link
+          href="/pricing"
+          aria-current={activePage === "pricing" ? "page" : undefined}
+        >
+          Pricing
+        </Link>
         {user && (
           <>
             <Link
@@ -56,6 +63,7 @@ export function SiteHeader({
 
       <div className="header-tools">
         <ConnectionStatus connection={connection} />
+        {user?.emailVerified && <ReminderCenter />}
         {user ? (
           <div className="account-menu">
             <span className="account-avatar" aria-hidden="true">

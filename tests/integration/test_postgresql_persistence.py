@@ -48,7 +48,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0010"
+            assert MigrationContext.configure(connection).get_current_revision() == "0011"
         assert database.check_connection() is True
 
         with database.session() as session:

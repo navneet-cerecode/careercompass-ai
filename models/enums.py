@@ -71,6 +71,23 @@ class ApplicationReminderStatus(str, Enum):
     DISMISSED = "dismissed"
 
 
+class SubscriptionPlan(str, Enum):
+    """Commercial plans understood by the product domain."""
+
+    FREE = "free"
+    PRO = "pro"
+
+
+class SubscriptionStatus(str, Enum):
+    """Provider-neutral subscription lifecycle states."""
+
+    ACTIVE = "active"
+    TRIALING = "trialing"
+    PAST_DUE = "past_due"
+    CANCELLED = "cancelled"
+    INCOMPLETE = "incomplete"
+
+
 class BackgroundTaskStatus(str, Enum):
     """Durable lifecycle states for background work."""
 

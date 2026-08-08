@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
+
 
 def test_settings_load_without_credentials(monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
@@ -80,3 +83,36 @@ def test_worker_settings_hide_redis_credentials(monkeypatch):
     assert settings.worker_max_retries == 5
     assert settings.worker_time_limit_ms == 120_000
     assert "private-password" not in repr(settings)
+
+
+def test_production_configuration_fails_closed_when_dependencies_are_missing():
+    from core.config import Settings
+
+    with pytest.raises(ValidationError, match="DATABASE_URL.*REDIS_URL.*TASK_TOKEN_SECRET"):
+        Settings(APP_ENVIRONMENT="production", _env_file=None)
+
+
+def test_production_configuration_requires_https_identity_and_explicit_hosts():
+    from core.config import Settings
+
+    common = {
+        "APP_ENVIRONMENT": "production",
+        "DATABASE_URL": "postgresql+psycopg://app:password@db/app",
+        "REDIS_URL": "redis://redis:6379/0",
+        "TASK_TOKEN_SECRET": "test-task-secret-that-is-at-least-32-bytes",
+        "auth_audience": "urn:solarahire:api",
+        "_env_file": None,
+    }
+    with pytest.raises(ValidationError, match="must use HTTPS"):
+        Settings(
+            **common,
+            auth_issuer="http://identity.example.test/",
+            auth_jwks_url="http://identity.example.test/jwks.json",
+        )
+    with pytest.raises(ValidationError, match="explicit hostnames"):
+        Settings(
+            **common,
+            auth_issuer="https://identity.example.test/",
+            auth_jwks_url="https://identity.example.test/jwks.json",
+            ALLOWED_HOSTS="*",
+        )

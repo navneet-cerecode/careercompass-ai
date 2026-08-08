@@ -4,6 +4,10 @@ import {
   attachSessionHeaders,
   resolveApiIdentity,
 } from "@/lib/auth/session";
+import {
+  correlatedResponseHeaders,
+  createRequestId,
+} from "@/lib/api/request-correlation";
 
 export const runtime = "nodejs";
 
@@ -21,6 +25,7 @@ function errorResponse(status: number, code: string, message: string) {
 }
 
 export async function POST(request: Request) {
+  const requestId = createRequestId();
   const contentLength = Number(request.headers.get("content-length"));
   if (
     Number.isFinite(contentLength) &&
@@ -81,6 +86,7 @@ export async function POST(request: Request) {
   }
 
   const upstreamHeaders = new Headers();
+  upstreamHeaders.set("X-Request-ID", requestId);
   if (identity.authorization) {
     upstreamHeaders.set("Authorization", identity.authorization);
   }
@@ -129,7 +135,7 @@ export async function POST(request: Request) {
     return attachSessionHeaders(
       Response.json(payload, {
         status: upstreamResponse.status,
-        headers: { "Cache-Control": "no-store" },
+        headers: correlatedResponseHeaders(requestId, upstreamResponse),
       }),
       identity,
     );

@@ -18,6 +18,7 @@ from database.repositories.tasks import (
     IdempotencyConflict,
     InvalidTaskTransition,
 )
+from database.repositories.subscriptions import SubscriptionRepository
 from database.repositories.users import User, UserRepository
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "SearchHistory",
     "SearchHistoryRepository",
     "SavedJobRepository",
+    "SubscriptionRepository",
     "User",
     "UserRepository",
 ]

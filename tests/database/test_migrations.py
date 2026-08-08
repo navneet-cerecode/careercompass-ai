@@ -149,10 +149,23 @@ def test_application_reminder_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'reminders.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0010")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0010"
     assert "application_reminders" in inspect(engine).get_table_names()
 
     command.downgrade(config, "0009")
     assert "application_reminders" not in inspect(engine).get_table_names()
+
+
+def test_subscription_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'subscriptions.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0011"
+    assert "subscriptions" in inspect(engine).get_table_names()
+
+    command.downgrade(config, "0010")
+    assert "subscriptions" not in inspect(engine).get_table_names()

@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from starlette.concurrency import run_in_threadpool
 
-from api.dependencies import get_job_catalog, get_recommendation_service
+from api.dependencies import get_job_catalog, get_product_analytics, get_recommendation_service
 from api.errors import APIError, ErrorResponse
 from api.mappers import map_recommendation, map_resume_input
 from api.schemas.recommendations import (
@@ -14,6 +14,7 @@ from api.schemas.recommendations import (
 )
 from api.services.job_catalog import JobCatalog
 from services.recommendation.recommendation_service import RecommendationService
+from core.observability import ProductAnalytics, ProductEventName
 
 router = APIRouter()
 RecommendationDependency = Annotated[
@@ -21,6 +22,7 @@ RecommendationDependency = Annotated[
     Depends(get_recommendation_service),
 ]
 CatalogDependency = Annotated[JobCatalog, Depends(get_job_catalog)]
+AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 
 @router.post(
@@ -36,6 +38,7 @@ async def recommend_jobs(
     request: RecommendationRequest,
     service: RecommendationDependency,
     catalog: CatalogDependency,
+    analytics: AnalyticsDependency,
 ) -> RecommendationBatchResponse:
     jobs = await run_in_threadpool(catalog.get_many, request.job_ids)
     if jobs is None:
@@ -59,6 +62,14 @@ async def recommend_jobs(
             "recommendation_unavailable",
             "Job recommendations are temporarily unavailable.",
         ) from error
+
+    analytics.track(
+        ProductEventName.RECOMMENDATIONS_GENERATED,
+        properties={
+            "jobs_considered": len(jobs),
+            "recommendations_returned": len(recommendations),
+        },
+    )
 
     return RecommendationBatchResponse(
         recommendations=tuple(

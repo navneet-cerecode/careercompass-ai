@@ -89,6 +89,7 @@ jobs:
           api
           agents/candidate_evaluation_agent.py
           core/config.py
+          core/observability.py
           core/career_compass.py
           database
           graph/nodes.py
@@ -125,6 +126,7 @@ jobs:
           services/jobs/providers/base_provider.py
           services/llm/evaluator.py
           services/llm/groq_client.py
+          services/llm/job_skill_extractor.py
           services/recommendation/fusion.py
           services/recommendation/models/signal_result.py
           services/recommendation/recommendation_engine.py
@@ -134,6 +136,7 @@ jobs:
           services/recommendation/signals/skill_signal.py
           services/resume/parser_service.py
           scripts/export_openapi.py
+          scripts/check_production_env.py
           scripts/smoke_frontend.py
           scripts/test_env.py
           scripts/test_registry.py
@@ -148,6 +151,7 @@ jobs:
           api
           agents/candidate_evaluation_agent.py
           core/config.py
+          core/observability.py
           core/career_compass.py
           database
           graph/nodes.py
@@ -184,6 +188,7 @@ jobs:
           services/jobs/providers/base_provider.py
           services/llm/evaluator.py
           services/llm/groq_client.py
+          services/llm/job_skill_extractor.py
           services/recommendation/fusion.py
           services/recommendation/models/signal_result.py
           services/recommendation/recommendation_engine.py
@@ -193,6 +198,7 @@ jobs:
           services/recommendation/signals/skill_signal.py
           services/resume/parser_service.py
           scripts/export_openapi.py
+          scripts/check_production_env.py
           scripts/smoke_frontend.py
           scripts/test_env.py
           scripts/test_registry.py
@@ -209,6 +215,12 @@ jobs:
           npm run test
           npm run build
           npm audit --audit-level=high
+
+      - name: Validate production container definitions
+        run: |
+          SOLARAHIRE_ENV_FILE=.env.production.example docker compose --env-file .env.production.example -f compose.production.yaml config --quiet
+          docker build --check -f Dockerfile.api .
+          docker build --check -f frontend/Dockerfile frontend
 
       - name: Run offline tests
         run: python -m pytest -m "not postgres and not redis"

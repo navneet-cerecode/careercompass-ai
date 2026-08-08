@@ -292,6 +292,9 @@ export function ApplicationTrackerWorkspace() {
       setAnnouncement(
         `${item.job.title} planning details were updated. Its employer-status history is unchanged.`,
       );
+      window.dispatchEvent(
+        new Event("solarahire:application-plan-updated"),
+      );
     } catch (error) {
       setAnnouncement(
         error instanceof Error
@@ -308,6 +311,18 @@ export function ApplicationTrackerWorkspace() {
   };
 
   const items = state.status === "ready" ? state.items : [];
+
+  useEffect(() => {
+    if (state.status !== "ready" || !window.location.hash) return;
+    const applicationId = window.location.hash.replace("#application-", "");
+    if (!state.items.some((item) => item.id === applicationId)) return;
+    window.requestAnimationFrame(() => {
+      const card = document.getElementById(`application-${applicationId}`);
+      card?.scrollIntoView({ block: "center" });
+      card?.focus({ preventScroll: true });
+    });
+  }, [state]);
+
   const activeCount = items.filter((item) =>
     ["Applied", "Under review", "Assessment", "Interview"].includes(
       item.status,
@@ -449,7 +464,12 @@ export function ApplicationTrackerWorkspace() {
                         const detail = details[item.id];
                         const isExpanded = expandedId === item.id;
                         return (
-                          <article className="tracker-card" key={item.id}>
+                          <article
+                            className="tracker-card"
+                            id={`application-${item.id}`}
+                            tabIndex={-1}
+                            key={item.id}
+                          >
                             <div className="tracker-card-topline">
                               <span
                                 className="tracker-status"

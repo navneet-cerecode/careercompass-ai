@@ -12,7 +12,7 @@ Author: Navneet Prakash Yadav
 
 from pathlib import Path
 
-from pydantic import AliasChoices, Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -67,6 +67,16 @@ class Settings(BaseSettings):
     app_name: str = "Solara Hire"
 
     version: str = "1.0.0"
+
+    environment: str = Field(
+        default="development",
+        pattern=r"^(development|test|production)$",
+        alias="APP_ENVIRONMENT",
+    )
+    allowed_hosts: str = Field(
+        default="localhost,127.0.0.1,testserver",
+        alias="ALLOWED_HOSTS",
+    )
 
     # ==========================
     # Job Search
@@ -179,11 +189,53 @@ class Settings(BaseSettings):
             )
         return self.auth_issuer, self.auth_audience, self.auth_jwks_url
 
+    def allowed_host_list(self) -> list[str]:
+        return [host.strip() for host in self.allowed_hosts.split(",") if host.strip()]
+
     # ==========================
     # Logging
     # ==========================
 
     log_level: str = "INFO"
+
+    analytics_enabled: bool = Field(default=False, alias="ANALYTICS_ENABLED")
+    analytics_identity_salt: SecretStr | None = Field(
+        default=None,
+        min_length=32,
+        alias="ANALYTICS_IDENTITY_SALT",
+    )
+
+    @model_validator(mode="after")
+    def validate_production_configuration(self) -> "Settings":
+        if self.environment != "production":
+            return self
+
+        missing: list[str] = []
+        if self.database_url is None:
+            missing.append("DATABASE_URL")
+        if self.redis_url is None:
+            missing.append("REDIS_URL")
+        if self.task_token_secret is None:
+            missing.append("TASK_TOKEN_SECRET")
+        if not self.auth_issuer:
+            missing.append("AUTH_ISSUER")
+        if not self.auth_audience:
+            missing.append("AUTH_AUDIENCE")
+        if not self.auth_jwks_url:
+            missing.append("AUTH_JWKS_URL")
+        if missing:
+            raise ValueError(
+                "Production configuration is missing required values: " + ", ".join(missing)
+            )
+
+        if not self.auth_issuer.startswith("https://") or not self.auth_jwks_url.startswith(
+            "https://"
+        ):
+            raise ValueError("Production identity endpoints must use HTTPS.")
+        hosts = self.allowed_host_list()
+        if not hosts or "*" in hosts:
+            raise ValueError("Production ALLOWED_HOSTS must contain explicit hostnames.")
+        return self
 
     # ==========================
     # Pydantic Config

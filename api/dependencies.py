@@ -10,9 +10,11 @@ from api.services.job_catalog import JobCatalog
 from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from api.services.task_capability import TaskCapability
 from api.services.applications import ApplicationTrackingService
+from api.services.billing import BillingService
 from api.services.reminders import ApplicationReminderService
 from api.services.saved_jobs import SavedJobService
 from core.config import Settings
+from core.observability import ProductAnalytics
 from database.session import Database
 from database.repositories.identities import IdentityLinkRequired, IdentityRepository
 from database.repositories.users import UserRepository
@@ -31,6 +33,10 @@ bearer_scheme = HTTPBearer(auto_error=False)
 def get_settings(request: Request) -> Settings:
     """Return the settings instance owned by the current application."""
     return request.app.state.settings
+
+
+def get_product_analytics(request: Request) -> ProductAnalytics:
+    return request.app.state.product_analytics
 
 
 def get_resume_parser() -> ResumeParserService:
@@ -86,6 +92,12 @@ def get_application_reminder_service(
     database: Annotated[Database, Depends(get_database)],
 ) -> ApplicationReminderService:
     return ApplicationReminderService(database)
+
+
+def get_billing_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> BillingService:
+    return BillingService(database)
 
 
 def get_job_discovery_service(request: Request) -> JobDiscoveryService:

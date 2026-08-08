@@ -1,12 +1,6 @@
-"""
-Job Skill Extractor.
+"""Extract technical skills from a job description through Groq."""
 
-Uses Groq to extract technical skills
-from a job description.
-"""
-
-import json
-
+from services.llm.groq_client import GroqClient
 
 
 class JobSkillExtractor:
@@ -15,17 +9,14 @@ class JobSkillExtractor:
     a job description.
     """
 
-    def __init__(self):
-
-        self.llm = get_llm()
+    def __init__(self, client: GroqClient | None = None) -> None:
+        self.client = client or GroqClient()
 
     def extract(
         self,
         description: str,
     ) -> list[str]:
-
         if not description.strip():
-
             return []
 
         prompt = f"""
@@ -59,21 +50,8 @@ Job Description:
 {description}
 """
 
-        response = self.llm.invoke(
-            prompt
-        )
-
-        try:
-
-            data = json.loads(
-                response.content
-            )
-
-            return data.get(
-                "skills",
-                [],
-            )
-
-        except Exception:
-
+        data = self.client.chat(prompt)
+        skills = data.get("skills", [])
+        if not isinstance(skills, list):
             return []
+        return [skill.strip() for skill in skills if isinstance(skill, str) and skill.strip()]

@@ -19,6 +19,7 @@ from database.models.recommendations import (
 )
 from database.models.resumes import ResumeRecord, ResumeSkillRecord, SkillRecord
 from database.models.tasks import BackgroundTaskRecord, TaskOutboxRecord
+from database.models.subscriptions import SubscriptionRecord
 from database.models.users import UserRecord
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "SearchResultRecord",
     "SavedJobRecord",
     "SkillRecord",
+    "SubscriptionRecord",
     "TaskOutboxRecord",
     "UserRecord",
     "UserIdentityRecord",

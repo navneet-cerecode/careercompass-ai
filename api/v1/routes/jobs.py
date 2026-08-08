@@ -11,6 +11,7 @@ from api.dependencies import (
     get_job_discovery_service,
     get_job_discovery_task_service,
     get_optional_principal,
+    get_product_analytics,
 )
 from api.errors import APIError, ErrorResponse
 from api.mappers import map_job
@@ -27,6 +28,7 @@ from api.services.job_catalog import JobCatalog
 from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from database.repositories.tasks import IdempotencyConflict
 from models.identity import AuthenticatedPrincipal
+from core.observability import ProductAnalytics, ProductEventName
 from services.job_discovery.discovery_service import JobDiscoveryService
 from services.job_discovery.providers.contracts import JobSearchQuery
 
@@ -44,6 +46,7 @@ OptionalPrincipalDependency = Annotated[
     AuthenticatedPrincipal | None,
     Depends(get_optional_principal),
 ]
+AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 
 def _map_search_result(snapshot) -> JobSearchResponse | None:
@@ -87,6 +90,7 @@ def create_search_task(
     request: JobSearchRequest,
     tasks: TaskServiceDependency,
     principal: OptionalPrincipalDependency,
+    analytics: AnalyticsDependency,
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=8, max_length=200)],
 ) -> JobSearchTaskCreatedResponse:
     try:
@@ -101,6 +105,15 @@ def create_search_task(
             "idempotency_conflict",
             "This idempotency key was already used for another search.",
         ) from error
+    analytics.track(
+        ProductEventName.JOB_SEARCH_REQUESTED,
+        user_id=principal.user_id if principal is not None else None,
+        properties={
+            "authenticated": principal is not None,
+            "remote_only": request.remote_only is True,
+            "employment_type_count": len(request.employment_types),
+        },
+    )
     return JobSearchTaskCreatedResponse(
         task_id=snapshot.task.id,
         access_token=token,

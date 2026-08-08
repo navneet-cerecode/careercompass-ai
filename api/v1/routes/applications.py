@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, status
 
 from api.dependencies import (
     get_application_tracking_service,
+    get_product_analytics,
     get_required_principal,
 )
 from api.errors import APIError, ErrorResponse
@@ -30,6 +31,7 @@ from database.repositories.applications import ALLOWED_TRANSITIONS
 from models.application import ApplicationEvent
 from models.enums import ApplicationStatus
 from models.identity import AuthenticatedPrincipal
+from core.observability import ProductAnalytics, ProductEventName
 
 router = APIRouter()
 PrincipalDependency = Annotated[
@@ -40,6 +42,7 @@ ApplicationServiceDependency = Annotated[
     ApplicationTrackingService,
     Depends(get_application_tracking_service),
 ]
+AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 
 def _allowed_next_statuses(
@@ -118,6 +121,7 @@ def create_application(
     request: CreateApplicationRequest,
     principal: PrincipalDependency,
     applications: ApplicationServiceDependency,
+    analytics: AnalyticsDependency,
 ) -> ApplicationDetailResponse:
     try:
         snapshot = applications.create(
@@ -142,6 +146,14 @@ def create_application(
         ) from error
     if snapshot is None:
         raise APIError(404, "job_not_found", "The requested job was not found.")
+    analytics.track(
+        ProductEventName.APPLICATION_TRACKING_STARTED,
+        user_id=principal.user_id,
+        properties={
+            "has_resume": request.resume_id is not None,
+            "has_next_action": bool(request.next_action and request.next_action.strip()),
+        },
+    )
     return _map_application_detail(snapshot)
 
 
@@ -218,6 +230,7 @@ def transition_application(
     request: TransitionApplicationRequest,
     principal: PrincipalDependency,
     applications: ApplicationServiceDependency,
+    analytics: AnalyticsDependency,
 ) -> ApplicationDetailResponse:
     try:
         snapshot = applications.transition(
@@ -240,4 +253,9 @@ def transition_application(
             "application_not_found",
             "The requested application was not found.",
         )
+    analytics.track(
+        ProductEventName.APPLICATION_STATUS_CHANGED,
+        user_id=principal.user_id,
+        properties={"to_status": request.status.value},
+    )
     return _map_application_detail(snapshot)

@@ -6,6 +6,10 @@ import {
   resolveApiIdentity,
   type ApiIdentity,
 } from "@/lib/auth/session";
+import {
+  correlatedResponseHeaders,
+  createRequestId,
+} from "@/lib/api/request-correlation";
 
 type AuthenticatedProxyOptions = {
   path: string;
@@ -27,6 +31,7 @@ export async function forwardAuthenticatedRequest(
   request: Request,
   options: AuthenticatedProxyOptions,
 ) {
+  const requestId = createRequestId();
   let identity: ApiIdentity;
   try {
     identity = await resolveApiIdentity(request);
@@ -48,6 +53,7 @@ export async function forwardAuthenticatedRequest(
   const headers = new Headers({
     Accept: "application/json",
     Authorization: identity.authorization,
+    "X-Request-ID": requestId,
   });
   let body: string | undefined;
   if (["POST", "PUT", "PATCH"].includes(options.method)) {
@@ -110,7 +116,7 @@ export async function forwardAuthenticatedRequest(
     return attachSessionHeaders(
       new Response(null, {
         status: 204,
-        headers: { "Cache-Control": "no-store" },
+        headers: correlatedResponseHeaders(requestId, upstream),
       }),
       identity,
     );
@@ -135,7 +141,7 @@ export async function forwardAuthenticatedRequest(
     return attachSessionHeaders(
       Response.json(await upstream.json(), {
         status: upstream.status,
-        headers: { "Cache-Control": "no-store" },
+        headers: correlatedResponseHeaders(requestId, upstream),
       }),
       identity,
     );

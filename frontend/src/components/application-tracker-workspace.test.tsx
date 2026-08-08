@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -47,6 +52,8 @@ const detail = {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  window.history.replaceState({}, "", "/");
 });
 
 describe("ApplicationTrackerWorkspace", () => {
@@ -157,5 +164,31 @@ describe("ApplicationTrackerWorkspace", () => {
       `/api/applications/${application.id}`,
       expect.objectContaining({ method: "PATCH" }),
     );
+  });
+
+  it("focuses an application reached from a reminder deep link", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(Response.json({ items: [application] })),
+    );
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    window.history.replaceState(
+      {},
+      "",
+      `/#application-${application.id}`,
+    );
+
+    render(<ApplicationTrackerWorkspace />);
+
+    const heading = await screen.findByRole("heading", {
+      name: "AI Engineer",
+    });
+    const card = heading.closest("article");
+    await waitFor(() => expect(document.activeElement).toBe(card));
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "center" });
   });
 });

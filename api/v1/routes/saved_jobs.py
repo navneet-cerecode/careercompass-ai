@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Response
 
-from api.dependencies import get_required_principal, get_saved_job_service
+from api.dependencies import get_product_analytics, get_required_principal, get_saved_job_service
 from api.errors import APIError, ErrorResponse
 from api.mappers import map_job
 from api.schemas.saved_jobs import (
@@ -15,6 +15,7 @@ from api.schemas.saved_jobs import (
 )
 from api.services.saved_jobs import SavedJobService, SavedJobSnapshot
 from models.identity import AuthenticatedPrincipal
+from core.observability import ProductAnalytics, ProductEventName
 
 router = APIRouter()
 PrincipalDependency = Annotated[
@@ -25,6 +26,7 @@ SavedJobServiceDependency = Annotated[
     SavedJobService,
     Depends(get_saved_job_service),
 ]
+AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 
 def _map_saved_job(snapshot: SavedJobSnapshot) -> SavedJobResponse:
@@ -67,6 +69,7 @@ def save_job(
     request: SaveJobRequest,
     principal: PrincipalDependency,
     saved_jobs: SavedJobServiceDependency,
+    analytics: AnalyticsDependency,
 ) -> SavedJobResponse:
     snapshot = saved_jobs.save(
         user_id=principal.user_id,
@@ -75,6 +78,11 @@ def save_job(
     )
     if snapshot is None:
         raise APIError(404, "job_not_found", "The requested job was not found.")
+    analytics.track(
+        ProductEventName.JOB_SAVED,
+        user_id=principal.user_id,
+        properties={"has_notes": bool(request.notes and request.notes.strip())},
+    )
     return _map_saved_job(snapshot)
 
 

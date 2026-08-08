@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from api.v1.routes.applications import router as applications_router
 from api.v1.routes.health import router as health_router
 from api.v1.routes.auth import router as auth_router
+from api.v1.routes.billing import router as billing_router
 from api.v1.routes.jobs import router as jobs_router
 from api.v1.routes.recommendations import router as recommendations_router
 from api.v1.routes.reminders import router as reminders_router
@@ -19,6 +20,7 @@ api_router.include_router(
 )
 api_router.include_router(reminders_router, prefix="/reminders", tags=["reminders"])
 api_router.include_router(auth_router, prefix="/auth", tags=["authentication"])
+api_router.include_router(billing_router, prefix="/billing", tags=["billing"])
 api_router.include_router(health_router, prefix="/health", tags=["health"])
 api_router.include_router(jobs_router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(

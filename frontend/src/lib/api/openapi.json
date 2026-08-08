@@ -427,6 +427,59 @@
         "title": "BackgroundTaskStatus",
         "type": "string"
       },
+      "BillingSummaryResponse": {
+        "properties": {
+          "cancel_at_period_end": {
+            "title": "Cancel At Period End",
+            "type": "boolean"
+          },
+          "checkout_available": {
+            "default": false,
+            "title": "Checkout Available",
+            "type": "boolean"
+          },
+          "current_period_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Period End"
+          },
+          "entitlements": {
+            "$ref": "#/components/schemas/EntitlementsResponse"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/SubscriptionPlan"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SubscriptionStatus"
+          }
+        },
+        "required": [
+          "plan",
+          "status",
+          "cancel_at_period_end",
+          "entitlements"
+        ],
+        "title": "BillingSummaryResponse",
+        "type": "object"
+      },
       "Body_parse_resume_api_v1_resumes_parse_post": {
         "properties": {
           "file": {
@@ -527,6 +580,39 @@
         ],
         "title": "EmploymentType",
         "type": "string"
+      },
+      "EntitlementsResponse": {
+        "properties": {
+          "application_tracking": {
+            "title": "Application Tracking",
+            "type": "boolean"
+          },
+          "explainable_recommendations": {
+            "title": "Explainable Recommendations",
+            "type": "boolean"
+          },
+          "job_discovery": {
+            "title": "Job Discovery",
+            "type": "boolean"
+          },
+          "reminders": {
+            "title": "Reminders",
+            "type": "boolean"
+          },
+          "tailored_documents": {
+            "title": "Tailored Documents",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "job_discovery",
+          "explainable_recommendations",
+          "tailored_documents",
+          "application_tracking",
+          "reminders"
+        ],
+        "title": "EntitlementsResponse",
+        "type": "object"
       },
       "ErrorResponse": {
         "properties": {
@@ -1485,6 +1571,27 @@
         "title": "SkillResponse",
         "type": "object"
       },
+      "SubscriptionPlan": {
+        "description": "Commercial plans understood by the product domain.",
+        "enum": [
+          "free",
+          "pro"
+        ],
+        "title": "SubscriptionPlan",
+        "type": "string"
+      },
+      "SubscriptionStatus": {
+        "description": "Provider-neutral subscription lifecycle states.",
+        "enum": [
+          "active",
+          "trialing",
+          "past_due",
+          "cancelled",
+          "incomplete"
+        ],
+        "title": "SubscriptionStatus",
+        "type": "string"
+      },
       "TransitionApplicationRequest": {
         "properties": {
           "next_action": {
@@ -2080,6 +2187,42 @@
         "summary": "Get the verified current account",
         "tags": [
           "authentication"
+        ]
+      }
+    },
+    "/api/v1/billing/summary": {
+      "get": {
+        "operationId": "get_billing_summary_api_v1_billing_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get the current account's plan and effective entitlements",
+        "tags": [
+          "billing"
         ]
       }
     },

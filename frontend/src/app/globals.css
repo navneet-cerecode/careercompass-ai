@@ -63,6 +63,18 @@ button:focus-visible {
   transform: translateY(0);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .site-shell {
   width: min(1440px, 100%);
   min-height: 100vh;
@@ -161,6 +173,387 @@ button:focus-visible {
   transform: translateY(-1px);
 }
 
+/* Pricing and billing */
+.pricing-shell,
+.billing-shell {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(185, 234, 213, 0.28), transparent 24rem),
+    var(--paper);
+}
+
+.pricing-main,
+.billing-main {
+  padding: clamp(4rem, 7vw, 7rem) clamp(1.5rem, 7vw, 6.5rem);
+}
+
+.pricing-main {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.pricing-hero,
+.billing-heading {
+  max-width: 850px;
+}
+
+.pricing-hero h1,
+.billing-heading h1 {
+  max-width: 820px;
+  margin: 0.75rem 0 1rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3.2rem, 7vw, 6.8rem);
+  font-weight: 500;
+  letter-spacing: -0.07em;
+  line-height: 0.91;
+}
+
+.billing-heading h1 {
+  font-size: clamp(3rem, 6vw, 5.7rem);
+}
+
+.pricing-hero > p,
+.billing-heading > p {
+  max-width: 650px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.65;
+}
+
+.plan-comparison {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(310px, 0.8fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.plan-card {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.85fr) minmax(280px, 1.15fr);
+  min-height: 390px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgba(250, 248, 242, 0.92);
+  box-shadow: 0 28px 70px rgba(14, 40, 35, 0.07);
+}
+
+.plan-card-planned {
+  grid-template-columns: 1fr;
+  background: rgba(185, 234, 213, 0.25);
+  box-shadow: none;
+}
+
+.plan-card-intro,
+.plan-capability-list {
+  padding: clamp(1.75rem, 3vw, 3rem);
+}
+
+.plan-card-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.plan-card-current .plan-card-intro {
+  background: var(--night);
+  color: var(--white);
+}
+
+.plan-state {
+  width: fit-content;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.plan-card h2,
+.billing-plan-summary h2,
+.billing-capabilities-heading h2,
+.billing-state-card h2 {
+  margin: 1.1rem 0 0.55rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.6rem, 4vw, 4.4rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+}
+
+.plan-card-intro p {
+  margin: 0 0 2rem;
+  color: inherit;
+  line-height: 1.65;
+  opacity: 0.78;
+}
+
+.plan-card-intro .button {
+  margin-top: auto;
+}
+
+.plan-card-current .button {
+  background: var(--acid);
+  color: var(--night);
+}
+
+.button-muted,
+.button-muted:disabled {
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: rgba(16, 35, 31, 0.08);
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
+.plan-capability-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.plan-capability-list > strong {
+  margin-bottom: 1.25rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.plan-capability-list ul,
+.billing-capabilities ul {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-capability-list li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.7rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+  line-height: 1.45;
+}
+
+.plan-list-mark {
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.35rem;
+  border: 2px solid #397a53;
+  border-radius: 50%;
+  background: #397a53;
+}
+
+.plan-list-mark.is-hollow {
+  background: transparent;
+}
+
+.pricing-principle {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(300px, 1.3fr);
+  gap: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.pricing-principle strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 2.5vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.pricing-principle p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+
+.billing-main {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(520px, 1.28fr);
+  gap: clamp(2.5rem, 6vw, 6rem);
+  align-items: start;
+}
+
+.billing-heading {
+  position: sticky;
+  top: 2rem;
+}
+
+.billing-ledger,
+.billing-state-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgba(250, 248, 242, 0.94);
+  box-shadow: 0 28px 70px rgba(14, 40, 35, 0.07);
+}
+
+.billing-plan-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  background: var(--night);
+  color: var(--white);
+}
+
+.billing-plan-summary h2 {
+  font-size: clamp(3.2rem, 6vw, 5.5rem);
+}
+
+.billing-plan-summary p {
+  max-width: 440px;
+  margin: 0;
+  color: rgba(255, 253, 248, 0.68);
+  line-height: 1.6;
+}
+
+.plan-seal {
+  display: grid;
+  width: 5.2rem;
+  height: 5.2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 6px solid rgba(205, 248, 111, 0.35);
+  border-radius: 50%;
+  background: var(--acid);
+  color: var(--night);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.billing-capabilities {
+  padding: clamp(2rem, 4vw, 3.5rem);
+}
+
+.billing-capabilities-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.billing-capabilities-heading h2,
+.billing-state-card h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+}
+
+.billing-capabilities-heading span {
+  max-width: 190px;
+  color: var(--ink-soft);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  line-height: 1.45;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.billing-capabilities li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.capability-mark {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mint);
+  color: var(--night);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.billing-capabilities .is-planned {
+  color: var(--ink-soft);
+}
+
+.billing-capabilities .is-planned .capability-mark {
+  background: rgba(16, 35, 31, 0.08);
+}
+
+.billing-capabilities strong {
+  font-size: 0.93rem;
+}
+
+.billing-capabilities p,
+.billing-next-note p,
+.billing-state-card p {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.billing-next-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem clamp(2rem, 4vw, 3.5rem);
+  border-top: 1px solid var(--line);
+  background: rgba(185, 234, 213, 0.25);
+}
+
+.billing-next-note .text-link {
+  flex: 0 0 auto;
+  font-weight: 750;
+}
+
+.billing-state-card {
+  display: grid;
+  gap: 1rem;
+  min-height: 430px;
+  align-content: center;
+  padding: clamp(2rem, 5vw, 4rem);
+}
+
+.billing-error {
+  grid-template-columns: auto 1fr;
+  min-height: 320px;
+}
+
+.billing-error .button {
+  margin-top: 1.5rem;
+}
+
+.billing-skeleton {
+  display: block;
+  width: 100%;
+  height: 1rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(16, 35, 31, 0.06), rgba(16, 35, 31, 0.13), rgba(16, 35, 31, 0.06));
+  background-size: 220% 100%;
+  animation: billing-shimmer 1.4s ease-in-out infinite;
+}
+
+.billing-skeleton-short { width: 25%; }
+.billing-skeleton-title { width: 55%; height: 4rem; }
+
+@keyframes billing-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .billing-skeleton { animation: none; }
+}
+
 .connection-status {
   display: flex;
   align-items: center;
@@ -199,6 +592,303 @@ button:focus-visible {
 .header-tools {
   justify-self: end;
   gap: clamp(0.75rem, 1.4vw, 1.35rem);
+}
+
+.reminder-center {
+  position: relative;
+  z-index: 30;
+}
+
+.reminder-trigger {
+  position: relative;
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 253, 248, 0.58);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.reminder-trigger:hover,
+.reminder-trigger[aria-expanded="true"] {
+  border-color: rgba(16, 35, 31, 0.3);
+  background: var(--white);
+  transform: translateY(-1px);
+}
+
+.reminder-bell {
+  position: relative;
+  display: block;
+  width: 0.8rem;
+  height: 0.86rem;
+  border: 1.5px solid currentColor;
+  border-top-left-radius: 0.55rem;
+  border-top-right-radius: 0.55rem;
+  border-bottom: 0;
+}
+
+.reminder-bell::before {
+  position: absolute;
+  right: -0.19rem;
+  bottom: -0.12rem;
+  left: -0.19rem;
+  height: 1.5px;
+  border-radius: 1rem;
+  background: currentColor;
+  content: "";
+}
+
+.reminder-bell::after {
+  position: absolute;
+  bottom: -0.34rem;
+  left: 50%;
+  width: 0.22rem;
+  height: 0.22rem;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.reminder-count {
+  position: absolute;
+  top: -0.28rem;
+  right: -0.28rem;
+  display: grid;
+  min-width: 1.12rem;
+  height: 1.12rem;
+  place-items: center;
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+  background: var(--coral);
+  color: var(--night);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  font-weight: 800;
+}
+
+.reminder-panel {
+  position: absolute;
+  top: calc(100% + 0.9rem);
+  right: 0;
+  width: min(27rem, calc(100vw - 2rem));
+  overflow: hidden;
+  border: 1px solid rgba(16, 35, 31, 0.16);
+  border-radius: 1.15rem;
+  background: var(--paper-soft);
+  box-shadow: 0 28px 80px rgba(16, 35, 31, 0.22);
+}
+
+.reminder-panel-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(205, 248, 111, 0.36), transparent 9rem),
+    var(--paper);
+  padding: 1.2rem;
+}
+
+.reminder-panel-heading span {
+  color: var(--ink-soft);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reminder-panel-heading h2 {
+  margin: 0.35rem 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.reminder-panel-heading a {
+  border-bottom: 1px solid currentColor;
+  font-size: 0.56rem;
+  font-weight: 720;
+  padding-bottom: 0.12rem;
+}
+
+.reminder-list {
+  display: grid;
+  max-height: min(32rem, calc(100vh - 12rem));
+  overflow-y: auto;
+}
+
+.reminder-item {
+  display: grid;
+  gap: 0.42rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.2rem;
+}
+
+.reminder-item[data-status="unread"] {
+  background:
+    linear-gradient(90deg, rgba(205, 248, 111, 0.13), transparent 65%),
+    var(--white);
+}
+
+.reminder-item-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reminder-item-topline span {
+  color: var(--ink-soft);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.02em;
+}
+
+.reminder-item-topline span[data-tone="overdue"] {
+  color: #a43f30;
+}
+
+.reminder-item-topline span[data-tone="today"] {
+  color: #46731d;
+}
+
+.reminder-item-topline i {
+  border-radius: 999px;
+  background: var(--acid);
+  color: var(--night);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.44rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.38rem;
+  text-transform: uppercase;
+}
+
+.reminder-item > strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.reminder-item > p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.56rem;
+}
+
+.reminder-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.reminder-item-actions a,
+.reminder-item-actions button,
+.reminder-panel-state button {
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.52rem;
+  padding: 0 0 0.1rem;
+}
+
+.reminder-item-actions a {
+  color: var(--ink);
+  font-weight: 760;
+}
+
+.reminder-item-actions button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.reminder-panel-state,
+.reminder-panel-empty {
+  display: grid;
+  min-height: 13rem;
+  place-content: center;
+  justify-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.reminder-panel-state > span {
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: reminder-pulse 1.2s ease-in-out infinite;
+  border-radius: 50%;
+  background: var(--acid);
+}
+
+.reminder-panel-state strong,
+.reminder-panel-empty strong {
+  margin-top: 0.8rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.reminder-panel-state p,
+.reminder-panel-empty p {
+  max-width: 19rem;
+  margin: 0.55rem 0;
+  color: var(--ink-soft);
+  font-size: 0.6rem;
+  line-height: 1.55;
+}
+
+.reminder-panel-empty > span {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--night);
+  color: var(--acid);
+}
+
+.reminder-inline-error {
+  margin: 0;
+  background: rgba(255, 128, 104, 0.12);
+  color: #8f3629;
+  font-size: 0.54rem;
+  padding: 0.7rem 1.2rem;
+}
+
+.reminder-provenance {
+  margin: 0;
+  background: var(--night);
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.46rem;
+  letter-spacing: 0.025em;
+  padding: 0.75rem 1.2rem;
+}
+
+@keyframes reminder-pulse {
+  50% {
+    transform: scale(0.78);
+    opacity: 0.45;
+  }
 }
 
 .auth-actions {
@@ -3048,11 +3738,17 @@ button:focus-visible {
 }
 
 .tracker-card {
+  scroll-margin-top: 6rem;
   overflow: hidden;
   border-radius: 1rem;
   background: var(--paper-soft);
   color: var(--ink);
   padding: 1.1rem;
+}
+
+.tracker-card:target {
+  outline: 3px solid var(--acid);
+  outline-offset: 4px;
 }
 
 .tracker-card-topline {
@@ -3378,6 +4074,10 @@ button:focus-visible {
     display: none;
   }
 
+  .account-copy {
+    display: none;
+  }
+
   .main-nav {
     display: flex;
     justify-self: center;
@@ -3388,6 +4088,14 @@ button:focus-visible {
   .main-nav a[href="/#approach"],
   .main-nav a[href="/#trust"] {
     display: none;
+  }
+
+  .plan-comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-card-planned {
+    grid-template-columns: minmax(230px, 0.85fr) minmax(280px, 1.15fr);
   }
 }
 
@@ -3458,6 +4166,14 @@ button:focus-visible {
   .recommendation-results {
     width: 100%;
   }
+
+  .billing-main {
+    grid-template-columns: 1fr;
+  }
+
+  .billing-heading {
+    position: static;
+  }
 }
 
 @media (max-width: 620px) {
@@ -3473,6 +4189,23 @@ button:focus-visible {
 
   .header-tools {
     gap: 0;
+  }
+
+  .reminder-center {
+    margin-right: 0.5rem;
+  }
+
+  .reminder-panel {
+    position: fixed;
+    top: 4.6rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    max-height: calc(100vh - 5.35rem);
+  }
+
+  .reminder-list {
+    max-height: calc(100vh - 19rem);
   }
 
   .auth-actions,
@@ -3758,6 +4491,51 @@ button:focus-visible {
     align-items: stretch;
     flex-direction: column;
   }
+
+  .pricing-main,
+  .billing-main {
+    padding: 3.5rem 1.1rem;
+  }
+
+  .pricing-hero h1,
+  .billing-heading h1 {
+    font-size: clamp(3rem, 15vw, 4.5rem);
+  }
+
+  .plan-card,
+  .plan-card-planned {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-card {
+    min-height: 0;
+  }
+
+  .pricing-principle {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .billing-plan-summary,
+  .billing-capabilities-heading,
+  .billing-next-note {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .billing-capabilities-heading span {
+    max-width: none;
+    text-align: left;
+  }
+
+  .billing-error {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-seal {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3773,6 +4551,10 @@ button:focus-visible {
   }
 
   .matching-symbol > span {
+    animation: none;
+  }
+
+  .reminder-panel-state > span {
     animation: none;
   }
 }
