@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 
+import { ApplicationPacketWorkspace } from "@/components/application-packet-workspace";
 import { ProviderAttribution } from "@/components/provider-attribution";
 import type {
   ApplicationDetailResponse,
@@ -149,6 +150,30 @@ export function ApplicationTrackerWorkspace() {
     })();
     return () => controller.abort();
   }, []);
+
+  const refreshApplication = async (applicationId: string) => {
+    const response = await fetch(`/api/applications/${applicationId}`, {
+      cache: "no-store",
+    });
+    const payload: unknown = await response.json();
+    if (!response.ok || !isApplicationDetail(payload)) {
+      throw new Error(
+        getApiErrorMessage(payload) ??
+          "Solara Hire could not refresh this application.",
+      );
+    }
+    setDetails((current) => ({ ...current, [applicationId]: payload }));
+    setState((current) =>
+      current.status === "ready"
+        ? {
+            status: "ready",
+            items: current.items.map((application) =>
+              application.id === applicationId ? payload : application,
+            ),
+          }
+        : current,
+    );
+  };
 
   const loadDetail = async (applicationId: string) => {
     if (expandedId === applicationId) {
@@ -582,6 +607,17 @@ export function ApplicationTrackerWorkspace() {
                                           : "Save plan"}
                                       </button>
                                     </form>
+
+                                    {[
+                                      "Preparing",
+                                      "Ready to apply",
+                                      "Applied",
+                                    ].includes(item.status) && (
+                                      <ApplicationPacketWorkspace
+                                        application={item}
+                                        onApplicationChanged={refreshApplication}
+                                      />
+                                    )}
 
                                     {item.allowed_next_statuses.length > 0 ? (
                                       <form

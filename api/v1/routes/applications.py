@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from api.dependencies import (
+    get_application_packet_service,
     get_application_tracking_service,
     get_product_analytics,
     get_required_principal,
@@ -13,15 +14,33 @@ from api.dependencies import (
 from api.errors import APIError, ErrorResponse
 from api.mappers import map_job
 from api.schemas.applications import (
+    ApplicationDocumentOptionResponse,
     ApplicationDetailResponse,
     ApplicationEventResponse,
     ApplicationListResponse,
     ApplicationResponse,
+    ApplicationPacketResponse,
+    ConfirmExternalSubmissionRequest,
     CreateApplicationRequest,
     TransitionApplicationRequest,
+    UpdateApplicationPacketRequest,
     UpdateApplicationPlanRequest,
 )
-from api.services.applications import ApplicationSnapshot, ApplicationTrackingService
+from api.services.application_packets import (
+    ApplicationPacketIncomplete,
+    ApplicationPacketInvalidDocument,
+    ApplicationPacketInvalidStatus,
+    ApplicationPacketNotFound,
+    ApplicationPacketService,
+    ApplicationPacketSnapshot,
+)
+from api.services.applications import (
+    ApplicationPacketRequired,
+    ApplicationSnapshot,
+    ApplicationTrackingService,
+)
+from core.observability import ProductAnalytics, ProductEventName
+from database.repositories.application_packets import ApplicationPacketLocked
 from database.repositories.applications import (
     ApplicationAlreadyTracked,
     InvalidApplicationTransition,
@@ -31,7 +50,6 @@ from database.repositories.applications import ALLOWED_TRANSITIONS
 from models.application import ApplicationEvent
 from models.enums import ApplicationStatus
 from models.identity import AuthenticatedPrincipal
-from core.observability import ProductAnalytics, ProductEventName
 
 router = APIRouter()
 PrincipalDependency = Annotated[
@@ -42,13 +60,20 @@ ApplicationServiceDependency = Annotated[
     ApplicationTrackingService,
     Depends(get_application_tracking_service),
 ]
+ApplicationPacketServiceDependency = Annotated[
+    ApplicationPacketService,
+    Depends(get_application_packet_service),
+]
 AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 
 def _allowed_next_statuses(
     current_status: ApplicationStatus,
 ) -> tuple[ApplicationStatus, ...]:
-    allowed = ALLOWED_TRANSITIONS[current_status]
+    allowed = ALLOWED_TRANSITIONS[current_status] - {
+        ApplicationStatus.READY_TO_APPLY,
+        ApplicationStatus.APPLIED,
+    }
     return tuple(status for status in ApplicationStatus if status in allowed)
 
 
@@ -69,6 +94,7 @@ def _map_application(snapshot: ApplicationSnapshot) -> ApplicationResponse:
         job=map_job(snapshot.job),
         status=application.status,
         allowed_next_statuses=_allowed_next_statuses(application.status),
+        packet_ready=snapshot.packet_ready,
         resume_id=application.resume_id,
         applied_at=application.applied_at,
         notes=application.notes,
@@ -77,6 +103,78 @@ def _map_application(snapshot: ApplicationSnapshot) -> ApplicationResponse:
         created_at=application.created_at,
         updated_at=application.updated_at,
     )
+
+
+def _map_packet(snapshot: ApplicationPacketSnapshot) -> ApplicationPacketResponse:
+    packet = snapshot.packet
+    return ApplicationPacketResponse(
+        id=packet.id,
+        application_id=packet.application_id,
+        source_resume_id=packet.source_resume_id,
+        tailored_resume_id=packet.tailored_resume_id,
+        cover_letter_id=packet.cover_letter_id,
+        job_details_reviewed=packet.job_details_reviewed,
+        resume_reviewed=packet.resume_reviewed,
+        cover_letter_reviewed=packet.cover_letter_reviewed,
+        employer_questions_reviewed=packet.employer_questions_reviewed,
+        ready_at=packet.ready_at,
+        application_status=snapshot.application.status,
+        blockers=snapshot.blockers,
+        can_mark_ready=(
+            packet.ready_at is None
+            and not snapshot.blockers
+            and snapshot.application.status == ApplicationStatus.PREPARING
+        ),
+        can_confirm_submitted=(
+            packet.ready_at is not None
+            and snapshot.application.status == ApplicationStatus.READY_TO_APPLY
+        ),
+        available_tailored_resumes=tuple(
+            ApplicationDocumentOptionResponse(**option.__dict__)
+            for option in snapshot.tailored_resumes
+        ),
+        available_cover_letters=tuple(
+            ApplicationDocumentOptionResponse(**option.__dict__)
+            for option in snapshot.cover_letters
+        ),
+        created_at=packet.created_at,
+        updated_at=packet.updated_at,
+    )
+
+
+def _raise_packet_error(error: Exception) -> None:
+    if isinstance(error, ApplicationPacketNotFound):
+        raise APIError(
+            404,
+            "application_packet_not_found",
+            "The application packet was not found.",
+        ) from error
+    if isinstance(error, ApplicationPacketInvalidDocument):
+        raise APIError(
+            409,
+            "invalid_application_document",
+            "Select a verified document created for this job and resume.",
+        ) from error
+    if isinstance(error, ApplicationPacketIncomplete):
+        raise APIError(
+            409,
+            "application_packet_incomplete",
+            "Complete every required review before continuing: "
+            + ", ".join(error.blockers),
+        ) from error
+    if isinstance(error, ApplicationPacketLocked):
+        raise APIError(
+            409,
+            "application_packet_locked",
+            "This reviewed packet is locked. Start a new revision to make changes.",
+        ) from error
+    if isinstance(error, ApplicationPacketInvalidStatus):
+        raise APIError(
+            409,
+            "invalid_application_packet_status",
+            "This action is not available at the application's current status.",
+        ) from error
+    raise error
 
 
 def _map_application_detail(
@@ -155,6 +253,161 @@ def create_application(
         },
     )
     return _map_application_detail(snapshot)
+
+
+@router.post(
+    "/{application_id}/packet",
+    response_model=ApplicationPacketResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Create or load a review-first application packet",
+)
+def create_application_packet(
+    application_id: UUID,
+    principal: PrincipalDependency,
+    packets: ApplicationPacketServiceDependency,
+) -> ApplicationPacketResponse:
+    try:
+        return _map_packet(
+            packets.create(
+                user_id=principal.user_id,
+                application_id=application_id,
+            )
+        )
+    except ApplicationPacketNotFound as error:
+        _raise_packet_error(error)
+        raise AssertionError("unreachable") from error
+
+
+@router.get(
+    "/{application_id}/packet",
+    response_model=ApplicationPacketResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Get an application packet",
+)
+def get_application_packet(
+    application_id: UUID,
+    principal: PrincipalDependency,
+    packets: ApplicationPacketServiceDependency,
+) -> ApplicationPacketResponse:
+    try:
+        return _map_packet(
+            packets.get(
+                user_id=principal.user_id,
+                application_id=application_id,
+            )
+        )
+    except ApplicationPacketNotFound as error:
+        _raise_packet_error(error)
+        raise AssertionError("unreachable") from error
+
+
+@router.patch(
+    "/{application_id}/packet",
+    response_model=ApplicationPacketResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+    },
+    summary="Save reviewed application packet choices",
+)
+def update_application_packet(
+    application_id: UUID,
+    request: UpdateApplicationPacketRequest,
+    principal: PrincipalDependency,
+    packets: ApplicationPacketServiceDependency,
+) -> ApplicationPacketResponse:
+    try:
+        return _map_packet(
+            packets.update(
+                user_id=principal.user_id,
+                application_id=application_id,
+                tailored_resume_id=request.tailored_resume_id,
+                cover_letter_id=request.cover_letter_id,
+                job_details_reviewed=request.job_details_reviewed,
+                resume_reviewed=request.resume_reviewed,
+                cover_letter_reviewed=request.cover_letter_reviewed,
+                employer_questions_reviewed=request.employer_questions_reviewed,
+            )
+        )
+    except (
+        ApplicationPacketInvalidDocument,
+        ApplicationPacketLocked,
+        ApplicationPacketNotFound,
+    ) as error:
+        _raise_packet_error(error)
+        raise AssertionError("unreachable") from error
+
+
+@router.post(
+    "/{application_id}/packet/ready",
+    response_model=ApplicationPacketResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+    },
+    summary="Lock a reviewed packet and mark the application ready",
+)
+def mark_application_packet_ready(
+    application_id: UUID,
+    principal: PrincipalDependency,
+    packets: ApplicationPacketServiceDependency,
+) -> ApplicationPacketResponse:
+    try:
+        return _map_packet(
+            packets.mark_ready(
+                user_id=principal.user_id,
+                application_id=application_id,
+            )
+        )
+    except (
+        ApplicationPacketIncomplete,
+        ApplicationPacketInvalidStatus,
+        ApplicationPacketNotFound,
+    ) as error:
+        _raise_packet_error(error)
+        raise AssertionError("unreachable") from error
+
+
+@router.post(
+    "/{application_id}/packet/submitted",
+    response_model=ApplicationPacketResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+    },
+    summary="Record the user's confirmation of an external submission",
+)
+def confirm_external_submission(
+    application_id: UUID,
+    request: ConfirmExternalSubmissionRequest,
+    principal: PrincipalDependency,
+    packets: ApplicationPacketServiceDependency,
+) -> ApplicationPacketResponse:
+    del request
+    try:
+        return _map_packet(
+            packets.confirm_submitted(
+                user_id=principal.user_id,
+                application_id=application_id,
+            )
+        )
+    except (
+        ApplicationPacketIncomplete,
+        ApplicationPacketInvalidStatus,
+        ApplicationPacketNotFound,
+    ) as error:
+        _raise_packet_error(error)
+        raise AssertionError("unreachable") from error
 
 
 @router.get(
@@ -241,6 +494,12 @@ def transition_application(
             next_action=request.next_action,
             next_action_due_at=request.next_action_due_at,
         )
+    except ApplicationPacketRequired as error:
+        raise APIError(
+            409,
+            "application_packet_required",
+            str(error),
+        ) from error
     except InvalidApplicationTransition as error:
         raise APIError(
             409,

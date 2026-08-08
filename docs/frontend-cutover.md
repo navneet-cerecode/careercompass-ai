@@ -19,6 +19,7 @@ when an Auth0 session is present:
 11. export an approved tailored resume as PDF or DOCX;
 12. draft a cover letter from verified resume and job evidence;
 13. edit, version, fact-check, and export the approved cover letter;
+14. assemble a reviewed application packet and confirm any external submission yourself;
 14. open the verified job page for user review.
 
 FastAPI remains the source of truth for transport contracts and Python application services
@@ -55,6 +56,7 @@ window and every required fallback-only capability has a replacement.
 | Application tracking | Complete for verified accounts | Not production-ready | Next.js canonical |
 | Reviewed, versioned tailored resumes | Complete for entitled verified accounts | Not available | Next.js canonical |
 | Reviewed, versioned cover letters | Complete for entitled verified accounts | Not available | Next.js canonical |
+| Review-first application packets | Complete for verified accounts | Not available | Next.js canonical |
 
 The Streamlit-only Groq narrative is not part of the anonymous cutover gate. Moving long-running
 AI generation into the web product should use the Phase 5 worker boundary rather than blocking a

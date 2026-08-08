@@ -32,6 +32,12 @@ export type TransitionApplicationRequest =
   components["schemas"]["TransitionApplicationRequest"];
 export type UpdateApplicationPlanRequest =
   components["schemas"]["UpdateApplicationPlanRequest"];
+export type ApplicationPacketResponse =
+  components["schemas"]["ApplicationPacketResponse"];
+export type UpdateApplicationPacketRequest =
+  components["schemas"]["UpdateApplicationPacketRequest"];
+export type ConfirmExternalSubmissionRequest =
+  components["schemas"]["ConfirmExternalSubmissionRequest"];
 export type ApplicationReminderStatus =
   components["schemas"]["ApplicationReminderStatus"];
 export type ApplicationReminderResponse =

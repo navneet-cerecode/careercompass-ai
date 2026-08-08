@@ -2,6 +2,7 @@
 
 from database.models.applications import (
     ApplicationEventRecord,
+    ApplicationPacketRecord,
     ApplicationReminderRecord,
     ApplicationRecord,
     SavedJobRecord,
@@ -25,6 +26,7 @@ from database.models.users import UserRecord
 
 __all__ = [
     "ApplicationEventRecord",
+    "ApplicationPacketRecord",
     "ApplicationReminderRecord",
     "ApplicationRecord",
     "BackgroundTaskRecord",

@@ -4658,6 +4658,244 @@ button:focus-visible {
   opacity: 0.5;
 }
 
+.application-packet {
+  margin: 1.2rem 0;
+  border: 1px solid rgba(16, 35, 31, 0.16);
+  border-radius: 0.9rem;
+  background: var(--white);
+  box-shadow: 0 18px 45px rgba(16, 35, 31, 0.07);
+  padding: 1rem;
+}
+
+.application-packet-intro,
+.application-packet-heading,
+.application-packet-actions,
+.application-packet-submit > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.application-packet h4 {
+  margin: 0.35rem 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.application-packet-intro p,
+.application-packet-message,
+.application-packet-complete,
+.application-packet-error p,
+.application-packet-loading {
+  color: var(--ink-soft);
+  font-size: 0.56rem;
+  line-height: 1.55;
+}
+
+.application-packet-intro p {
+  max-width: 38rem;
+  margin: 0.5rem 0 0;
+}
+
+.application-packet button,
+.application-packet-submit a {
+  min-height: 2.75rem;
+  border: 1px solid rgba(16, 35, 31, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.58rem;
+  font-weight: 750;
+  padding: 0.75rem 1rem;
+}
+
+.application-packet button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.application-packet-state {
+  border-radius: 999px;
+  background: rgba(205, 248, 111, 0.32);
+  color: #365218;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.05em;
+  padding: 0.45rem 0.6rem;
+  text-transform: uppercase;
+}
+
+.application-packet-documents {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.application-packet-documents label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink-soft);
+  font-size: 0.52rem;
+}
+
+.application-packet-documents select {
+  min-height: 2.75rem;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: var(--paper-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.6rem;
+  padding: 0.65rem;
+}
+
+.application-packet-downloads {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+  border-left: 2px solid var(--acid-deep);
+  background: rgba(205, 248, 111, 0.1);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.52rem;
+}
+
+.application-packet-downloads span {
+  margin-right: auto;
+  color: var(--ink-soft);
+}
+
+.application-packet-downloads a {
+  border-bottom: 1px solid currentColor;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.application-packet-checklist {
+  display: grid;
+  margin-top: 1rem;
+  border-block: 1px solid var(--line);
+}
+
+.application-packet-checklist label {
+  display: grid;
+  grid-template-columns: 1.7rem 1.1rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.55rem;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  padding: 0.7rem 0;
+}
+
+.application-packet-checklist label:last-child {
+  border-bottom: 0;
+}
+
+.application-packet-checklist label[data-disabled] {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.application-packet-checklist label > span:first-child {
+  color: var(--coral);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  padding-top: 0.12rem;
+}
+
+.application-packet-checklist input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--night);
+}
+
+.application-packet-checklist label > span:last-child {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.application-packet-checklist strong {
+  font-size: 0.58rem;
+}
+
+.application-packet-checklist small {
+  color: var(--ink-soft);
+  font-size: 0.5rem;
+  line-height: 1.45;
+}
+
+.application-packet-actions {
+  margin-top: 1rem;
+}
+
+.application-packet .application-packet-primary,
+.application-packet-submit button {
+  border-color: var(--night);
+  background: var(--night);
+  color: var(--white);
+}
+
+.application-packet-submit {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+  background: var(--night);
+  color: var(--white);
+  padding: 0.9rem;
+}
+
+.application-packet-submit a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-color: rgba(205, 248, 111, 0.4);
+  background: var(--acid);
+  color: var(--night);
+}
+
+.application-packet-submit small {
+  max-width: 16rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.48rem;
+  line-height: 1.45;
+}
+
+.application-packet-submit label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.56rem;
+}
+
+.application-packet-submit input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--acid);
+}
+
+.application-packet-submit button {
+  width: 100%;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.application-packet-message {
+  min-height: 1rem;
+  margin: 0.7rem 0 0;
+}
+
+.application-packet-error {
+  border-color: rgba(255, 128, 104, 0.35);
+}
+
 .tracker-transition-form {
   display: grid;
   gap: 0.8rem;
@@ -5266,6 +5504,25 @@ button:focus-visible {
   .tracker-card-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .application-packet-intro,
+  .application-packet-heading,
+  .application-packet-actions,
+  .application-packet-submit > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .application-packet-documents {
+    grid-template-columns: 1fr;
+  }
+
+  .application-packet button,
+  .application-packet-submit a {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 
   .pricing-main,

@@ -40,6 +40,59 @@ export interface paths {
         patch: operations["update_application_plan_api_v1_applications__application_id__patch"];
         trace?: never;
     };
+    "/api/v1/applications/{application_id}/packet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an application packet */
+        get: operations["get_application_packet_api_v1_applications__application_id__packet_get"];
+        put?: never;
+        /** Create or load a review-first application packet */
+        post: operations["create_application_packet_api_v1_applications__application_id__packet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Save reviewed application packet choices */
+        patch: operations["update_application_packet_api_v1_applications__application_id__packet_patch"];
+        trace?: never;
+    };
+    "/api/v1/applications/{application_id}/packet/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lock a reviewed packet and mark the application ready */
+        post: operations["mark_application_packet_ready_api_v1_applications__application_id__packet_ready_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/applications/{application_id}/packet/submitted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record the user's confirmation of an external submission */
+        post: operations["confirm_external_submission_api_v1_applications__application_id__packet_submitted_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/applications/{application_id}/status": {
         parameters: {
             query?: never;
@@ -587,6 +640,11 @@ export interface components {
             next_action_due_at?: string | null;
             /** Notes */
             notes?: string | null;
+            /**
+             * Packet Ready
+             * @default false
+             */
+            packet_ready: boolean;
             /** Resume Id */
             resume_id?: string | null;
             status: components["schemas"]["ApplicationStatus"];
@@ -595,6 +653,26 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** ApplicationDocumentOptionResponse */
+        ApplicationDocumentOptionResponse: {
+            /**
+             * Approved At
+             * Format: date-time
+             */
+            approved_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Source Resume Id
+             * Format: uuid
+             */
+            source_resume_id: string;
+            /** Version */
+            version: number;
         };
         /** ApplicationEventResponse */
         ApplicationEventResponse: {
@@ -620,6 +698,65 @@ export interface components {
              * @default []
              */
             items: components["schemas"]["ApplicationResponse"][];
+        };
+        /** ApplicationPacketResponse */
+        ApplicationPacketResponse: {
+            /**
+             * Application Id
+             * Format: uuid
+             */
+            application_id: string;
+            application_status: components["schemas"]["ApplicationStatus"];
+            /**
+             * Available Cover Letters
+             * @default []
+             */
+            available_cover_letters: components["schemas"]["ApplicationDocumentOptionResponse"][];
+            /**
+             * Available Tailored Resumes
+             * @default []
+             */
+            available_tailored_resumes: components["schemas"]["ApplicationDocumentOptionResponse"][];
+            /**
+             * Blockers
+             * @default []
+             */
+            blockers: string[];
+            /** Can Confirm Submitted */
+            can_confirm_submitted: boolean;
+            /** Can Mark Ready */
+            can_mark_ready: boolean;
+            /** Cover Letter Id */
+            cover_letter_id?: string | null;
+            /** Cover Letter Reviewed */
+            cover_letter_reviewed: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Employer Questions Reviewed */
+            employer_questions_reviewed: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Job Details Reviewed */
+            job_details_reviewed: boolean;
+            /** Ready At */
+            ready_at?: string | null;
+            /** Resume Reviewed */
+            resume_reviewed: boolean;
+            /** Source Resume Id */
+            source_resume_id?: string | null;
+            /** Tailored Resume Id */
+            tailored_resume_id?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** ApplicationReminderListResponse */
         ApplicationReminderListResponse: {
@@ -698,6 +835,11 @@ export interface components {
             next_action_due_at?: string | null;
             /** Notes */
             notes?: string | null;
+            /**
+             * Packet Ready
+             * @default false
+             */
+            packet_ready: boolean;
             /** Resume Id */
             resume_id?: string | null;
             status: components["schemas"]["ApplicationStatus"];
@@ -774,6 +916,14 @@ export interface components {
              * @description PDF, DOCX, or UTF-8 text resume
              */
             file: string;
+        };
+        /** ConfirmExternalSubmissionRequest */
+        ConfirmExternalSubmissionRequest: {
+            /**
+             * Confirm External Submission
+             * @constant
+             */
+            confirm_external_submission: true;
         };
         /** CoverLetterContentRequest */
         CoverLetterContentRequest: {
@@ -1571,6 +1721,33 @@ export interface components {
             note?: string | null;
             status: components["schemas"]["ApplicationStatus"];
         };
+        /** UpdateApplicationPacketRequest */
+        UpdateApplicationPacketRequest: {
+            /** Cover Letter Id */
+            cover_letter_id?: string | null;
+            /**
+             * Cover Letter Reviewed
+             * @default false
+             */
+            cover_letter_reviewed: boolean;
+            /**
+             * Employer Questions Reviewed
+             * @default false
+             */
+            employer_questions_reviewed: boolean;
+            /**
+             * Job Details Reviewed
+             * @default false
+             */
+            job_details_reviewed: boolean;
+            /**
+             * Resume Reviewed
+             * @default false
+             */
+            resume_reviewed: boolean;
+            /** Tailored Resume Id */
+            tailored_resume_id?: string | null;
+        };
         /** UpdateApplicationPlanRequest */
         UpdateApplicationPlanRequest: {
             /** Next Action */
@@ -1788,6 +1965,286 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_application_packet_api_v1_applications__application_id__packet_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPacketResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_application_packet_api_v1_applications__application_id__packet_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPacketResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_application_packet_api_v1_applications__application_id__packet_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateApplicationPacketRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPacketResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_application_packet_ready_api_v1_applications__application_id__packet_ready_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPacketResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_external_submission_api_v1_applications__application_id__packet_submitted_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmExternalSubmissionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPacketResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from database.repositories.application_packets import ApplicationPacketRepository
 from database.repositories.applications import ApplicationRepository
 from database.repositories.jobs import JobRepository
 from database.session import Database
@@ -17,6 +18,11 @@ class ApplicationSnapshot:
     application: JobApplication
     job: Job
     events: tuple[ApplicationEvent, ...] = ()
+    packet_ready: bool = False
+
+
+class ApplicationPacketRequired(ValueError):
+    """Raised when a reviewed packet must drive a readiness transition."""
 
 
 class ApplicationTrackingService:
@@ -55,6 +61,7 @@ class ApplicationTrackingService:
                     user_id=user_id,
                     application_id=application.id,
                 ),
+                packet_ready=False,
             )
 
     def list(self, *, user_id: UUID) -> tuple[ApplicationSnapshot, ...]:
@@ -67,8 +74,16 @@ class ApplicationTrackingService:
             )
             if jobs is None:
                 raise RuntimeError("An application references a missing catalog entry.")
+            ready_ids = ApplicationPacketRepository(session).ready_application_ids(
+                user_id=user_id,
+                application_ids=tuple(application.id for application in applications),
+            )
             return tuple(
-                ApplicationSnapshot(application=application, job=job)
+                ApplicationSnapshot(
+                    application=application,
+                    job=job,
+                    packet_ready=application.id in ready_ids,
+                )
                 for application, job in zip(applications, jobs, strict=True)
             )
 
@@ -96,6 +111,11 @@ class ApplicationTrackingService:
                     user_id=user_id,
                     application_id=application_id,
                 ),
+                packet_ready=self._packet_ready(
+                    session,
+                    user_id=user_id,
+                    application_id=application_id,
+                ),
             )
 
     def transition(
@@ -110,6 +130,16 @@ class ApplicationTrackingService:
     ) -> ApplicationSnapshot | None:
         with self.database.session() as session:
             repository = ApplicationRepository(session)
+            current = repository.get(user_id=user_id, application_id=application_id)
+            if current is None:
+                return None
+            if new_status in {
+                ApplicationStatus.READY_TO_APPLY,
+                ApplicationStatus.APPLIED,
+            }:
+                raise ApplicationPacketRequired(
+                    "Use the reviewed application packet to change this status."
+                )
             application = repository.transition(
                 user_id=user_id,
                 application_id=application_id,
@@ -127,6 +157,11 @@ class ApplicationTrackingService:
                 application=application,
                 job=job,
                 events=repository.events(
+                    user_id=user_id,
+                    application_id=application_id,
+                ),
+                packet_ready=self._packet_ready(
+                    session,
                     user_id=user_id,
                     application_id=application_id,
                 ),
@@ -162,4 +197,22 @@ class ApplicationTrackingService:
                     user_id=user_id,
                     application_id=application_id,
                 ),
+                packet_ready=self._packet_ready(
+                    session,
+                    user_id=user_id,
+                    application_id=application_id,
+                ),
             )
+
+    @staticmethod
+    def _packet_ready(
+        session,
+        *,
+        user_id: UUID,
+        application_id: UUID,
+    ) -> bool:
+        packet = ApplicationPacketRepository(session).get(
+            user_id=user_id,
+            application_id=application_id,
+        )
+        return packet is not None and packet.ready_at is not None

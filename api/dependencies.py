@@ -10,6 +10,7 @@ from api.services.job_catalog import JobCatalog
 from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from api.services.task_capability import TaskCapability
 from api.services.applications import ApplicationTrackingService
+from api.services.application_packets import ApplicationPacketService
 from api.services.billing import BillingService
 from api.services.reminders import ApplicationReminderService
 from api.services.saved_jobs import SavedJobService
@@ -89,6 +90,12 @@ def get_application_tracking_service(
     database: Annotated[Database, Depends(get_database)],
 ) -> ApplicationTrackingService:
     return ApplicationTrackingService(database)
+
+
+def get_application_packet_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> ApplicationPacketService:
+    return ApplicationPacketService(database)
 
 
 def get_application_reminder_service(

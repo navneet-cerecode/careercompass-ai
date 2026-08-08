@@ -60,6 +60,23 @@ class TailoredResumeRepository:
         ).all()
         return tuple(self._to_domain(record) for record in records)
 
+    def list_verified_for_job(
+        self,
+        *,
+        user_id: UUID,
+        job_id: UUID,
+    ) -> tuple[TailoredResumeVersion, ...]:
+        records = self.session.scalars(
+            select(TailoredResumeRecord)
+            .where(
+                TailoredResumeRecord.user_id == user_id,
+                TailoredResumeRecord.job_id == job_id,
+                TailoredResumeRecord.verification_status == "user_verified",
+            )
+            .order_by(TailoredResumeRecord.updated_at.desc())
+        ).all()
+        return tuple(self._to_domain(record) for record in records)
+
     def create_version(
         self,
         *,

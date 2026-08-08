@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
@@ -83,6 +83,47 @@ class ApplicationEventRecord(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
+    )
+
+
+class ApplicationPacketRecord(Base):
+    __tablename__ = "application_packets"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+    )
+    application_id: Mapped[UUID] = mapped_column(
+        ForeignKey("applications.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+    )
+    source_resume_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("resumes.id", ondelete="SET NULL"),
+        index=True,
+    )
+    tailored_resume_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("tailored_resumes.id", ondelete="SET NULL"),
+        index=True,
+    )
+    cover_letter_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("cover_letters.id", ondelete="SET NULL"),
+        index=True,
+    )
+    job_details_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    resume_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    cover_letter_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    employer_questions_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    ready_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
     )
 
 

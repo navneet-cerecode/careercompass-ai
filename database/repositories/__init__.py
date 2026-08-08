@@ -6,6 +6,7 @@ from database.repositories.applications import (
     SavedJobRepository,
 )
 from database.repositories.application_reminders import ApplicationReminderRepository
+from database.repositories.application_packets import ApplicationPacketRepository
 from database.repositories.jobs import JobRepository
 from database.repositories.history import (
     RecommendationHistoryRepository,
@@ -27,6 +28,7 @@ from database.repositories.users import User, UserRepository
 __all__ = [
     "ApplicationRepository",
     "ApplicationReminderRepository",
+    "ApplicationPacketRepository",
     "BackgroundTaskRepository",
     "CoverLetterRepository",
     "IdempotencyConflict",

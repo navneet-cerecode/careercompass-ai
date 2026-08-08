@@ -65,6 +65,22 @@ def make_authenticated_client():
     )
 
 
+def review_application_packet(client: TestClient, application_id: str) -> dict:
+    created = client.post(f"/api/v1/applications/{application_id}/packet")
+    assert created.status_code == 201
+    reviewed = client.patch(
+        f"/api/v1/applications/{application_id}/packet",
+        json={
+            "job_details_reviewed": True,
+            "resume_reviewed": True,
+            "cover_letter_reviewed": False,
+            "employer_questions_reviewed": True,
+        },
+    )
+    assert reviewed.status_code == 200
+    return reviewed.json()
+
+
 def test_applications_require_authentication():
     application = create_app(Settings(_env_file=None))
 
@@ -101,7 +117,8 @@ def test_application_create_list_detail_and_transition_are_owner_scoped():
     application_id = payload["id"]
     assert payload["job"]["id"] == str(job.id)
     assert payload["status"] == "Preparing"
-    assert payload["allowed_next_statuses"] == ["Ready to apply", "Withdrawn"]
+    assert payload["allowed_next_statuses"] == ["Withdrawn"]
+    assert payload["packet_ready"] is False
     assert payload["events"][0]["previous_status"] is None
     assert payload["events"][0]["new_status"] == "Preparing"
 
@@ -114,18 +131,29 @@ def test_application_create_list_detail_and_transition_are_owner_scoped():
     assert detail.status_code == 200
     assert len(detail.json()["events"]) == 1
 
-    transitioned = client.patch(
+    blocked = client.patch(
         f"/api/v1/applications/{application_id}/status",
-        json={
-            "status": "Ready to apply",
-            "note": "Evidence reviewed by the user.",
-            "next_action": "Open the verified employer page",
-        },
+        json={"status": "Ready to apply"},
+    )
+    assert blocked.status_code == 409
+    assert blocked.json()["code"] == "application_packet_required"
+
+    packet = review_application_packet(client, application_id)
+    assert packet["source_resume_id"] == str(owner_resume.resume.id)
+    assert packet["blockers"] == []
+    assert packet["can_mark_ready"] is True
+    transitioned = client.post(
+        f"/api/v1/applications/{application_id}/packet/ready",
     )
     assert transitioned.status_code == 200
-    assert transitioned.json()["status"] == "Ready to apply"
-    assert transitioned.json()["allowed_next_statuses"] == ["Applied", "Withdrawn"]
-    assert [event["new_status"] for event in transitioned.json()["events"]] == [
+    assert transitioned.json()["application_status"] == "Ready to apply"
+    assert transitioned.json()["can_confirm_submitted"] is True
+
+    detail = client.get(f"/api/v1/applications/{application_id}").json()
+    assert detail["status"] == "Ready to apply"
+    assert detail["packet_ready"] is True
+    assert detail["allowed_next_statuses"] == ["Withdrawn"]
+    assert [event["new_status"] for event in detail["events"]] == [
         "Preparing",
         "Ready to apply",
     ]
@@ -139,6 +167,10 @@ def test_application_create_list_detail_and_transition_are_owner_scoped():
         json={"status": "Applied"},
     )
     assert hidden_transition.status_code == 404
+    assert (
+        client.get(f"/api/v1/applications/{application_id}/packet").status_code
+        == 404
+    )
 
     application.dependency_overrides[get_required_principal] = lambda: make_principal(owner)
     assert client.get(f"/api/v1/applications/{application_id}").status_code == 200
@@ -211,24 +243,26 @@ def test_transition_to_applied_sets_timestamp_and_preserves_audit_history():
     ).json()
     application_id = created["id"]
 
-    ready = client.patch(
-        f"/api/v1/applications/{application_id}/status",
-        json={"status": "Ready to apply"},
-    )
+    review_application_packet(client, application_id)
+    ready = client.post(f"/api/v1/applications/{application_id}/packet/ready")
     assert ready.status_code == 200
-    applied = client.patch(
-        f"/api/v1/applications/{application_id}/status",
-        json={"status": "Applied", "note": "Submitted after final review."},
+    applied = client.post(
+        f"/api/v1/applications/{application_id}/packet/submitted",
+        json={"confirm_external_submission": True},
     )
 
     assert applied.status_code == 200
-    assert applied.json()["applied_at"] is not None
-    assert [event["new_status"] for event in applied.json()["events"]] == [
+    assert applied.json()["application_status"] == "Applied"
+    detail = client.get(f"/api/v1/applications/{application_id}").json()
+    assert detail["applied_at"] is not None
+    assert [event["new_status"] for event in detail["events"]] == [
         "Preparing",
         "Ready to apply",
         "Applied",
     ]
-    assert applied.json()["events"][-1]["note"] == "Submitted after final review."
+    assert detail["events"][-1]["note"] == (
+        "User confirmed submission on the employer site."
+    )
 
     under_review = client.patch(
         f"/api/v1/applications/{application_id}/status",
@@ -242,6 +276,54 @@ def test_transition_to_applied_sets_timestamp_and_preserves_audit_history():
         "Rejected",
         "Withdrawn",
     ]
+
+
+def test_application_packet_requires_complete_review_and_locks_when_ready():
+    _, client, _, _, _, job, _, _ = make_authenticated_client()
+    application_id = client.post(
+        "/api/v1/applications",
+        json={"job_id": str(job.id)},
+    ).json()["id"]
+
+    created = client.post(f"/api/v1/applications/{application_id}/packet")
+    assert created.status_code == 201
+    assert created.json()["blockers"] == [
+        "job_details_not_reviewed",
+        "resume_not_reviewed",
+        "employer_questions_not_reviewed",
+    ]
+    incomplete = client.post(
+        f"/api/v1/applications/{application_id}/packet/ready"
+    )
+    assert incomplete.status_code == 409
+    assert incomplete.json()["code"] == "application_packet_incomplete"
+
+    review_application_packet(client, application_id)
+    ready = client.post(f"/api/v1/applications/{application_id}/packet/ready")
+    assert ready.status_code == 200
+    bypass = client.patch(
+        f"/api/v1/applications/{application_id}/status",
+        json={"status": "Applied"},
+    )
+    assert bypass.status_code == 409
+    assert bypass.json()["code"] == "application_packet_required"
+    locked = client.patch(
+        f"/api/v1/applications/{application_id}/packet",
+        json={
+            "job_details_reviewed": False,
+            "resume_reviewed": False,
+            "cover_letter_reviewed": False,
+            "employer_questions_reviewed": False,
+        },
+    )
+    assert locked.status_code == 409
+    assert locked.json()["code"] == "application_packet_locked"
+
+    missing_confirmation = client.post(
+        f"/api/v1/applications/{application_id}/packet/submitted",
+        json={"confirm_external_submission": False},
+    )
+    assert missing_confirmation.status_code == 422
 
 
 def test_application_plan_updates_without_inventing_a_status_event():

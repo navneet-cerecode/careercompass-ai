@@ -1,6 +1,7 @@
 """Real PostgreSQL migration and repository integration gate."""
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -10,6 +11,7 @@ from sqlalchemy.engine import make_url
 
 from database.alembic import build_alembic_config
 from database.repositories.applications import ApplicationRepository, SavedJobRepository
+from database.repositories.application_packets import ApplicationPacketRepository
 from database.repositories.application_reminders import ApplicationReminderRepository
 from database.repositories.jobs import JobRepository
 from database.repositories.identities import IdentityRepository
@@ -22,6 +24,7 @@ from models.enums import ApplicationStatus, BackgroundTaskStatus
 from models.job import Job
 from models.identity import VerifiedIdentity
 from api.schemas.job_search import JobSearchRequest
+from api.services.application_packets import ApplicationPacketService
 from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
 
 pytestmark = pytest.mark.postgres
@@ -48,7 +51,7 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
         command.downgrade(config, "base")
         command.upgrade(config, "head")
         with database.engine.connect() as connection:
-            assert MigrationContext.configure(connection).get_current_revision() == "0014"
+            assert MigrationContext.configure(connection).get_current_revision() == "0015"
         assert database.check_connection() is True
 
         with database.session() as session:
@@ -85,6 +88,26 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
                 status=ApplicationStatus.SAVED,
                 next_action="Review the role",
                 next_action_due_at=datetime.now(UTC) + timedelta(hours=12),
+            )
+            packet = ApplicationPacketRepository(session).get_or_create(
+                user_id=user.id,
+                application_id=application.id,
+                source_resume_id=None,
+            )
+            assert packet is not None
+            concurrent_job = JobRepository(session).upsert(
+                Job(
+                    title="Concurrent Packet Gate",
+                    company="CareerCompass Test",
+                    location="Remote",
+                    description="Validate idempotent packet creation.",
+                    url="https://example.com/jobs/concurrent-packet-gate",
+                )
+            )
+            concurrent_application = ApplicationRepository(session).create(
+                user_id=user.id,
+                job_id=concurrent_job.id,
+                status=ApplicationStatus.PREPARING,
             )
             reminder_result = ApplicationReminderRepository(session).reconcile(
                 now=datetime.now(UTC),
@@ -135,6 +158,19 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
                 ),
             )
 
+        packet_service = ApplicationPacketService(database)
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            concurrent_packets = tuple(
+                executor.map(
+                    lambda _: packet_service.create(
+                        user_id=user.id,
+                        application_id=concurrent_application.id,
+                    ),
+                    range(16),
+                )
+            )
+        assert len({snapshot.packet.id for snapshot in concurrent_packets}) == 1
+
         with database.session() as session:
             assert (
                 SavedJobRepository(session).get(
@@ -149,6 +185,11 @@ def test_postgresql_migrations_and_owner_scoped_repositories():
             )
             assert loaded is not None
             assert loaded.status == ApplicationStatus.SAVED
+            loaded_packet = ApplicationPacketRepository(session).get(
+                user_id=user.id,
+                application_id=application.id,
+            )
+            assert loaded_packet == packet
             reminders = ApplicationReminderRepository(session).list(user_id=user.id)
             assert len(reminders) == 1
             assert reminders[0].application_id == application.id

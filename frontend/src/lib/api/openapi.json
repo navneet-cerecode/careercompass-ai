@@ -78,6 +78,11 @@
             ],
             "title": "Notes"
           },
+          "packet_ready": {
+            "default": false,
+            "title": "Packet Ready",
+            "type": "boolean"
+          },
           "resume_id": {
             "anyOf": [
               {
@@ -107,6 +112,37 @@
           "updated_at"
         ],
         "title": "ApplicationDetailResponse",
+        "type": "object"
+      },
+      "ApplicationDocumentOptionResponse": {
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "source_resume_id": {
+            "format": "uuid",
+            "title": "Source Resume Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "source_resume_id",
+          "approved_at"
+        ],
+        "title": "ApplicationDocumentOptionResponse",
         "type": "object"
       },
       "ApplicationEventResponse": {
@@ -167,6 +203,144 @@
           }
         },
         "title": "ApplicationListResponse",
+        "type": "object"
+      },
+      "ApplicationPacketResponse": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "application_status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          },
+          "available_cover_letters": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ApplicationDocumentOptionResponse"
+            },
+            "title": "Available Cover Letters",
+            "type": "array"
+          },
+          "available_tailored_resumes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ApplicationDocumentOptionResponse"
+            },
+            "title": "Available Tailored Resumes",
+            "type": "array"
+          },
+          "blockers": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "can_confirm_submitted": {
+            "title": "Can Confirm Submitted",
+            "type": "boolean"
+          },
+          "can_mark_ready": {
+            "title": "Can Mark Ready",
+            "type": "boolean"
+          },
+          "cover_letter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Letter Id"
+          },
+          "cover_letter_reviewed": {
+            "title": "Cover Letter Reviewed",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "employer_questions_reviewed": {
+            "title": "Employer Questions Reviewed",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "job_details_reviewed": {
+            "title": "Job Details Reviewed",
+            "type": "boolean"
+          },
+          "ready_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ready At"
+          },
+          "resume_reviewed": {
+            "title": "Resume Reviewed",
+            "type": "boolean"
+          },
+          "source_resume_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Resume Id"
+          },
+          "tailored_resume_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tailored Resume Id"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "job_details_reviewed",
+          "resume_reviewed",
+          "cover_letter_reviewed",
+          "employer_questions_reviewed",
+          "application_status",
+          "can_mark_ready",
+          "can_confirm_submitted",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ApplicationPacketResponse",
         "type": "object"
       },
       "ApplicationReminderListResponse": {
@@ -340,6 +514,11 @@
               }
             ],
             "title": "Notes"
+          },
+          "packet_ready": {
+            "default": false,
+            "title": "Packet Ready",
+            "type": "boolean"
           },
           "resume_id": {
             "anyOf": [
@@ -521,6 +700,20 @@
           "file"
         ],
         "title": "Body_parse_resume_api_v1_resumes_parse_post",
+        "type": "object"
+      },
+      "ConfirmExternalSubmissionRequest": {
+        "properties": {
+          "confirm_external_submission": {
+            "const": true,
+            "title": "Confirm External Submission",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirm_external_submission"
+        ],
+        "title": "ConfirmExternalSubmissionRequest",
         "type": "object"
       },
       "CoverLetterContentRequest": {
@@ -2312,6 +2505,56 @@
         "title": "TransitionApplicationRequest",
         "type": "object"
       },
+      "UpdateApplicationPacketRequest": {
+        "properties": {
+          "cover_letter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Letter Id"
+          },
+          "cover_letter_reviewed": {
+            "default": false,
+            "title": "Cover Letter Reviewed",
+            "type": "boolean"
+          },
+          "employer_questions_reviewed": {
+            "default": false,
+            "title": "Employer Questions Reviewed",
+            "type": "boolean"
+          },
+          "job_details_reviewed": {
+            "default": false,
+            "title": "Job Details Reviewed",
+            "type": "boolean"
+          },
+          "resume_reviewed": {
+            "default": false,
+            "title": "Resume Reviewed",
+            "type": "boolean"
+          },
+          "tailored_resume_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tailored Resume Id"
+          }
+        },
+        "title": "UpdateApplicationPacketRequest",
+        "type": "object"
+      },
       "UpdateApplicationPlanRequest": {
         "properties": {
           "next_action": {
@@ -2703,6 +2946,392 @@
           }
         ],
         "summary": "Update application planning details",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/packet": {
+      "get": {
+        "operationId": "get_application_packet_api_v1_applications__application_id__packet_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationPacketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get an application packet",
+        "tags": [
+          "applications"
+        ]
+      },
+      "patch": {
+        "operationId": "update_application_packet_api_v1_applications__application_id__packet_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationPacketRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationPacketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save reviewed application packet choices",
+        "tags": [
+          "applications"
+        ]
+      },
+      "post": {
+        "operationId": "create_application_packet_api_v1_applications__application_id__packet_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationPacketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create or load a review-first application packet",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/packet/ready": {
+      "post": {
+        "operationId": "mark_application_packet_ready_api_v1_applications__application_id__packet_ready_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationPacketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lock a reviewed packet and mark the application ready",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/packet/submitted": {
+      "post": {
+        "operationId": "confirm_external_submission_api_v1_applications__application_id__packet_submitted_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmExternalSubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationPacketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Record the user's confirmation of an external submission",
         "tags": [
           "applications"
         ]

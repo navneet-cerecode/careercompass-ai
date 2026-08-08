@@ -56,6 +56,23 @@ class CoverLetterRepository:
         ).all()
         return tuple(self._to_domain(record) for record in records)
 
+    def list_verified_for_job(
+        self,
+        *,
+        user_id: UUID,
+        job_id: UUID,
+    ) -> tuple[CoverLetterVersion, ...]:
+        records = self.session.scalars(
+            select(CoverLetterRecord)
+            .where(
+                CoverLetterRecord.user_id == user_id,
+                CoverLetterRecord.job_id == job_id,
+                CoverLetterRecord.verification_status == "user_verified",
+            )
+            .order_by(CoverLetterRecord.updated_at.desc())
+        ).all()
+        return tuple(self._to_domain(record) for record in records)
+
     def create_version(
         self,
         *,

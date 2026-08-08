@@ -27,7 +27,8 @@ const application = {
     url: "https://example.com/jobs/ai-engineer",
   },
   status: "Preparing",
-  allowed_next_statuses: ["Ready to apply", "Withdrawn"],
+  allowed_next_statuses: ["Withdrawn"],
+  packet_ready: false,
   resume_id: null,
   applied_at: null,
   notes: null,
@@ -79,15 +80,15 @@ describe("ApplicationTrackerWorkspace", () => {
     const user = userEvent.setup();
     const transitioned = {
       ...detail,
-      status: "Ready to apply",
-      allowed_next_statuses: ["Applied", "Withdrawn"],
+      status: "Withdrawn",
+      allowed_next_statuses: [],
       events: [
         ...detail.events,
         {
           id: "5ddfb7fa-1156-4fe1-9d82-90341d49ab45",
           previous_status: "Preparing",
-          new_status: "Ready to apply",
-          note: "Evidence reviewed",
+          new_status: "Withdrawn",
+          note: "Role is no longer a fit",
           occurred_at: "2026-08-02T11:00:00Z",
         },
       ],
@@ -107,7 +108,7 @@ describe("ApplicationTrackerWorkspace", () => {
     expect(await screen.findByText("Started at Preparing")).toBeVisible();
     await user.type(
       screen.getByLabelText("What changed?"),
-      "Evidence reviewed",
+      "Role is no longer a fit",
     );
     await user.click(
       screen.getByRole("button", { name: "Confirm transition" }),
@@ -115,7 +116,7 @@ describe("ApplicationTrackerWorkspace", () => {
 
     expect(
       await screen.findByText(
-        "AI Engineer moved to Ready to apply. The change is in your history.",
+        "AI Engineer moved to Withdrawn. The change is in your history.",
       ),
     ).toBeVisible();
     expect(fetchMock).toHaveBeenLastCalledWith(

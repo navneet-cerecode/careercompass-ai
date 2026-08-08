@@ -201,10 +201,23 @@ def test_cover_letter_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'cover-letters.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0014")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0014"
     assert "cover_letters" in inspect(engine).get_table_names()
 
     command.downgrade(config, "0013")
     assert "cover_letters" not in inspect(engine).get_table_names()
+
+
+def test_application_packet_schema_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'application-packets.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0015"
+    assert "application_packets" in inspect(engine).get_table_names()
+
+    command.downgrade(config, "0014")
+    assert "application_packets" not in inspect(engine).get_table_names()
