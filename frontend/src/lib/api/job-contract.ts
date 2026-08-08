@@ -38,6 +38,10 @@ export type UpdateApplicationPacketRequest =
   components["schemas"]["UpdateApplicationPacketRequest"];
 export type ConfirmExternalSubmissionRequest =
   components["schemas"]["ConfirmExternalSubmissionRequest"];
+export type InterviewKitResponse =
+  components["schemas"]["InterviewKitResponse"];
+export type UpdateInterviewKitRequest =
+  components["schemas"]["UpdateInterviewKitRequest"];
 export type ApplicationReminderStatus =
   components["schemas"]["ApplicationReminderStatus"];
 export type ApplicationReminderResponse =

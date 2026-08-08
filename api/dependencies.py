@@ -1,5 +1,6 @@
 """Shared FastAPI dependencies."""
 
+import logging
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -11,6 +12,7 @@ from api.services.job_discovery_tasks import JobDiscoveryTaskService
 from api.services.task_capability import TaskCapability
 from api.services.applications import ApplicationTrackingService
 from api.services.application_packets import ApplicationPacketService
+from api.services.interview_kits import InterviewKitService
 from api.services.billing import BillingService
 from api.services.reminders import ApplicationReminderService
 from api.services.saved_jobs import SavedJobService
@@ -32,6 +34,7 @@ from workers.broker import build_broker
 from workers.publisher import BackgroundTaskPublisher
 
 bearer_scheme = HTTPBearer(auto_error=False)
+logger = logging.getLogger(__name__)
 
 
 def get_settings(request: Request) -> Settings:
@@ -96,6 +99,12 @@ def get_application_packet_service(
     database: Annotated[Database, Depends(get_database)],
 ) -> ApplicationPacketService:
     return ApplicationPacketService(database)
+
+
+def get_interview_kit_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> InterviewKitService:
+    return InterviewKitService(database)
 
 
 def get_application_reminder_service(
@@ -224,6 +233,10 @@ def _resolve_principal(
     try:
         identity = get_oidc_verifier(request).verify(token)
     except TokenValidationError as error:
+        logger.warning(
+            "Access token rejected (%s).",
+            type(error.__cause__).__name__ if error.__cause__ else type(error).__name__,
+        )
         raise APIError(
             401,
             "invalid_access_token",

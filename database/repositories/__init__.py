@@ -8,6 +8,7 @@ from database.repositories.applications import (
 from database.repositories.application_reminders import ApplicationReminderRepository
 from database.repositories.application_packets import ApplicationPacketRepository
 from database.repositories.jobs import JobRepository
+from database.repositories.interview_kits import InterviewKitRepository
 from database.repositories.history import (
     RecommendationHistoryRepository,
     SearchHistory,
@@ -35,6 +36,7 @@ __all__ = [
     "InvalidApplicationTransition",
     "InvalidTaskTransition",
     "JobRepository",
+    "InterviewKitRepository",
     "RecommendationHistoryRepository",
     "PersistedResume",
     "PersistedTailoringPlan",

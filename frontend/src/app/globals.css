@@ -4896,6 +4896,194 @@ button:focus-visible {
   border-color: rgba(255, 128, 104, 0.35);
 }
 
+.interview-kit-intro,
+.interview-kit-loading,
+.interview-kit-error,
+.interview-kit {
+  margin: 1.2rem 0;
+  border: 1px solid rgba(16, 35, 31, 0.16);
+  border-radius: 0.9rem;
+  background: #f4f2e9;
+  padding: 1.1rem;
+}
+
+.interview-kit-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.interview-kit-intro h4,
+.interview-kit header h4 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.interview-kit-intro p,
+.interview-kit header p,
+.interview-kit-error p {
+  max-width: 35rem;
+  margin: 0.45rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.6rem;
+  line-height: 1.55;
+}
+
+.interview-kit button,
+.interview-kit-intro button,
+.interview-kit-error button {
+  min-height: 2.7rem;
+  border: 1px solid rgba(16, 35, 31, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.58rem;
+  font-weight: 750;
+  padding: 0.7rem 1rem;
+}
+
+.interview-kit button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.interview-kit > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.interview-kit > header > span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(16, 35, 31, 0.08);
+  color: var(--ink-soft);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.04em;
+  padding: 0.45rem 0.65rem;
+  text-transform: uppercase;
+}
+
+.interview-kit > header > span[data-reviewed="true"] {
+  background: rgba(205, 248, 111, 0.44);
+  color: #365218;
+}
+
+.interview-question-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interview-question-list > li {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1.15rem 0;
+}
+
+.interview-question-number,
+.interview-question-list small {
+  color: var(--coral);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.interview-question-list h5 {
+  max-width: 42rem;
+  margin: 0.35rem 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.interview-question-list p,
+.interview-question-list details,
+.interview-question-list label {
+  color: var(--ink-soft);
+  font-size: 0.56rem;
+  line-height: 1.55;
+}
+
+.interview-question-list details {
+  margin: 0.75rem 0;
+}
+
+.interview-question-list summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.interview-question-list details ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0;
+  padding-left: 1rem;
+}
+
+.interview-question-list label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.interview-question-list textarea {
+  min-height: 7rem;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 400;
+  line-height: 1.55;
+  padding: 0.75rem;
+}
+
+.interview-kit > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.interview-kit > footer p {
+  min-height: 1rem;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.55rem;
+}
+
+.interview-kit > footer > div {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.interview-kit .interview-review-button {
+  border-color: var(--night);
+  background: var(--night);
+  color: var(--white);
+}
+
 .tracker-transition-form {
   display: grid;
   gap: 0.8rem;
@@ -5523,6 +5711,23 @@ button:focus-visible {
     width: 100%;
     justify-content: center;
     text-align: center;
+  }
+
+  .interview-kit-intro,
+  .interview-kit > header,
+  .interview-kit > footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .interview-kit > footer > div {
+    display: grid;
+  }
+
+  .interview-kit button,
+  .interview-kit-intro button,
+  .interview-kit-error button {
+    width: 100%;
   }
 
   .pricing-main,

@@ -22,6 +22,8 @@ the frontend cutover.
 - Export user-verified tailored resumes as PDF or DOCX.
 - Draft concise cover letters from verified resume evidence and target-job facts.
 - Edit, version, fact-check, and export approved cover letters as PDF or DOCX.
+- Assemble review-first application packets before recording an external submission.
+- Prepare for interviews with role questions, resume evidence prompts, and user-authored notes.
 
 The built-in provider set includes Adzuna, Arbeitnow, JSearch, and NVIDIA Workday. Adzuna is
 enabled only when both of its credentials are configured. Arbeitnow serves its supported Germany

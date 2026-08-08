@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from api.v1.routes.applications import router as applications_router
+from api.v1.routes.interview_kits import router as interview_kits_router
 from api.v1.routes.health import router as health_router
 from api.v1.routes.auth import router as auth_router
 from api.v1.routes.billing import router as billing_router
@@ -25,6 +26,11 @@ api_router.include_router(
     applications_router,
     prefix="/applications",
     tags=["applications"],
+)
+api_router.include_router(
+    interview_kits_router,
+    prefix="/applications",
+    tags=["interview preparation"],
 )
 api_router.include_router(
     tailored_resumes_router,

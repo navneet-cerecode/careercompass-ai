@@ -40,6 +40,25 @@ export interface paths {
         patch: operations["update_application_plan_api_v1_applications__application_id__patch"];
         trace?: never;
     };
+    "/api/v1/applications/{application_id}/interview-kit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an interview preparation kit */
+        get: operations["get_interview_kit_api_v1_applications__application_id__interview_kit_get"];
+        put?: never;
+        /** Create an evidence-grounded interview preparation kit */
+        post: operations["create_interview_kit_api_v1_applications__application_id__interview_kit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Save user-authored interview notes */
+        patch: operations["update_interview_kit_api_v1_applications__application_id__interview_kit_patch"];
+        trace?: never;
+    };
     "/api/v1/applications/{application_id}/packet": {
         parameters: {
             query?: never;
@@ -1129,6 +1148,60 @@ export interface components {
          * @enum {string}
          */
         HealthStatus: "ok" | "ready" | "not_ready";
+        /** InterviewKitResponse */
+        InterviewKitResponse: {
+            /**
+             * Application Id
+             * Format: uuid
+             */
+            application_id: string;
+            application_status: components["schemas"]["ApplicationStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            job: components["schemas"]["JobResponse"];
+            /** Questions */
+            questions: components["schemas"]["InterviewQuestionResponse"][];
+            /** Responses */
+            responses: {
+                [key: string]: string;
+            };
+            /**
+             * Resume Id
+             * Format: uuid
+             */
+            resume_id: string;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** InterviewQuestionResponse */
+        InterviewQuestionResponse: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "career_story" | "role_specific" | "skill_gap" | "motivation" | "behavioral";
+            /** Evidence Prompts */
+            evidence_prompts: string[];
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Why It Matters */
+            why_it_matters: string;
+        };
         /** JobRecommendationResponse */
         JobRecommendationResponse: {
             assessment: components["schemas"]["MatchAssessmentResponse"];
@@ -1761,6 +1834,18 @@ export interface components {
         UpdateApplicationReminderRequest: {
             status: components["schemas"]["ApplicationReminderStatus"];
         };
+        /** UpdateInterviewKitRequest */
+        UpdateInterviewKitRequest: {
+            /**
+             * Confirm Reviewed
+             * @default false
+             */
+            confirm_reviewed: boolean;
+            /** Responses */
+            responses?: {
+                [key: string]: string;
+            };
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1979,6 +2064,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_interview_kit_api_v1_applications__application_id__interview_kit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewKitResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_interview_kit_api_v1_applications__application_id__interview_kit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewKitResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_interview_kit_api_v1_applications__application_id__interview_kit_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInterviewKitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewKitResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

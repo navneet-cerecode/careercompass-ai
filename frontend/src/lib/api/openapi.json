@@ -1195,6 +1195,124 @@
         "title": "HealthStatus",
         "type": "string"
       },
+      "InterviewKitResponse": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "application_status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "job": {
+            "$ref": "#/components/schemas/JobResponse"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewQuestionResponse"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "responses": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Responses",
+            "type": "object"
+          },
+          "resume_id": {
+            "format": "uuid",
+            "title": "Resume Id",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "resume_id",
+          "application_status",
+          "job",
+          "questions",
+          "responses",
+          "reviewed_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InterviewKitResponse",
+        "type": "object"
+      },
+      "InterviewQuestionResponse": {
+        "properties": {
+          "category": {
+            "enum": [
+              "career_story",
+              "role_specific",
+              "skill_gap",
+              "motivation",
+              "behavioral"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "evidence_prompts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Prompts",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "why_it_matters": {
+            "title": "Why It Matters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "question",
+          "why_it_matters",
+          "evidence_prompts"
+        ],
+        "title": "InterviewQuestionResponse",
+        "type": "object"
+      },
       "JobRecommendationResponse": {
         "properties": {
           "assessment": {
@@ -2609,6 +2727,24 @@
         "title": "UpdateApplicationReminderRequest",
         "type": "object"
       },
+      "UpdateInterviewKitRequest": {
+        "properties": {
+          "confirm_reviewed": {
+            "default": false,
+            "title": "Confirm Reviewed",
+            "type": "boolean"
+          },
+          "responses": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Responses",
+            "type": "object"
+          }
+        },
+        "title": "UpdateInterviewKitRequest",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2948,6 +3084,226 @@
         "summary": "Update application planning details",
         "tags": [
           "applications"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/interview-kit": {
+      "get": {
+        "operationId": "get_interview_kit_api_v1_applications__application_id__interview_kit_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewKitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read an interview preparation kit",
+        "tags": [
+          "interview preparation"
+        ]
+      },
+      "patch": {
+        "operationId": "update_interview_kit_api_v1_applications__application_id__interview_kit_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInterviewKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewKitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save user-authored interview notes",
+        "tags": [
+          "interview preparation"
+        ]
+      },
+      "post": {
+        "operationId": "create_interview_kit_api_v1_applications__application_id__interview_kit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewKitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create an evidence-grounded interview preparation kit",
+        "tags": [
+          "interview preparation"
         ]
       }
     },

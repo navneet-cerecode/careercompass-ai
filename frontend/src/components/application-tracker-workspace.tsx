@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { ApplicationPacketWorkspace } from "@/components/application-packet-workspace";
+import { InterviewKitWorkspace } from "@/components/interview-kit-workspace";
 import { ProviderAttribution } from "@/components/provider-attribution";
 import type {
   ApplicationDetailResponse,
@@ -617,6 +618,15 @@ export function ApplicationTrackerWorkspace() {
                                         application={item}
                                         onApplicationChanged={refreshApplication}
                                       />
+                                    )}
+
+                                    {[
+                                      "Applied",
+                                      "Under review",
+                                      "Assessment",
+                                      "Interview",
+                                    ].includes(item.status) && (
+                                      <InterviewKitWorkspace application={item} />
                                     )}
 
                                     {item.allowed_next_statuses.length > 0 ? (

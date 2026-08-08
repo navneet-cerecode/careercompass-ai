@@ -9,6 +9,7 @@ from database.models.applications import (
 )
 from database.models.jobs import JobRecord, JobSourceRecord
 from database.models.identities import UserIdentityRecord
+from database.models.interviews import InterviewKitRecord
 from database.models.job_discovery_tasks import (
     JobDiscoveryTaskRecord,
     JobDiscoveryTaskResultRecord,
@@ -35,6 +36,7 @@ __all__ = [
     "JobDiscoveryTaskRecord",
     "JobDiscoveryTaskResultRecord",
     "JobSourceRecord",
+    "InterviewKitRecord",
     "RecommendationRecord",
     "ResumeRecord",
     "ResumeSkillRecord",
