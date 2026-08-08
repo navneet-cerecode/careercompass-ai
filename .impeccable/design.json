@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-09T02:27:00.0416156+05:30",
+  "title": "Design System: Solara Hire",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#f2efe7",
+        "tonalRamp": ["oklch(15% 0.012 92)", "oklch(27% 0.012 92)", "oklch(39% 0.012 92)", "oklch(51% 0.012 92)", "oklch(63% 0.012 92)", "oklch(75% 0.012 92)", "oklch(87% 0.012 92)", "oklch(95% 0.012 92)"]
+      },
+      "paper-soft": {
+        "role": "neutral",
+        "displayName": "Soft Paper",
+        "canonical": "#faf8f2",
+        "tonalRamp": ["oklch(15% 0.008 92)", "oklch(27% 0.008 92)", "oklch(39% 0.008 92)", "oklch(51% 0.008 92)", "oklch(63% 0.008 92)", "oklch(75% 0.008 92)", "oklch(87% 0.008 92)", "oklch(95% 0.008 92)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Editorial Ink",
+        "canonical": "#10231f",
+        "tonalRamp": ["oklch(15% 0.035 170)", "oklch(27% 0.035 170)", "oklch(39% 0.035 170)", "oklch(51% 0.035 170)", "oklch(63% 0.035 170)", "oklch(75% 0.035 170)", "oklch(87% 0.035 170)", "oklch(95% 0.035 170)"]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#4d5e59",
+        "tonalRamp": ["oklch(15% 0.025 170)", "oklch(27% 0.025 170)", "oklch(39% 0.025 170)", "oklch(51% 0.025 170)", "oklch(63% 0.025 170)", "oklch(75% 0.025 170)", "oklch(87% 0.025 170)", "oklch(95% 0.025 170)"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline Ink",
+        "canonical": "rgba(16, 35, 31, 0.14)",
+        "tonalRamp": ["oklch(15% 0.02 170 / 0.14)", "oklch(27% 0.02 170 / 0.14)", "oklch(39% 0.02 170 / 0.14)", "oklch(51% 0.02 170 / 0.14)", "oklch(63% 0.02 170 / 0.14)", "oklch(75% 0.02 170 / 0.14)", "oklch(87% 0.02 170 / 0.14)", "oklch(95% 0.02 170 / 0.14)"]
+      },
+      "acid": {
+        "role": "primary",
+        "displayName": "Acid Highlight",
+        "canonical": "#cdf86f",
+        "tonalRamp": ["oklch(15% 0.16 122)", "oklch(27% 0.16 122)", "oklch(39% 0.16 122)", "oklch(51% 0.16 122)", "oklch(63% 0.16 122)", "oklch(75% 0.16 122)", "oklch(87% 0.16 122)", "oklch(95% 0.16 122)"]
+      },
+      "acid-deep": {
+        "role": "primary",
+        "displayName": "Deep Acid",
+        "canonical": "#acd94d",
+        "tonalRamp": ["oklch(15% 0.15 122)", "oklch(27% 0.15 122)", "oklch(39% 0.15 122)", "oklch(51% 0.15 122)", "oklch(63% 0.15 122)", "oklch(75% 0.15 122)", "oklch(87% 0.15 122)", "oklch(95% 0.15 122)"]
+      },
+      "coral": {
+        "role": "tertiary",
+        "displayName": "Coral Signal",
+        "canonical": "#ff8068",
+        "tonalRamp": ["oklch(15% 0.16 30)", "oklch(27% 0.16 30)", "oklch(39% 0.16 30)", "oklch(51% 0.16 30)", "oklch(63% 0.16 30)", "oklch(75% 0.16 30)", "oklch(87% 0.16 30)", "oklch(95% 0.16 30)"]
+      },
+      "mint": {
+        "role": "secondary",
+        "displayName": "Mint Wash",
+        "canonical": "#b9ead5",
+        "tonalRamp": ["oklch(15% 0.07 165)", "oklch(27% 0.07 165)", "oklch(39% 0.07 165)", "oklch(51% 0.07 165)", "oklch(63% 0.07 165)", "oklch(75% 0.07 165)", "oklch(87% 0.07 165)", "oklch(95% 0.07 165)"]
+      },
+      "night": {
+        "role": "primary",
+        "displayName": "Night Ink",
+        "canonical": "#0e2823",
+        "tonalRamp": ["oklch(15% 0.045 170)", "oklch(27% 0.045 170)", "oklch(39% 0.045 170)", "oklch(51% 0.045 170)", "oklch(63% 0.045 170)", "oklch(75% 0.045 170)", "oklch(87% 0.045 170)", "oklch(95% 0.045 170)"]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "Warm White",
+        "canonical": "#fffdf8",
+        "tonalRamp": ["oklch(15% 0.006 92)", "oklch(27% 0.006 92)", "oklch(39% 0.006 92)", "oklch(51% 0.006 92)", "oklch(63% 0.006 92)", "oklch(75% 0.006 92)", "oklch(87% 0.006 92)", "oklch(95% 0.006 92)"]
+      },
+      "supported-text": {
+        "role": "tertiary",
+        "displayName": "Supported Text",
+        "canonical": "#365218",
+        "tonalRamp": ["oklch(15% 0.09 125)", "oklch(27% 0.09 125)", "oklch(39% 0.09 125)", "oklch(51% 0.09 125)", "oklch(63% 0.09 125)", "oklch(75% 0.09 125)", "oklch(87% 0.09 125)", "oklch(95% 0.09 125)"]
+      },
+      "develop-text": {
+        "role": "tertiary",
+        "displayName": "Develop Text",
+        "canonical": "#7c291c",
+        "tonalRamp": ["oklch(15% 0.12 30)", "oklch(27% 0.12 30)", "oklch(39% 0.12 30)", "oklch(51% 0.12 30)", "oklch(63% 0.12 30)", "oklch(75% 0.12 30)", "oklch(87% 0.12 30)", "oklch(95% 0.12 30)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Editorial Display", "purpose": "Meaning-setting first-view headlines and major empty states." },
+      "headline": { "displayName": "Editorial Headline", "purpose": "Working-region and matrix headings." },
+      "body": { "displayName": "Workhorse Body", "purpose": "Explanations, evidence limits, and general interface copy." },
+      "label": { "displayName": "Evidence Label", "purpose": "Controls, table headers, and compact state text." },
+      "mono": { "displayName": "System Annotation", "purpose": "Footer and compact system-brand metadata only." }
+    },
+    "shadows": [
+      { "name": "action-lift", "value": "0 12px 34px rgba(14, 40, 35, 0.17)", "purpose": "Reserved for the global high-priority primary button treatment." },
+      { "name": "ambient-surface", "value": "0 28px 70px rgba(14, 40, 35, 0.07)", "purpose": "Selected raised cards elsewhere in the system; not evidence matrices." },
+      { "name": "focus-halo", "value": "0 0 0 3px rgba(185, 234, 213, 0.42)", "purpose": "Secondary interactive focus treatment where the coral outline is not used." }
+    ],
+    "motion": [
+      { "name": "interaction-standard", "value": "160ms ease", "purpose": "Navigation color and compact positional feedback." },
+      { "name": "action-lift", "value": "180ms ease", "purpose": "Primary action lift, shadow, and background changes." },
+      { "name": "row-settle", "value": "180ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Mint-to-transparent feedback after evidence filter changes; disabled for reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "evidence-mobile", "value": "680px" },
+      { "name": "evidence-stack", "value": "900px" },
+      { "name": "header-compact", "value": "1180px" },
+      { "name": "header-mobile", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "action-primary",
+      "description": "A familiar, high-contrast pill for the next evidence-led action.",
+      "html": "<button class=\"ds-action-primary\">Review evidence</button>",
+      "css": ".ds-action-primary { min-height: 2.8rem; border: 0; border-radius: 999px; background: var(--night, #0e2823); color: var(--white, #fffdf8); cursor: pointer; padding: 0.8rem 1.1rem; font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); font-size: 0.82rem; font-weight: 700; transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease; } .ds-action-primary:hover { transform: translateY(-2px); } .ds-action-primary:focus-visible { outline: 3px solid var(--coral, #ff8068); outline-offset: 4px; } .ds-action-primary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Evidence Filter",
+      "kind": "button",
+      "refersTo": "filter-default",
+      "description": "An unselected matrix filter that keeps its control role obvious.",
+      "html": "<button class=\"ds-filter\" aria-pressed=\"false\">Resume only</button>",
+      "css": ".ds-filter { min-height: 2.35rem; border: 1px solid var(--line, rgba(16, 35, 31, 0.14)); border-radius: 999px; background: transparent; color: var(--ink-soft, #4d5e59); cursor: pointer; padding: 0.55rem 0.8rem; font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); font-size: 0.78rem; transition: background 160ms ease, color 160ms ease, border-color 160ms ease; } .ds-filter:hover { border-color: var(--ink, #10231f); color: var(--ink, #10231f); } .ds-filter:focus-visible { outline: 3px solid var(--coral, #ff8068); outline-offset: 4px; } .ds-filter:active { background: rgba(16, 35, 31, 0.04); }"
+    },
+    {
+      "name": "Selected Evidence Filter",
+      "kind": "button",
+      "refersTo": "filter-selected",
+      "description": "The pressed filter reverses to Night Ink and Warm White.",
+      "html": "<button class=\"ds-filter-selected\" aria-pressed=\"true\">Role + resume</button>",
+      "css": ".ds-filter-selected { min-height: 2.35rem; border: 1px solid var(--night, #0e2823); border-radius: 999px; background: var(--night, #0e2823); color: var(--white, #fffdf8); cursor: pointer; padding: 0.55rem 0.8rem; font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); font-size: 0.78rem; transition: transform 160ms ease; } .ds-filter-selected:hover { transform: translateY(-1px); } .ds-filter-selected:focus-visible { outline: 3px solid var(--coral, #ff8068); outline-offset: 4px; } .ds-filter-selected:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Evidence Boundary",
+      "kind": "custom",
+      "description": "A ruled aside that states coverage before the interface interprets evidence.",
+      "html": "<aside class=\"ds-evidence-boundary\"><strong>What this measures</strong><p>8 of 10 roles included explicit skill data. 2 did not and remain visible as a coverage limitation.</p></aside>",
+      "css": ".ds-evidence-boundary { max-width: 28rem; border-top: 1px solid var(--ink, #10231f); padding-top: 1rem; color: var(--ink, #10231f); font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); } .ds-evidence-boundary strong { font-size: 0.9rem; } .ds-evidence-boundary p { margin: 0.6rem 0 0; color: var(--ink-soft, #4d5e59); font-size: 0.85rem; line-height: 1.6; } .ds-evidence-boundary:focus-within { box-shadow: 0 0 0 3px rgba(185, 234, 213, 0.42); }"
+    },
+    {
+      "name": "Source Ledger",
+      "kind": "custom",
+      "description": "A compact provenance strip for totals, sources, and deduplication limits.",
+      "html": "<section class=\"ds-source-ledger\"><p><strong>10 distinct roles analyzed</strong><span>6 from searches</span><span>3 saved</span><span>2 tracked applications</span></p><small>A role can appear in more than one source. It is analyzed only once.</small></section>",
+      "css": ".ds-source-ledger { border-block: 1px solid var(--line, rgba(16, 35, 31, 0.14)); padding: 1rem 0; color: var(--ink, #10231f); font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); } .ds-source-ledger p { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; margin: 0; font-size: 0.85rem; } .ds-source-ledger span, .ds-source-ledger small { color: var(--ink-soft, #4d5e59); } .ds-source-ledger small { display: block; margin-top: 0.5rem; font-size: 0.76rem; } .ds-source-ledger:hover { border-color: var(--ink, #10231f); }"
+    },
+    {
+      "name": "Comparison Matrix",
+      "kind": "custom",
+      "refersTo": "comparison-surface",
+      "description": "The central evidence ledger, with explicit role provenance and interpretation.",
+      "html": "<section class=\"ds-matrix\"><header><h2>Evidence comparison</h2><p>Repeated requirements are a priority signal, not proof of market-wide demand.</p></header><table><thead><tr><th>Skill</th><th>Resume</th><th>Observed roles</th><th>Interpretation</th></tr></thead><tbody><tr><th>Facilitation <span>Leadership</span></th><td>Evidenced</td><td><strong>4</strong> of 10</td><td><span class=\"ds-matrix-status\">Evidence aligns with role set</span></td></tr></tbody></table></section>",
+      "css": ".ds-matrix { overflow: hidden; border: 1px solid var(--line, rgba(16, 35, 31, 0.14)); border-radius: 1rem; background: var(--paper-soft, #faf8f2); color: var(--ink, #10231f); font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); } .ds-matrix header { padding: 1.4rem; } .ds-matrix h2 { margin: 0; font-family: var(--font-editorial, 'Source Serif 4', Georgia, serif); font-size: 2rem; font-weight: 500; letter-spacing: -0.035em; } .ds-matrix header p { max-width: 62ch; margin: 0.55rem 0 0; color: var(--ink-soft, #4d5e59); font-size: 0.84rem; line-height: 1.55; } .ds-matrix table { width: 100%; border-collapse: collapse; table-layout: fixed; } .ds-matrix th, .ds-matrix td { border-top: 1px solid var(--line, rgba(16, 35, 31, 0.14)); padding: 1rem; text-align: left; vertical-align: top; font-size: 0.8rem; } .ds-matrix thead th { background: rgba(16, 35, 31, 0.04); color: var(--ink-soft, #4d5e59); font-size: 0.75rem; } .ds-matrix tbody th span { display: block; color: var(--ink-soft, #4d5e59); font-weight: 400; } .ds-matrix-status { display: inline-block; border-radius: 999px; background: rgba(172, 217, 77, 0.28); color: #365218; padding: 0.35rem 0.55rem; } .ds-matrix:hover { border-color: rgba(16, 35, 31, 0.24); } .ds-matrix:focus-within { outline: 3px solid var(--coral, #ff8068); outline-offset: 4px; }"
+    },
+    {
+      "name": "Supported Status",
+      "kind": "chip",
+      "refersTo": "status-supported",
+      "description": "A positive evidence interpretation expressed through both text and color.",
+      "html": "<span class=\"ds-status-supported\">Evidence aligns with role set</span>",
+      "css": ".ds-status-supported { display: inline-block; border-radius: 999px; background: rgba(172, 217, 77, 0.28); color: var(--supported-text, #365218); padding: 0.35rem 0.55rem; font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); font-size: 0.8rem; line-height: 1.5; transition: background 160ms ease; } .ds-status-supported:hover { background: rgba(172, 217, 77, 0.4); } .ds-status-supported:focus-visible { outline: 3px solid var(--coral, #ff8068); outline-offset: 4px; }"
+    },
+    {
+      "name": "Develop Status",
+      "kind": "chip",
+      "refersTo": "status-develop",
+      "description": "A development prompt that remains calm, readable, and explicit.",
+      "html": "<span class=\"ds-status-develop\">Build or verify evidence</span>",
+      "css": ".ds-status-develop { display: inline-block; border-radius: 999px; background: rgba(255, 128, 104, 0.16); color: var(--develop-text, #7c291c); padding: 0.35rem 0.55rem; font-family: var(--font-geist-sans, Aptos, 'Segoe UI', sans-serif); font-size: 0.8rem; line-height: 1.5; transition: background 160ms ease; } .ds-status-develop:hover { background: rgba(255, 128, 104, 0.24); } .ds-status-develop:focus-visible { outline: 3px solid var(--coral, #ff8068); outline-offset: 4px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Editorial Evidence Ledger",
+    "overview": "Solara Hire presents career intelligence like a carefully edited working paper: warm paper fields, dark green ink, precise rules, and generous editorial typography. The atmosphere is calm and exacting rather than clinical. Familiar controls remain visibly interactive while the page composition gives evidence, scope, and limitations the visual authority usually reserved for promotional claims.\n\nThe system is deliberately not a generic dashboard. It avoids interchangeable KPI tiles and market-wide data theater; the shipped skill-intelligence surface instead moves from an evidence boundary to a source ledger and then into the working comparison. Mint and acid tints create a living paper atmosphere, while coral is held for focus and caution.",
+    "keyCharacteristics": [
+      "Warm paper surfaces with deep green ink and hairline rules.",
+      "Source Serif 4 editorial hierarchy paired with an Aptos/Segoe UI workhorse body.",
+      "Evidence scope and source coverage appear before interpretation.",
+      "Familiar pill controls and tabular structures keep dense comparisons usable.",
+      "Responsive tables become labeled records instead of shrinking into illegibility."
+    ],
+    "rules": [
+      { "name": "The Evidence Color Rule", "body": "Color may distinguish a state, but the state must also be written in plain language.", "section": "colors" },
+      { "name": "The Rare Acid Rule", "body": "Acid is an emphasis signal, not a canvas color; its scarcity preserves its meaning.", "section": "colors" },
+      { "name": "The Serif Authority Rule", "body": "Use the editorial serif for meaning-setting headlines; keep controls, measurements, evidence detail, and navigation in the workhorse sans-serif.", "section": "typography" },
+      { "name": "The Readable Ledger Rule", "body": "Dense evidence text stays small but never decorative: preserve strong contrast, explicit labels, and generous line-height.", "section": "typography" },
+      { "name": "The Evidence Before Inventory Rule", "body": "On comparison surfaces, state the data boundary and source coverage before presenting interpreted rows.", "section": "layout" },
+      { "name": "The Flat Ledger Rule", "body": "Tables and evidence containers use tonal contrast and rules at rest; shadow is reserved for actions, overlays, or genuinely raised surfaces.", "section": "elevation" },
+      { "name": "The Two-Silhouette Rule", "body": "Use soft rectangles for information regions and pills for compact actions or states; do not introduce arbitrary intermediate corner styles.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do put evidence limits and source coverage before interpreted comparison data.",
+      "Do use Source Serif 4 for editorial hierarchy and Aptos/Segoe UI for working information.",
+      "Do preserve explicit state text, semantic table structure, visible keyboard focus, and reduced-motion behavior.",
+      "Do convert wide evidence tables into labeled records below 680px.",
+      "Do keep paper fields, green ink, mint atmosphere, acid emphasis, and coral focus within their observed roles."
+    ],
+    "donts": [
+      "Don't turn evidence views into generic KPI-card dashboards.",
+      "Don't imply market-wide demand from a user-selected role set or hide missing provider data.",
+      "Don't rely on acid, coral, or any color alone to communicate evidence status.",
+      "Don't add shadows to every surface or replace precise hairline rules with heavy boxes.",
+      "Don't shrink the desktop matrix until its labels and evidence become illegible."
+    ]
+  }
+}

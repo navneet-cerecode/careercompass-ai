@@ -42,6 +42,10 @@ export type InterviewKitResponse =
   components["schemas"]["InterviewKitResponse"];
 export type UpdateInterviewKitRequest =
   components["schemas"]["UpdateInterviewKitRequest"];
+export type SkillIntelligenceResponse =
+  components["schemas"]["SkillIntelligenceResponse"];
+export type SkillIntelligenceItemResponse =
+  components["schemas"]["SkillIntelligenceItemResponse"];
 export type ApplicationReminderStatus =
   components["schemas"]["ApplicationReminderStatus"];
 export type ApplicationReminderResponse =

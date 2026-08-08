@@ -12,6 +12,7 @@ from api.v1.routes.recommendations import router as recommendations_router
 from api.v1.routes.reminders import router as reminders_router
 from api.v1.routes.resumes import router as resumes_router
 from api.v1.routes.saved_jobs import router as saved_jobs_router
+from api.v1.routes.skill_intelligence import router as skill_intelligence_router
 from api.v1.routes.tailoring import router as tailoring_router
 from api.v1.routes.tailored_resumes import router as tailored_resumes_router
 from api.v1.routes.cover_letters import router as cover_letters_router
@@ -52,6 +53,11 @@ api_router.include_router(
     saved_jobs_router,
     prefix="/saved-jobs",
     tags=["saved jobs"],
+)
+api_router.include_router(
+    skill_intelligence_router,
+    prefix="/skill-intelligence",
+    tags=["skill intelligence"],
 )
 api_router.include_router(
     tailoring_router,

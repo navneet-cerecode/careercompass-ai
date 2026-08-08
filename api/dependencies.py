@@ -16,6 +16,7 @@ from api.services.interview_kits import InterviewKitService
 from api.services.billing import BillingService
 from api.services.reminders import ApplicationReminderService
 from api.services.saved_jobs import SavedJobService
+from api.services.skill_intelligence import SkillIntelligenceService
 from api.services.tailoring_plans import TailoringPlanService
 from api.services.tailored_resumes import TailoredResumeService
 from api.services.cover_letters import CoverLetterService
@@ -87,6 +88,12 @@ def get_saved_job_service(
     database: Annotated[Database, Depends(get_database)],
 ) -> SavedJobService:
     return SavedJobService(database)
+
+
+def get_skill_intelligence_service(
+    database: Annotated[Database, Depends(get_database)],
+) -> SkillIntelligenceService:
+    return SkillIntelligenceService(database)
 
 
 def get_application_tracking_service(

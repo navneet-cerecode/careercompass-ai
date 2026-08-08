@@ -8,7 +8,13 @@ import type { SiteUser } from "@/lib/auth/session";
 type SiteHeaderProps = {
   connection: ApiConnection;
   user: SiteUser | null;
-  activePage?: "home" | "pricing" | "workspace" | "saved" | "applications";
+  activePage?:
+    | "home"
+    | "pricing"
+    | "workspace"
+    | "saved"
+    | "applications"
+    | "insights";
 };
 
 export function SiteHeader({
@@ -55,6 +61,12 @@ export function SiteHeader({
               }
             >
               Tracker
+            </Link>
+            <Link
+              href="/insights"
+              aria-current={activePage === "insights" ? "page" : undefined}
+            >
+              Skills
             </Link>
           </>
         )}

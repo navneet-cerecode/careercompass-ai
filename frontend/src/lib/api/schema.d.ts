@@ -488,6 +488,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/skill-intelligence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare verified resume evidence with roles in the user's history */
+        get: operations["get_skill_intelligence_api_v1_skill_intelligence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tailored-resumes": {
         parameters: {
             query?: never;
@@ -1566,12 +1583,61 @@ export interface components {
             /** Score */
             score: number;
         };
+        /** SkillIntelligenceItemResponse */
+        SkillIntelligenceItemResponse: {
+            /** Category */
+            category: string | null;
+            /** Name */
+            name: string;
+            /** Observed Role Count */
+            observed_role_count: number;
+            /** Observed Roles */
+            observed_roles: components["schemas"]["SkillRoleReferenceResponse"][];
+            /** Resume Evidenced */
+            resume_evidenced: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "supported" | "develop" | "resume_only";
+        };
+        /** SkillIntelligenceResponse */
+        SkillIntelligenceResponse: {
+            /** Application Roles */
+            application_roles: number;
+            /** Resume Id */
+            resume_id: string | null;
+            /** Roles Analyzed */
+            roles_analyzed: number;
+            /** Roles With Skill Data */
+            roles_with_skill_data: number;
+            /** Roles Without Skill Data */
+            roles_without_skill_data: number;
+            /** Saved Roles */
+            saved_roles: number;
+            /** Search History Roles */
+            search_history_roles: number;
+            /** Skills */
+            skills: components["schemas"]["SkillIntelligenceItemResponse"][];
+        };
         /** SkillResponse */
         SkillResponse: {
             /** Category */
             category?: string | null;
             /** Name */
             name: string;
+        };
+        /** SkillRoleReferenceResponse */
+        SkillRoleReferenceResponse: {
+            /** Company */
+            company: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /** Title */
+            title: string;
         };
         /**
          * SubscriptionPlan
@@ -3630,6 +3696,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_skill_intelligence_api_v1_skill_intelligence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillIntelligenceResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -10,6 +10,7 @@ from database.models.job_discovery_tasks import (
     JobDiscoveryTaskRecord,
     JobDiscoveryTaskResultRecord,
 )
+from database.models.tasks import BackgroundTaskRecord
 from database.repositories.jobs import JobRepository
 from database.repositories.tasks import BackgroundTaskRepository, IdempotencyConflict
 from database.repositories.task_outbox import TaskOutboxRepository
@@ -71,6 +72,26 @@ class JobDiscoveryTaskRepository:
     def get_request(self, task_id: UUID) -> JobSearchRequest | None:
         record = self.session.get(JobDiscoveryTaskRecord, task_id)
         return self._request_from_record(record) if record is not None else None
+
+    def list_user_job_ids(self, *, user_id: UUID, limit: int = 100) -> tuple[UUID, ...]:
+        # ponytail: scan 5x the requested rows; paginate if repeated searches hide older unique jobs.
+        rows = self.session.scalars(
+            select(JobDiscoveryTaskResultRecord.job_id)
+            .join(
+                BackgroundTaskRecord,
+                BackgroundTaskRecord.id == JobDiscoveryTaskResultRecord.task_id,
+            )
+            .where(
+                BackgroundTaskRecord.user_id == user_id,
+                BackgroundTaskRecord.status == "succeeded",
+            )
+            .order_by(
+                BackgroundTaskRecord.updated_at.desc(),
+                JobDiscoveryTaskResultRecord.position,
+            )
+            .limit(max(limit * 5, limit))
+        ).all()
+        return tuple(dict.fromkeys(rows))[:limit]
 
     def save_result(
         self,

@@ -21,7 +21,8 @@ when an Auth0 session is present:
 13. edit, version, fact-check, and export the approved cover letter;
 14. assemble a reviewed application packet and confirm any external submission yourself;
 15. prepare interview notes from role requirements and verified resume evidence;
-16. open the verified job page for user review.
+16. compare reviewed resume skills with requirements observed in chosen roles;
+17. open the verified job page for user review.
 
 FastAPI remains the source of truth for transport contracts and Python application services
 remain the source of truth for parsing, discovery, normalization, persistence, and ranking.
@@ -59,6 +60,7 @@ window and every required fallback-only capability has a replacement.
 | Reviewed, versioned cover letters | Complete for entitled verified accounts | Not available | Next.js canonical |
 | Review-first application packets | Complete for verified accounts | Not available | Next.js canonical |
 | Evidence-grounded interview preparation | Complete for verified accounts | Not available | Next.js canonical |
+| Observed-role skill intelligence | Complete for verified accounts | Not available | Next.js canonical |
 
 The Streamlit-only Groq narrative is not part of the anonymous cutover gate. Moving long-running
 AI generation into the web product should use the Phase 5 worker boundary rather than blocking a

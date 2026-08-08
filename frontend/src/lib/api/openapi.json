@@ -2156,6 +2156,118 @@
         "title": "ScoreComponentResponse",
         "type": "object"
       },
+      "SkillIntelligenceItemResponse": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "observed_role_count": {
+            "title": "Observed Role Count",
+            "type": "integer"
+          },
+          "observed_roles": {
+            "items": {
+              "$ref": "#/components/schemas/SkillRoleReferenceResponse"
+            },
+            "title": "Observed Roles",
+            "type": "array"
+          },
+          "resume_evidenced": {
+            "title": "Resume Evidenced",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "supported",
+              "develop",
+              "resume_only"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "status",
+          "resume_evidenced",
+          "observed_role_count",
+          "observed_roles"
+        ],
+        "title": "SkillIntelligenceItemResponse",
+        "type": "object"
+      },
+      "SkillIntelligenceResponse": {
+        "properties": {
+          "application_roles": {
+            "title": "Application Roles",
+            "type": "integer"
+          },
+          "resume_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Id"
+          },
+          "roles_analyzed": {
+            "title": "Roles Analyzed",
+            "type": "integer"
+          },
+          "roles_with_skill_data": {
+            "title": "Roles With Skill Data",
+            "type": "integer"
+          },
+          "roles_without_skill_data": {
+            "title": "Roles Without Skill Data",
+            "type": "integer"
+          },
+          "saved_roles": {
+            "title": "Saved Roles",
+            "type": "integer"
+          },
+          "search_history_roles": {
+            "title": "Search History Roles",
+            "type": "integer"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillIntelligenceItemResponse"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "resume_id",
+          "roles_analyzed",
+          "roles_with_skill_data",
+          "roles_without_skill_data",
+          "search_history_roles",
+          "saved_roles",
+          "application_roles",
+          "skills"
+        ],
+        "title": "SkillIntelligenceResponse",
+        "type": "object"
+      },
       "SkillResponse": {
         "properties": {
           "category": {
@@ -2178,6 +2290,30 @@
           "name"
         ],
         "title": "SkillResponse",
+        "type": "object"
+      },
+      "SkillRoleReferenceResponse": {
+        "properties": {
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "title",
+          "company"
+        ],
+        "title": "SkillRoleReferenceResponse",
         "type": "object"
       },
       "SubscriptionPlan": {
@@ -5213,6 +5349,42 @@
         "summary": "Save or update a job for the current account",
         "tags": [
           "saved jobs"
+        ]
+      }
+    },
+    "/api/v1/skill-intelligence": {
+      "get": {
+        "operationId": "get_skill_intelligence_api_v1_skill_intelligence_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillIntelligenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Compare verified resume evidence with roles in the user's history",
+        "tags": [
+          "skill intelligence"
         ]
       }
     },
