@@ -12,6 +12,27 @@ const snapshot = {
   search_history_roles: 3,
   saved_roles: 2,
   application_roles: 1,
+  history_window: {
+    first_observed_at: "2026-07-01T00:00:00Z",
+    last_observed_at: "2026-08-09T00:00:00Z",
+    observed_last_7_days: 2,
+    observed_8_to_30_days: 1,
+    observed_over_30_days: 1,
+  },
+  role_clusters: [
+    {
+      label: "Operations Manager",
+      basis: "search_intent",
+      role_count: 3,
+      roles: [],
+    },
+    {
+      label: "Supply Coordinator",
+      basis: "role_title",
+      role_count: 1,
+      roles: [],
+    },
+  ],
   skills: [
     {
       name: "Communication",
@@ -80,6 +101,10 @@ describe("SkillIntelligenceWorkspace", () => {
       }),
     ).toBeVisible();
     expect(screen.getByText(/not from the wider labor market/i)).toBeVisible();
+    expect(screen.getByText("1 Jul 2026 – 9 Aug 2026")).toBeVisible();
+    expect(screen.getByText(/not the employer’s posting date/i)).toBeVisible();
+    expect(screen.getByText(/3 roles · Your search intent/i)).toBeVisible();
+    expect(screen.getByText(/1 role · Exact role title/i)).toBeVisible();
     expect(screen.getByRole("row", { name: /Communication/ })).toBeVisible();
     expect(screen.getByText("Curated alias · high confidence")).toBeVisible();
     expect(screen.getByText("Matched terms: MS Excel ↔ Microsoft Excel")).toBeVisible();

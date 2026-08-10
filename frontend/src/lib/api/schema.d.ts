@@ -1535,6 +1535,33 @@ export interface components {
              */
             skills: components["schemas"]["SkillResponse"][];
         };
+        /** RoleClusterResponse */
+        RoleClusterResponse: {
+            /**
+             * Basis
+             * @enum {string}
+             */
+            basis: "search_intent" | "role_title";
+            /** Label */
+            label: string;
+            /** Role Count */
+            role_count: number;
+            /** Roles */
+            roles: components["schemas"]["SkillRoleReferenceResponse"][];
+        };
+        /** RoleHistoryWindowResponse */
+        RoleHistoryWindowResponse: {
+            /** First Observed At */
+            first_observed_at: string | null;
+            /** Last Observed At */
+            last_observed_at: string | null;
+            /** Observed 8 To 30 Days */
+            observed_8_to_30_days: number;
+            /** Observed Last 7 Days */
+            observed_last_7_days: number;
+            /** Observed Over 30 Days */
+            observed_over_30_days: number;
+        };
         /** SaveJobRequest */
         SaveJobRequest: {
             /** Notes */
@@ -1609,8 +1636,11 @@ export interface components {
         SkillIntelligenceResponse: {
             /** Application Roles */
             application_roles: number;
+            history_window: components["schemas"]["RoleHistoryWindowResponse"];
             /** Resume Id */
             resume_id: string | null;
+            /** Role Clusters */
+            role_clusters: components["schemas"]["RoleClusterResponse"][];
             /** Roles Analyzed */
             roles_analyzed: number;
             /** Roles With Skill Data */

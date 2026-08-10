@@ -47,6 +47,16 @@ function confidenceLabel(item: SkillIntelligenceItemResponse) {
   return null;
 }
 
+function formatObservedDate(value: string | null) {
+  if (!value) return null;
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
+
 export function SkillIntelligenceWorkspace() {
   const [state, setState] = useState<IntelligenceState>({ status: "loading" });
   const [filter, setFilter] = useState<Filter>("all");
@@ -140,6 +150,8 @@ export function SkillIntelligenceWorkspace() {
   }
 
   const hasObservedSkillData = snapshot.roles_with_skill_data > 0;
+  const firstObserved = formatObservedDate(snapshot.history_window.first_observed_at);
+  const lastObserved = formatObservedDate(snapshot.history_window.last_observed_at);
 
   return (
     <main id="main-content" className="intelligence-main">
@@ -181,6 +193,54 @@ export function SkillIntelligenceWorkspace() {
           <span>{snapshot.application_roles} tracked applications</span>
         </p>
         <small>A role can appear in more than one source. It is analyzed only once.</small>
+      </section>
+
+      <section className="intelligence-history" aria-label="Comparison context">
+        <div className="intelligence-window">
+          <p className="intelligence-context-label">Comparison window</p>
+          <h2>
+            {firstObserved && lastObserved
+              ? `${firstObserved} – ${lastObserved}`
+              : "No role history yet"}
+          </h2>
+          <p className="intelligence-context-note">
+            Freshness shows when a role entered or re-entered your Solara Hire history—not the
+            employer’s posting date.
+          </p>
+          <dl>
+            <div>
+              <dt>Last 7 days</dt>
+              <dd>{snapshot.history_window.observed_last_7_days}</dd>
+            </div>
+            <div>
+              <dt>8–30 days</dt>
+              <dd>{snapshot.history_window.observed_8_to_30_days}</dd>
+            </div>
+            <div>
+              <dt>Over 30 days</dt>
+              <dd>{snapshot.history_window.observed_over_30_days}</dd>
+            </div>
+          </dl>
+        </div>
+        <div className="intelligence-clusters">
+          <p className="intelligence-context-label">Role directions</p>
+          <h2>{snapshot.role_clusters.length} observed clusters</h2>
+          <p className="intelligence-context-note">
+            Search results follow your latest search intent. Saved or tracked roles without a
+            search use their exact role title.
+          </p>
+          <ul>
+            {snapshot.role_clusters.map((cluster) => (
+              <li key={`${cluster.basis}-${cluster.label}`}>
+                <strong>{cluster.label}</strong>
+                <span>
+                  {cluster.role_count} {cluster.role_count === 1 ? "role" : "roles"} ·{" "}
+                  {cluster.basis === "search_intent" ? "Your search intent" : "Exact role title"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       {snapshot.skills.length === 0 ? (

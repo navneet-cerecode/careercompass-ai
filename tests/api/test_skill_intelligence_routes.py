@@ -107,6 +107,16 @@ def test_skill_intelligence_is_cross_industry_evidence_only_and_owner_scoped():
     assert payload["roles_with_skill_data"] == 2
     assert payload["saved_roles"] == 1
     assert payload["application_roles"] == 1
+    assert payload["history_window"]["first_observed_at"] is not None
+    assert payload["history_window"]["last_observed_at"] is not None
+    assert payload["history_window"]["observed_last_7_days"] == 2
+    assert payload["history_window"]["observed_8_to_30_days"] == 0
+    assert payload["history_window"]["observed_over_30_days"] == 0
+    assert {cluster["label"] for cluster in payload["role_clusters"]} == {
+        "Operations Manager",
+        "Supply Coordinator",
+    }
+    assert {cluster["basis"] for cluster in payload["role_clusters"]} == {"role_title"}
     by_name = {item["name"]: item for item in payload["skills"]}
     assert by_name["Communication"]["status"] == "supported"
     assert by_name["Communication"]["match_confidence"] == "exact"
@@ -123,6 +133,8 @@ def test_skill_intelligence_is_cross_industry_evidence_only_and_owner_scoped():
     assert hidden.status_code == 200
     assert hidden.json()["roles_analyzed"] == 0
     assert hidden.json()["resume_id"] is None
+    assert hidden.json()["role_clusters"] == []
+    assert hidden.json()["history_window"]["last_observed_at"] is None
 
     app.dependency_overrides[get_required_principal] = lambda: _principal(owner)
 

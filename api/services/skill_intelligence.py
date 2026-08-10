@@ -1,5 +1,6 @@
 """Aggregate skill evidence from one user's resume and observed role history."""
 
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from database.repositories.applications import ApplicationRepository, SavedJobRepository
@@ -9,6 +10,9 @@ from database.repositories.resumes import ResumeRepository
 from database.session import Database
 from models.job import Job
 from models.skill_intelligence import (
+    RoleCluster,
+    RoleClusterBasis,
+    RoleHistoryWindow,
     SkillIntelligenceItem,
     SkillIntelligenceSnapshot,
     SkillRoleReference,
@@ -26,29 +30,48 @@ class SkillIntelligenceService:
     def get(self, *, user_id: UUID) -> SkillIntelligenceSnapshot:
         with self.database.session() as session:
             resume = ResumeRepository(session).get_active(user_id=user_id)
-            searched_ids = JobDiscoveryTaskRepository(session).list_user_job_ids(
+            search_observations = JobDiscoveryTaskRepository(
+                session
+            ).list_user_job_observations(
                 user_id=user_id,
                 limit=self.MAX_ROLES,
             )
-            saved_ids = tuple(
-                saved.job_id for saved in SavedJobRepository(session).list(user_id=user_id)
-            )
-            application_ids = tuple(
-                application.job_id
-                for application in ApplicationRepository(session).list(user_id=user_id)
-            )
+            saved_jobs = SavedJobRepository(session).list(user_id=user_id)
+            applications = ApplicationRepository(session).list(user_id=user_id)
+            searched_ids = tuple(item.job_id for item in search_observations)
+            saved_ids = tuple(saved.job_id for saved in saved_jobs)
+            application_ids = tuple(application.job_id for application in applications)
             job_ids = self._unique_ids(application_ids + saved_ids + searched_ids)[
                 : self.MAX_ROLES
             ]
             jobs = JobRepository(session).get_many(job_ids) if job_ids else ()
             if jobs is None:
                 raise RuntimeError("Career history references a missing catalog entry.")
+            observation_windows: dict[UUID, tuple[datetime, datetime]] = {
+                item.job_id: (item.first_observed_at, item.last_observed_at)
+                for item in search_observations
+            }
+            cluster_hints: dict[UUID, tuple[str, RoleClusterBasis]] = {
+                item.job_id: (item.role, "search_intent") for item in search_observations
+            }
+            for item in (*saved_jobs, *applications):
+                first, last = observation_windows.get(
+                    item.job_id,
+                    (item.created_at, item.created_at),
+                )
+                observation_windows[item.job_id] = (
+                    min(self._utc(first), self._utc(item.created_at)),
+                    max(self._utc(last), self._utc(item.created_at)),
+                )
             return self._snapshot(
                 resume=resume.resume if resume else None,
                 jobs=jobs,
                 searched_ids=searched_ids,
                 saved_ids=saved_ids,
                 application_ids=application_ids,
+                observation_windows=observation_windows,
+                cluster_hints=cluster_hints,
+                now=datetime.now(UTC),
             )
 
     @classmethod
@@ -60,6 +83,9 @@ class SkillIntelligenceService:
         searched_ids: tuple[UUID, ...],
         saved_ids: tuple[UUID, ...],
         application_ids: tuple[UUID, ...],
+        observation_windows: dict[UUID, tuple[datetime, datetime]],
+        cluster_hints: dict[UUID, tuple[str, RoleClusterBasis]],
+        now: datetime,
     ) -> SkillIntelligenceSnapshot:
         resume_skills: dict[str, tuple[str, str | None, str]] = {}
         if resume:
@@ -152,8 +178,63 @@ class SkillIntelligenceService:
             search_history_roles=len(analyzed_ids.intersection(searched_ids)),
             saved_roles=len(analyzed_ids.intersection(saved_ids)),
             application_roles=len(analyzed_ids.intersection(application_ids)),
+            history_window=cls._history_window(
+                jobs=jobs,
+                observation_windows=observation_windows,
+                now=now,
+            ),
+            role_clusters=cls._role_clusters(jobs=jobs, cluster_hints=cluster_hints),
             skills=tuple(skills),
         )
+
+    @classmethod
+    def _history_window(
+        cls,
+        *,
+        jobs: tuple[Job, ...],
+        observation_windows: dict[UUID, tuple[datetime, datetime]],
+        now: datetime,
+    ) -> RoleHistoryWindow:
+        windows = [observation_windows[job.id] for job in jobs]
+        if not windows:
+            return RoleHistoryWindow()
+        normalized = [(cls._utc(first), cls._utc(last)) for first, last in windows]
+        recent_cutoff = now - timedelta(days=7)
+        aging_cutoff = now - timedelta(days=30)
+        latest = [last for _, last in normalized]
+        return RoleHistoryWindow(
+            first_observed_at=min(first for first, _ in normalized),
+            last_observed_at=max(latest),
+            observed_last_7_days=sum(item >= recent_cutoff for item in latest),
+            observed_8_to_30_days=sum(aging_cutoff <= item < recent_cutoff for item in latest),
+            observed_over_30_days=sum(item < aging_cutoff for item in latest),
+        )
+
+    @classmethod
+    def _role_clusters(
+        cls,
+        *,
+        jobs: tuple[Job, ...],
+        cluster_hints: dict[UUID, tuple[str, RoleClusterBasis]],
+    ) -> tuple[RoleCluster, ...]:
+        clusters: dict[tuple[RoleClusterBasis, str], dict[str, object]] = {}
+        for job in jobs:
+            label, basis = cluster_hints.get(job.id, (job.title, "role_title"))
+            key = (basis, cls._literal_key(label))
+            cluster = clusters.setdefault(key, {"label": label, "roles": []})
+            cluster["roles"].append(
+                SkillRoleReference(job_id=job.id, title=job.title, company=job.company)
+            )
+        values = (
+            RoleCluster(
+                label=str(cluster["label"]),
+                basis=basis,
+                role_count=len(cluster["roles"]),
+                roles=tuple(cluster["roles"][:3]),
+            )
+            for (basis, _), cluster in clusters.items()
+        )
+        return tuple(sorted(values, key=lambda item: (-item.role_count, item.label.casefold())))
 
     @staticmethod
     def _unique_ids(values: tuple[UUID, ...]) -> tuple[UUID, ...]:
@@ -162,3 +243,7 @@ class SkillIntelligenceService:
     @staticmethod
     def _literal_key(value: str) -> str:
         return " ".join(value.strip().casefold().split())
+
+    @staticmethod
+    def _utc(value: datetime) -> datetime:
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)

@@ -5258,6 +5258,100 @@ button:focus-visible {
   font-size: 0.76rem;
 }
 
+.intelligence-history {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  max-width: 1450px;
+  margin: 0 auto 1.25rem;
+  border: 1px solid var(--line);
+  background: var(--paper-soft);
+}
+
+.intelligence-history > div {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.intelligence-history > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.intelligence-context-label {
+  margin: 0;
+  color: var(--coral-strong);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.intelligence-history h2 {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: clamp(1.55rem, 2.4vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.intelligence-context-note {
+  max-width: 64ch;
+  margin: 0.6rem 0 1.2rem;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.intelligence-window dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+}
+
+.intelligence-window dl > div {
+  border-top: 1px solid var(--line);
+  padding: 0.75rem 0.65rem 0 0;
+}
+
+.intelligence-window dt,
+.intelligence-clusters span {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.intelligence-window dd {
+  margin: 0.3rem 0 0;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: 1.65rem;
+}
+
+.intelligence-clusters ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intelligence-clusters li {
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.intelligence-clusters strong,
+.intelligence-clusters span {
+  display: block;
+}
+
+.intelligence-clusters strong {
+  font-size: 0.86rem;
+}
+
+.intelligence-clusters span {
+  margin-top: 0.25rem;
+}
+
 .intelligence-matrix {
   max-width: 1450px;
   margin: 0 auto;
@@ -5492,6 +5586,15 @@ tr[data-status="develop"] .intelligence-status {
     max-width: 70ch;
   }
 
+  .intelligence-history {
+    grid-template-columns: 1fr;
+  }
+
+  .intelligence-history > div + div {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
   .intelligence-matrix > header {
     align-items: flex-start;
     flex-direction: column;
@@ -5514,6 +5617,21 @@ tr[data-status="develop"] .intelligence-status {
   .intelligence-sources p {
     display: grid;
     gap: 0.45rem;
+  }
+
+  .intelligence-window dl {
+    grid-template-columns: 1fr;
+  }
+
+  .intelligence-window dl > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.65rem 0;
+  }
+
+  .intelligence-window dd {
+    margin: 0;
   }
 
   .intelligence-matrix {

@@ -125,3 +125,8 @@ def test_discovery_history_lists_only_completed_jobs_for_the_owner():
 
         assert repository.list_user_job_ids(user_id=owner.id) == (job.id,)
         assert repository.list_user_job_ids(user_id=other.id) == ()
+        observations = repository.list_user_job_observations(user_id=owner.id)
+        assert len(observations) == 1
+        assert observations[0].job_id == job.id
+        assert observations[0].role == "Store Manager"
+        assert observations[0].first_observed_at <= observations[0].last_observed_at

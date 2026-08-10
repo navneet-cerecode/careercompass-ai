@@ -2050,6 +2050,90 @@
         "title": "ResumeResponse",
         "type": "object"
       },
+      "RoleClusterResponse": {
+        "properties": {
+          "basis": {
+            "enum": [
+              "search_intent",
+              "role_title"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "role_count": {
+            "title": "Role Count",
+            "type": "integer"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/SkillRoleReferenceResponse"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "basis",
+          "role_count",
+          "roles"
+        ],
+        "title": "RoleClusterResponse",
+        "type": "object"
+      },
+      "RoleHistoryWindowResponse": {
+        "properties": {
+          "first_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Observed At"
+          },
+          "last_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Observed At"
+          },
+          "observed_8_to_30_days": {
+            "title": "Observed 8 To 30 Days",
+            "type": "integer"
+          },
+          "observed_last_7_days": {
+            "title": "Observed Last 7 Days",
+            "type": "integer"
+          },
+          "observed_over_30_days": {
+            "title": "Observed Over 30 Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "first_observed_at",
+          "last_observed_at",
+          "observed_last_7_days",
+          "observed_8_to_30_days",
+          "observed_over_30_days"
+        ],
+        "title": "RoleHistoryWindowResponse",
+        "type": "object"
+      },
       "SaveJobRequest": {
         "properties": {
           "notes": {
@@ -2239,6 +2323,9 @@
             "title": "Application Roles",
             "type": "integer"
           },
+          "history_window": {
+            "$ref": "#/components/schemas/RoleHistoryWindowResponse"
+          },
           "resume_id": {
             "anyOf": [
               {
@@ -2250,6 +2337,13 @@
               }
             ],
             "title": "Resume Id"
+          },
+          "role_clusters": {
+            "items": {
+              "$ref": "#/components/schemas/RoleClusterResponse"
+            },
+            "title": "Role Clusters",
+            "type": "array"
           },
           "roles_analyzed": {
             "title": "Roles Analyzed",
@@ -2287,6 +2381,8 @@
           "search_history_roles",
           "saved_roles",
           "application_roles",
+          "history_window",
+          "role_clusters",
           "skills"
         ],
         "title": "SkillIntelligenceResponse",

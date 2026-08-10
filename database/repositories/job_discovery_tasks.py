@@ -1,8 +1,10 @@
 """Persistence boundary for asynchronous discovery inputs and ordered results."""
 
+from datetime import datetime
+from typing import NamedTuple
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from api.schemas.job_search import JobSearchRequest
@@ -17,6 +19,13 @@ from database.repositories.task_outbox import TaskOutboxRepository
 from models.background_task import BackgroundTask
 from models.job import Job
 from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
+
+
+class JobHistoryObservation(NamedTuple):
+    job_id: UUID
+    role: str
+    first_observed_at: datetime
+    last_observed_at: datetime
 
 
 class JobDiscoveryTaskRepository:
@@ -74,9 +83,26 @@ class JobDiscoveryTaskRepository:
         return self._request_from_record(record) if record is not None else None
 
     def list_user_job_ids(self, *, user_id: UUID, limit: int = 100) -> tuple[UUID, ...]:
-        # ponytail: scan 5x the requested rows; paginate if repeated searches hide older unique jobs.
-        rows = self.session.scalars(
-            select(JobDiscoveryTaskResultRecord.job_id)
+        return tuple(
+            observation.job_id
+            for observation in self.list_user_job_observations(
+                user_id=user_id,
+                limit=limit,
+            )
+        )
+
+    def list_user_job_observations(
+        self,
+        *,
+        user_id: UUID,
+        limit: int = 100,
+    ) -> tuple[JobHistoryObservation, ...]:
+        observed_rows = self.session.execute(
+            select(
+                JobDiscoveryTaskResultRecord.job_id,
+                func.min(BackgroundTaskRecord.created_at),
+                func.max(BackgroundTaskRecord.updated_at),
+            )
             .join(
                 BackgroundTaskRecord,
                 BackgroundTaskRecord.id == JobDiscoveryTaskResultRecord.task_id,
@@ -85,13 +111,46 @@ class JobDiscoveryTaskRepository:
                 BackgroundTaskRecord.user_id == user_id,
                 BackgroundTaskRecord.status == "succeeded",
             )
-            .order_by(
-                BackgroundTaskRecord.updated_at.desc(),
-                JobDiscoveryTaskResultRecord.position,
-            )
-            .limit(max(limit * 5, limit))
+            .group_by(JobDiscoveryTaskResultRecord.job_id)
+            .order_by(func.max(BackgroundTaskRecord.updated_at).desc())
+            .limit(limit)
         ).all()
-        return tuple(dict.fromkeys(rows))[:limit]
+        if not observed_rows:
+            return ()
+
+        job_ids = tuple(row[0] for row in observed_rows)
+        latest_roles: dict[UUID, str] = {}
+        for job_id, role in self.session.execute(
+            select(
+                JobDiscoveryTaskResultRecord.job_id,
+                JobDiscoveryTaskRecord.role,
+            )
+            .join(
+                JobDiscoveryTaskRecord,
+                JobDiscoveryTaskRecord.task_id == JobDiscoveryTaskResultRecord.task_id,
+            )
+            .join(
+                BackgroundTaskRecord,
+                BackgroundTaskRecord.id == JobDiscoveryTaskResultRecord.task_id,
+            )
+            .where(
+                JobDiscoveryTaskResultRecord.job_id.in_(job_ids),
+                BackgroundTaskRecord.user_id == user_id,
+                BackgroundTaskRecord.status == "succeeded",
+            )
+            .order_by(BackgroundTaskRecord.updated_at.desc())
+        ).all():
+            latest_roles.setdefault(job_id, role)
+
+        return tuple(
+            JobHistoryObservation(
+                job_id=job_id,
+                role=latest_roles[job_id],
+                first_observed_at=first_observed_at,
+                last_observed_at=last_observed_at,
+            )
+            for job_id, first_observed_at, last_observed_at in observed_rows
+        )
 
     def save_result(
         self,
