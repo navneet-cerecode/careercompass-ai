@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 SkillEvidenceStatus = Literal["supported", "develop", "resume_only"]
+SkillMatchConfidence = Literal["exact", "curated_high"]
 
 
 class SkillRoleReference(BaseModel):
@@ -23,6 +24,8 @@ class SkillIntelligenceItem(BaseModel):
     category: str | None = None
     status: SkillEvidenceStatus
     resume_evidenced: bool
+    match_confidence: SkillMatchConfidence | None = None
+    matched_terms: tuple[str, ...] = ()
     observed_role_count: int
     observed_roles: tuple[SkillRoleReference, ...] = ()
 

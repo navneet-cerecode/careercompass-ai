@@ -40,7 +40,7 @@ def _client():
                 skills=[
                     Skill(name="Communication", category="People"),
                     Skill(name="Inventory management", category="Operations"),
-                    Skill(name="Excel", category="Tools"),
+                    Skill(name="MS Excel", category="Tools"),
                 ],
             ),
         )
@@ -66,6 +66,7 @@ def _client():
                 description="Coordinate inventory and supplier relationships.",
                 required_skills=[
                     Skill(name="Inventory management", category="Operations"),
+                    Skill(name="Microsoft Excel", category="Tools"),
                     Skill(name="Vendor relations", category="Operations"),
                 ],
                 url="https://example.com/supply",
@@ -108,10 +109,13 @@ def test_skill_intelligence_is_cross_industry_evidence_only_and_owner_scoped():
     assert payload["application_roles"] == 1
     by_name = {item["name"]: item for item in payload["skills"]}
     assert by_name["Communication"]["status"] == "supported"
+    assert by_name["Communication"]["match_confidence"] == "exact"
     assert by_name["Inventory Management"]["status"] == "supported"
+    assert by_name["MS Excel"]["status"] == "supported"
+    assert by_name["MS Excel"]["match_confidence"] == "curated_high"
+    assert by_name["MS Excel"]["matched_terms"] == ["MS Excel", "Microsoft Excel"]
     assert by_name["Vendor Relations"]["status"] == "develop"
     assert by_name["Vendor Relations"]["observed_role_count"] == 2
-    assert by_name["Excel"]["status"] == "resume_only"
     assert "Python" not in by_name
 
     app.dependency_overrides[get_required_principal] = lambda: _principal(other)

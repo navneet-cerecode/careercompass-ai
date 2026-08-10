@@ -1587,6 +1587,10 @@ export interface components {
         SkillIntelligenceItemResponse: {
             /** Category */
             category: string | null;
+            /** Match Confidence */
+            match_confidence: ("exact" | "curated_high") | null;
+            /** Matched Terms */
+            matched_terms: string[];
             /** Name */
             name: string;
             /** Observed Role Count */

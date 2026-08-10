@@ -5405,6 +5405,20 @@ tr[data-status="develop"] .intelligence-status {
   color: #7c291c;
 }
 
+.intelligence-confidence {
+  width: fit-content;
+  margin-top: 0.45rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.intelligence-match-note {
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
 .intelligence-filter-empty {
   margin: 0;
   border-top: 1px solid var(--line);

@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from api.schemas.common import APIModel
-from models.skill_intelligence import SkillEvidenceStatus
+from models.skill_intelligence import SkillEvidenceStatus, SkillMatchConfidence
 
 
 class SkillRoleReferenceResponse(APIModel):
@@ -17,6 +17,8 @@ class SkillIntelligenceItemResponse(APIModel):
     category: str | None
     status: SkillEvidenceStatus
     resume_evidenced: bool
+    match_confidence: SkillMatchConfidence | None
+    matched_terms: tuple[str, ...]
     observed_role_count: int
     observed_roles: tuple[SkillRoleReferenceResponse, ...]
 

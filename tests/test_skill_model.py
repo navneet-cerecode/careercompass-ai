@@ -31,3 +31,14 @@ def test_skill_model_preserves_canonical_technology_names(raw_name, canonical_na
 @pytest.mark.parametrize("name", ["CPR", "RN", "CPA"])
 def test_skill_model_preserves_occupational_acronyms(name):
     assert Skill(name=name).name == name
+
+
+@pytest.mark.parametrize(
+    ("raw_name", "canonical_name"),
+    [("ms excel", "MS Excel"), ("crm", "CRM"), ("sops", "SOPs"), ("ux", "UX")],
+)
+def test_skill_model_preserves_cross_industry_product_and_process_names(
+    raw_name,
+    canonical_name,
+):
+    assert Skill(name=raw_name).name == canonical_name

@@ -39,6 +39,14 @@ function stateLabel(item: SkillIntelligenceItemResponse) {
   return "Not observed in this role set";
 }
 
+function confidenceLabel(item: SkillIntelligenceItemResponse) {
+  if (item.match_confidence === "exact") return "Exact wording";
+  if (item.match_confidence === "curated_high") {
+    return "Curated alias · high confidence";
+  }
+  return null;
+}
+
 export function SkillIntelligenceWorkspace() {
   const [state, setState] = useState<IntelligenceState>({ status: "loading" });
   const [filter, setFilter] = useState<Filter>("all");
@@ -253,6 +261,16 @@ export function SkillIntelligenceWorkspace() {
                       </td>
                       <td data-label="Interpretation">
                         <span className="intelligence-status">{stateLabel(skill)}</span>
+                        {confidenceLabel(skill) ? (
+                          <span className="intelligence-confidence">
+                            {confidenceLabel(skill)}
+                          </span>
+                        ) : null}
+                        {skill.match_confidence === "curated_high" ? (
+                          <span className="intelligence-match-note">
+                            Matched terms: {skill.matched_terms.join(" ↔ ")}
+                          </span>
+                        ) : null}
                       </td>
                     </tr>
                   ))}

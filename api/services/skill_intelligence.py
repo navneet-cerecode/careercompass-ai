@@ -13,6 +13,7 @@ from models.skill_intelligence import (
     SkillIntelligenceSnapshot,
     SkillRoleReference,
 )
+from services.skills import canonical_skill_key
 
 
 class SkillIntelligenceService:
@@ -60,22 +61,36 @@ class SkillIntelligenceService:
         saved_ids: tuple[UUID, ...],
         application_ids: tuple[UUID, ...],
     ) -> SkillIntelligenceSnapshot:
-        resume_skills = {
-            skill.name.casefold(): (skill.name, skill.category) for skill in resume.skills
-        } if resume else {}
+        resume_skills: dict[str, tuple[str, str | None, str]] = {}
+        if resume:
+            for skill in resume.skills:
+                resume_skills.setdefault(
+                    canonical_skill_key(skill.name),
+                    (skill.name, skill.category, cls._literal_key(skill.name)),
+                )
         observed: dict[str, dict[str, object]] = {}
         roles_with_skills = 0
         for job in jobs:
             unique_job_skills: set[str] = set()
             for skill in job.required_skills:
-                key = skill.name.casefold()
+                key = canonical_skill_key(skill.name)
+                entry = observed.setdefault(
+                    key,
+                    {
+                        "name": skill.name,
+                        "category": skill.category,
+                        "roles": [],
+                        "terms": [],
+                    },
+                )
+                terms = entry["terms"]
+                if cls._literal_key(skill.name) not in {
+                    cls._literal_key(term) for term in terms
+                }:
+                    terms.append(skill.name)
                 if key in unique_job_skills:
                     continue
                 unique_job_skills.add(key)
-                entry = observed.setdefault(
-                    key,
-                    {"name": skill.name, "category": skill.category, "roles": []},
-                )
                 entry["roles"].append(
                     SkillRoleReference(job_id=job.id, title=job.title, company=job.company)
                 )
@@ -87,17 +102,29 @@ class SkillIntelligenceService:
         resume_only: list[SkillIntelligenceItem] = []
         for key, entry in observed.items():
             roles = tuple(entry["roles"])
+            terms = tuple(entry["terms"])
             resume_entry = resume_skills.get(key)
+            match_confidence = None
+            matched_terms: tuple[str, ...] = ()
+            if resume_entry:
+                match_confidence = (
+                    "exact"
+                    if resume_entry[2] in {cls._literal_key(term) for term in terms}
+                    else "curated_high"
+                )
+                matched_terms = tuple(dict.fromkeys((resume_entry[0], *terms)))
             item = SkillIntelligenceItem(
                 name=resume_entry[0] if resume_entry else str(entry["name"]),
                 category=resume_entry[1] if resume_entry else entry["category"],
                 status="supported" if resume_entry else "develop",
                 resume_evidenced=resume_entry is not None,
+                match_confidence=match_confidence,
+                matched_terms=matched_terms,
                 observed_role_count=len(roles),
                 observed_roles=roles[:3],
             )
             (supported if resume_entry else gaps).append(item)
-        for key, (name, category) in resume_skills.items():
+        for key, (name, category, _) in resume_skills.items():
             if key not in observed:
                 resume_only.append(
                     SkillIntelligenceItem(
@@ -131,3 +158,7 @@ class SkillIntelligenceService:
     @staticmethod
     def _unique_ids(values: tuple[UUID, ...]) -> tuple[UUID, ...]:
         return tuple(dict.fromkeys(values))
+
+    @staticmethod
+    def _literal_key(value: str) -> str:
+        return " ".join(value.strip().casefold().split())

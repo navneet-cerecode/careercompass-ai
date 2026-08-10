@@ -18,6 +18,8 @@ const snapshot = {
       category: "People",
       status: "supported",
       resume_evidenced: true,
+      match_confidence: "exact",
+      matched_terms: ["Communication"],
       observed_role_count: 3,
       observed_roles: [
         {
@@ -32,14 +34,28 @@ const snapshot = {
       category: "Operations",
       status: "develop",
       resume_evidenced: false,
+      match_confidence: null,
+      matched_terms: [],
       observed_role_count: 2,
       observed_roles: [],
     },
     {
-      name: "Excel",
+      name: "MS Excel",
       category: "Tools",
+      status: "supported",
+      resume_evidenced: true,
+      match_confidence: "curated_high",
+      matched_terms: ["MS Excel", "Microsoft Excel"],
+      observed_role_count: 1,
+      observed_roles: [],
+    },
+    {
+      name: "Bookkeeping",
+      category: "Finance",
       status: "resume_only",
       resume_evidenced: true,
+      match_confidence: null,
+      matched_terms: [],
       observed_role_count: 0,
       observed_roles: [],
     },
@@ -65,6 +81,8 @@ describe("SkillIntelligenceWorkspace", () => {
     ).toBeVisible();
     expect(screen.getByText(/not from the wider labor market/i)).toBeVisible();
     expect(screen.getByRole("row", { name: /Communication/ })).toBeVisible();
+    expect(screen.getByText("Curated alias · high confidence")).toBeVisible();
+    expect(screen.getByText("Matched terms: MS Excel ↔ Microsoft Excel")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Develop" }));
     expect(screen.getByRole("row", { name: /Vendor Relations/ })).toBeVisible();
     expect(screen.queryByRole("row", { name: /Communication/ })).not.toBeInTheDocument();
