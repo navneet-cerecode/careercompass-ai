@@ -152,6 +152,14 @@ export function SkillIntelligenceWorkspace() {
   const hasObservedSkillData = snapshot.roles_with_skill_data > 0;
   const firstObserved = formatObservedDate(snapshot.history_window.first_observed_at);
   const lastObserved = formatObservedDate(snapshot.history_window.last_observed_at);
+  const developmentPriorities = snapshot.skills
+    .filter((skill) => skill.status === "develop")
+    .sort(
+      (left, right) =>
+        right.observed_role_count - left.observed_role_count ||
+        left.name.localeCompare(right.name),
+    )
+    .slice(0, 5);
 
   return (
     <main id="main-content" className="intelligence-main">
@@ -242,6 +250,51 @@ export function SkillIntelligenceWorkspace() {
           </ul>
         </div>
       </section>
+
+      {developmentPriorities.length > 0 ? (
+        <section className="intelligence-priorities" aria-labelledby="priority-title">
+          <header>
+            <div>
+              <p className="intelligence-context-label">Development plan</p>
+              <h2 id="priority-title">Start with the gaps that repeat.</h2>
+            </div>
+            <p>
+              Ranked only by how often a skill appeared in this role set. First verify whether
+              you already have truthful evidence; build the skill only when that evidence does
+              not exist.
+            </p>
+          </header>
+          <ol>
+            {developmentPriorities.map((skill, index) => (
+              <li key={skill.name}>
+                <span className="intelligence-priority-rank">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p>{skill.category ?? "Uncategorized"}</p>
+                  <h3>{skill.name}</h3>
+                  <strong>
+                    Observed in {skill.observed_role_count} of {snapshot.roles_analyzed} roles
+                  </strong>
+                  {skill.observed_roles.length > 0 ? (
+                    <span>
+                      Including {skill.observed_roles.map((role) => role.title).join(", ")}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="intelligence-priority-action">
+                  Check your existing work for specific evidence. If none exists, choose one
+                  concrete learning or practice step before adding this skill to your resume.
+                </p>
+              </li>
+            ))}
+          </ol>
+          <footer>
+            <span>This is a planning aid, not a claim that you lack these capabilities.</span>
+            <a href="/workspace">Review resume evidence</a>
+          </footer>
+        </section>
+      ) : null}
 
       {snapshot.skills.length === 0 ? (
         <section className="intelligence-state intelligence-state-inline">

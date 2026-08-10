@@ -61,6 +61,16 @@ const snapshot = {
       observed_roles: [],
     },
     {
+      name: "Scheduling",
+      category: "Operations",
+      status: "develop",
+      resume_evidenced: false,
+      match_confidence: null,
+      matched_terms: [],
+      observed_role_count: 1,
+      observed_roles: [],
+    },
+    {
       name: "MS Excel",
       category: "Tools",
       status: "supported",
@@ -105,6 +115,16 @@ describe("SkillIntelligenceWorkspace", () => {
     expect(screen.getByText(/not the employer’s posting date/i)).toBeVisible();
     expect(screen.getByText(/3 roles · Your search intent/i)).toBeVisible();
     expect(screen.getByText(/1 role · Exact role title/i)).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Start with the gaps that repeat." }),
+    ).toBeVisible();
+    expect(screen.getByText("Observed in 2 of 4 roles")).toBeVisible();
+    expect(screen.getByText("Observed in 1 of 4 roles")).toBeVisible();
+    expect(screen.getByText(/not a claim that you lack these capabilities/i)).toBeVisible();
+    expect(screen.getByRole("link", { name: "Review resume evidence" })).toHaveAttribute(
+      "href",
+      "/workspace",
+    );
     expect(screen.getByRole("row", { name: /Communication/ })).toBeVisible();
     expect(screen.getByText("Curated alias · high confidence")).toBeVisible();
     expect(screen.getByText("Matched terms: MS Excel ↔ Microsoft Excel")).toBeVisible();

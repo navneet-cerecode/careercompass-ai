@@ -5352,6 +5352,123 @@ button:focus-visible {
   margin-top: 0.25rem;
 }
 
+.intelligence-priorities {
+  max-width: 1450px;
+  margin: 0 auto 1.25rem;
+  border: 1px solid var(--night);
+  background: var(--night);
+  color: var(--white);
+}
+
+.intelligence-priorities > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.75fr);
+  gap: 2rem;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+}
+
+.intelligence-priorities h2 {
+  max-width: 14ch;
+  margin: 0.45rem 0 0;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: clamp(2rem, 3.6vw, 3.8rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.intelligence-priorities > header > p {
+  align-self: end;
+  max-width: 60ch;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.intelligence-priorities ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intelligence-priorities li {
+  display: grid;
+  grid-template-columns: 3rem minmax(220px, 0.65fr) minmax(280px, 1fr);
+  gap: clamp(1rem, 2vw, 2rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.2rem clamp(1.4rem, 3vw, 2.4rem);
+}
+
+.intelligence-priority-rank {
+  color: var(--lime);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  padding-top: 0.2rem;
+}
+
+.intelligence-priorities li p,
+.intelligence-priorities li h3,
+.intelligence-priorities li strong,
+.intelligence-priorities li span {
+  margin: 0;
+}
+
+.intelligence-priorities li div > p {
+  color: var(--lime);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intelligence-priorities h3 {
+  margin-top: 0.3rem !important;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+
+.intelligence-priorities li div > strong,
+.intelligence-priorities li div > span {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.intelligence-priorities li div > span,
+.intelligence-priority-action {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.intelligence-priority-action {
+  align-self: center;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.intelligence-priorities footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1rem clamp(1.4rem, 3vw, 2.4rem);
+}
+
+.intelligence-priorities footer span {
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.72rem;
+}
+
+.intelligence-priorities footer a {
+  color: var(--lime);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .intelligence-matrix {
   max-width: 1450px;
   margin: 0 auto;
@@ -5595,6 +5712,18 @@ tr[data-status="develop"] .intelligence-status {
     border-left: 0;
   }
 
+  .intelligence-priorities > header {
+    grid-template-columns: 1fr;
+  }
+
+  .intelligence-priorities li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+
+  .intelligence-priority-action {
+    grid-column: 2;
+  }
+
   .intelligence-matrix > header {
     align-items: flex-start;
     flex-direction: column;
@@ -5632,6 +5761,17 @@ tr[data-status="develop"] .intelligence-status {
 
   .intelligence-window dd {
     margin: 0;
+  }
+
+  .intelligence-priorities li {
+    grid-template-columns: 1.7rem minmax(0, 1fr);
+    padding-inline: 1rem;
+  }
+
+  .intelligence-priorities footer {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-inline: 1rem;
   }
 
   .intelligence-matrix {
