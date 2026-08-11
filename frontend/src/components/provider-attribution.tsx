@@ -23,6 +23,13 @@ export function ProviderAttribution({
   source_name: sourceName,
   source_url: sourceUrl,
 }: ProviderAttributionProps) {
+  if (source === "The Muse" && sourceUrl) {
+    return (
+      <a className="job-source" href={sourceUrl} target="_blank" rel="noreferrer">
+        {source}
+      </a>
+    );
+  }
   if (source !== "Adzuna") {
     return <span className="job-source">{sourceName ?? source}</span>;
   }

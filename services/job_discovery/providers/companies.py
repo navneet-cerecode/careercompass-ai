@@ -22,6 +22,13 @@ COMPANIES: list[ProviderConfig] = [
         "priority": 10,
     },
     {
+        "id": "the_muse",
+        "name": "The Muse",
+        "platform": "the_muse",
+        "enabled": bool(settings.the_muse_api_key),
+        "priority": 7,
+    },
+    {
         "id": "nvidia",
         "name": "NVIDIA",
         "platform": "workday",

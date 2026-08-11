@@ -28,10 +28,11 @@ the frontend cutover.
   tracked roles using disclosed exact or curated high-confidence aliases, without presenting the
   sample as market-wide demand.
 
-The built-in provider set includes Adzuna, Arbeitnow, JSearch, and NVIDIA Workday. Adzuna is
-enabled only when both of its credentials are configured. Arbeitnow serves its supported Germany
-and UK feeds. The Muse, Greenhouse, SmartRecruiters, and Ashby remain evaluated roadmap sources,
-not active adapters.
+The built-in provider set includes Adzuna, Arbeitnow, JSearch, The Muse, and NVIDIA Workday.
+Adzuna and The Muse are enabled only when their credentials are configured. Arbeitnow serves its
+supported Germany and UK feeds. The Muse locally enforces title and location relevance because its
+public API has no general keyword filter. Greenhouse, SmartRecruiters, and Ashby remain roadmap
+sources, not active adapters.
 
 ## Requirements
 
@@ -265,12 +266,13 @@ The decision and migration rules are recorded in
 
 `services/job_discovery/providers` is the canonical provider package. Providers accept a typed
 `JobSearchQuery`, declare implemented capabilities, and normalize raw payloads into the shared
-`Job` model. The active adapters are `AdzunaProvider`, `ArbeitnowProvider`, `JSearchProvider`, and
-`WorkdayProvider`; credential and geography checks determine which participate in a search.
+`Job` model. The active adapters are `AdzunaProvider`, `ArbeitnowProvider`, `JSearchProvider`,
+`TheMuseProvider`, and `WorkdayProvider`; credential and geography checks determine which
+participate in a search.
 
 JSearch uses `job_uid` as its stable provider identity and retains `job_id` only as a compatibility
 fallback. Provider outages produce explicit partial-coverage results rather than failing the
-complete search. Displayed Adzuna listings carry the required linked source attribution.
+complete search. Displayed Adzuna and Muse listings carry their required linked attribution.
 
 The former `APIProvider`, positional `search(role, location)`, and duplicate provider-base import
 remain as compatibility adapters. The provider decision is recorded in

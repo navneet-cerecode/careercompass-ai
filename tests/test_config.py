@@ -13,6 +13,7 @@ def test_settings_load_without_credentials(monkeypatch):
 
     assert settings.groq_api_key is None
     assert settings.rapidapi_key is None
+    assert settings.the_muse_api_key is None
     assert settings.groq_model == "llama-3.3-70b-versatile"
     assert settings.temperature == 0.2
     assert settings.max_tokens == 1024
@@ -23,6 +24,7 @@ def test_settings_load_without_credentials(monkeypatch):
 def test_settings_load_prefixed_llm_configuration(monkeypatch):
     monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
     monkeypatch.setenv("RAPIDAPI_KEY", "test-rapidapi-key")
+    monkeypatch.setenv("THE_MUSE_API_KEY", "test-muse-key")
     monkeypatch.setenv("GROQ_TEMPERATURE", "0.35")
     monkeypatch.setenv("GROQ_MAX_TOKENS", "2048")
 
@@ -34,10 +36,13 @@ def test_settings_load_prefixed_llm_configuration(monkeypatch):
     assert settings.groq_api_key.get_secret_value() == "test-groq-key"
     assert settings.rapidapi_key is not None
     assert settings.rapidapi_key.get_secret_value() == "test-rapidapi-key"
+    assert settings.the_muse_api_key is not None
+    assert settings.the_muse_api_key.get_secret_value() == "test-muse-key"
     assert settings.temperature == 0.35
     assert settings.max_tokens == 2048
     assert "test-groq-key" not in repr(settings)
     assert "test-rapidapi-key" not in repr(settings)
+    assert "test-muse-key" not in repr(settings)
 
 
 def test_environment_example_documents_required_credentials():
@@ -45,6 +50,7 @@ def test_environment_example_documents_required_credentials():
 
     assert "GROQ_API_KEY=" in content
     assert "RAPIDAPI_KEY=" in content
+    assert "THE_MUSE_API_KEY=" in content
     assert "GROQ_MODEL=" in content
     assert "REDIS_URL=" in content
     assert "WORKER_MESSAGE_MAX_AGE_MS=" in content

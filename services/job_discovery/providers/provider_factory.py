@@ -6,6 +6,7 @@ from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvide
 from services.job_discovery.providers.contracts import ProviderConfig
 from services.job_discovery.providers.errors import ProviderConfigurationError
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
+from services.job_discovery.providers.the_muse_provider import TheMuseProvider
 from services.job_discovery.providers.workday_provider import WorkdayProvider
 
 
@@ -17,6 +18,7 @@ class ProviderFactory:
         "arbeitnow": ArbeitnowProvider,
         "workday": WorkdayProvider,
         "jsearch": JSearchProvider,
+        "the_muse": TheMuseProvider,
         "api": JSearchProvider,
     }
 

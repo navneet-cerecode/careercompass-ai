@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     adzuna_app_id: SecretStr | None = Field(default=None, alias="ADZUNA_APP_ID")
     adzuna_app_key: SecretStr | None = Field(default=None, alias="ADZUNA_APP_KEY")
+    the_muse_api_key: SecretStr | None = Field(default=None, alias="THE_MUSE_API_KEY")
 
     # ==========================
     # LLM Configuration
