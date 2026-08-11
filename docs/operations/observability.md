@@ -44,6 +44,11 @@ application configuration.
 
 ## Provider integration
 
+Each observed provider search emits a `provider_search` JSON record containing only the provider
+identifier, outcome, elapsed milliseconds, attempts, returned-job count, and sanitized failure code.
+Search text, location, job payloads, resume evidence, credentials, and exception messages are not
+included. Use these records for latency percentiles and source-specific availability alerts.
+
 An external analytics provider must implement the `AnalyticsSink` boundary. It
 must not receive arbitrary request objects or domain models. Provider outages
 must remain non-blocking for product operations, and the sink failure log must

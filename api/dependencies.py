@@ -149,7 +149,7 @@ def get_cover_letter_service(
 
 
 def get_job_discovery_service(request: Request) -> JobDiscoveryService:
-    service = getattr(request.app.state, "job_discovery_service", None)
+    service = request.app.state.job_discovery_service
     if service is None:
         service = JobDiscoveryService()
         request.app.state.job_discovery_service = service

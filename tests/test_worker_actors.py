@@ -81,11 +81,13 @@ def test_system_probe_actor_executes_with_stub_broker():
 
 def test_worker_shutdown_disposes_database_connections():
     database = Mock()
-    middleware = DatabaseDisposalMiddleware(database)
+    discovery = Mock()
+    middleware = DatabaseDisposalMiddleware(database, discovery)
 
     middleware.after_worker_shutdown(Mock(), Mock())
 
     database.dispose.assert_called_once_with()
+    discovery.close.assert_called_once_with()
 
 
 def test_task_maintenance_actor_uses_bounded_worker_options():

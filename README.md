@@ -39,6 +39,9 @@ These integrations are discovery-only and perform no application submission.
 Transient provider timeouts, connection failures, rate limits, and selected server errors receive
 one bounded retry. Partial results preserve healthy sources and expose sanitized failure reasons,
 attempt counts, and observed source health without issuing separate quota-consuming probes.
+Configured providers run concurrently through a process-bounded executor. Searches preserve every
+source completed within a 45-second budget and emit privacy-safe provider latency records containing
+only provider identity, outcome, duration, attempts, and result count.
 
 ## Requirements
 

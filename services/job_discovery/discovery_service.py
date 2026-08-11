@@ -2,8 +2,11 @@
 
 import logging
 import time
+import json
 from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass
+from time import perf_counter
 
 import requests
 
@@ -25,6 +28,7 @@ from services.job_discovery.providers.errors import (
 from services.job_discovery.providers.provider_factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
+provider_logger = logging.getLogger("solarahire.providers")
 
 
 @dataclass(frozen=True)
@@ -49,11 +53,15 @@ class JobDiscoveryService:
     MAX_PROVIDER_ATTEMPTS = 2
     MAX_RETRY_DELAY_SECONDS = 2.0
     RETRYABLE_HTTP_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+    DEFAULT_MAX_WORKERS = 8
+    DEFAULT_SEARCH_TIMEOUT_SECONDS = 45.0
 
     def __init__(
         self,
         providers: Iterable[BaseProvider] | None = None,
         pipeline: JobPipeline | None = None,
+        max_workers: int = DEFAULT_MAX_WORKERS,
+        search_timeout_seconds: float = DEFAULT_SEARCH_TIMEOUT_SECONDS,
     ):
         if providers is None:
             self.providers, self.initialization_failures = self._build_configured_providers()
@@ -61,6 +69,14 @@ class JobDiscoveryService:
             self.providers = list(providers)
             self.initialization_failures = []
         self.pipeline = pipeline or self._build_default_pipeline()
+        self.search_timeout_seconds = search_timeout_seconds
+        self.executor = ThreadPoolExecutor(
+            max_workers=max(1, min(max_workers, len(self.providers) or 1)),
+            thread_name_prefix="provider-search",
+        )
+
+    def close(self) -> None:
+        self.executor.shutdown(wait=False, cancel_futures=True)
 
     @staticmethod
     def _build_configured_providers() -> tuple[list[BaseProvider], list[ProviderFailure]]:
@@ -119,34 +135,55 @@ class JobDiscoveryService:
         jobs = []
         failures = list(self.initialization_failures)
         providers_succeeded = 0
+        futures = [
+            (provider, self.executor.submit(self._search_provider, provider, query))
+            for provider in self.providers
+        ]
+        _, pending = wait(
+            [future for _, future in futures],
+            timeout=self.search_timeout_seconds,
+        )
 
-        for provider in self.providers:
-            attempts = 0
-            try:
-                while True:
-                    attempts += 1
-                    try:
-                        provider_jobs = provider.search_jobs(query)
-                        break
-                    except Exception as error:
-                        if attempts >= self.MAX_PROVIDER_ATTEMPTS or not self._is_retryable(error):
-                            raise
-                        time.sleep(self._retry_delay(error, attempts))
-                jobs.extend(provider_jobs)
-                providers_succeeded += 1
-            except Exception as error:
-                logger.exception(
-                    "Provider search failed: %s",
-                    provider.provider_name,
+        for provider, future in futures:
+            if future in pending:
+                attempts = 0 if future.cancel() else 1
+                failure = ProviderFailure(
+                    provider_name=provider.provider_name,
+                    error_type="SearchBudgetExceeded",
+                    code=ProviderFailureCode.TIMEOUT,
+                    attempts=attempts,
                 )
-                failures.append(
-                    ProviderFailure(
-                        provider_name=provider.provider_name,
-                        error_type=type(error).__name__,
-                        code=self._failure_code(error),
-                        attempts=attempts,
-                    )
+                failures.append(failure)
+                self._log_attempt(
+                    provider_name=provider.provider_name,
+                    outcome="unavailable",
+                    duration_ms=self.search_timeout_seconds * 1000,
+                    attempts=attempts,
+                    failure_code=failure.code,
                 )
+                continue
+
+            provider_jobs, failure, duration_ms, attempts = future.result()
+            if failure is not None:
+                failures.append(failure)
+                self._log_attempt(
+                    provider_name=provider.provider_name,
+                    outcome="failed",
+                    duration_ms=duration_ms,
+                    attempts=attempts,
+                    failure_code=failure.code,
+                )
+                continue
+
+            jobs.extend(provider_jobs)
+            providers_succeeded += 1
+            self._log_attempt(
+                provider_name=provider.provider_name,
+                outcome="healthy",
+                duration_ms=duration_ms,
+                attempts=attempts,
+                job_count=len(provider_jobs),
+            )
 
         processed_jobs = self.pipeline.process(jobs)
         return JobDiscoveryResult(
@@ -155,6 +192,64 @@ class JobDiscoveryService:
             providers_attempted=len(self.providers) + len(self.initialization_failures),
             providers_succeeded=providers_succeeded,
         )
+
+    def _search_provider(
+        self,
+        provider: BaseProvider,
+        query: JobSearchQuery,
+    ) -> tuple[list[Job], ProviderFailure | None, float, int]:
+        started = perf_counter()
+        attempts = 0
+        try:
+            while True:
+                attempts += 1
+                try:
+                    jobs = provider.search_jobs(query)
+                    return jobs, None, (perf_counter() - started) * 1000, attempts
+                except Exception as error:
+                    if attempts >= self.MAX_PROVIDER_ATTEMPTS or not self._is_retryable(error):
+                        raise
+                    time.sleep(self._retry_delay(error, attempts))
+        except Exception as error:
+            logger.warning(
+                "Provider search failed: %s; error_type=%s",
+                provider.provider_name,
+                type(error).__name__,
+            )
+            return (
+                [],
+                ProviderFailure(
+                    provider_name=provider.provider_name,
+                    error_type=type(error).__name__,
+                    code=self._failure_code(error),
+                    attempts=attempts,
+                ),
+                (perf_counter() - started) * 1000,
+                attempts,
+            )
+
+    @staticmethod
+    def _log_attempt(
+        *,
+        provider_name: str,
+        outcome: str,
+        duration_ms: float,
+        attempts: int,
+        job_count: int = 0,
+        failure_code: ProviderFailureCode | None = None,
+    ) -> None:
+        event = {
+            "schema_version": 1,
+            "kind": "provider_search",
+            "provider": provider_name,
+            "outcome": outcome,
+            "duration_ms": round(duration_ms, 2),
+            "attempts": attempts,
+            "job_count": job_count,
+        }
+        if failure_code is not None:
+            event["failure_code"] = failure_code.value
+        provider_logger.info(json.dumps(event, separators=(",", ":"), sort_keys=True))
 
     @classmethod
     def _is_retryable(cls, error: Exception) -> bool:

@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from fastapi.testclient import TestClient
 
 from api.application import create_app
@@ -24,6 +26,17 @@ def test_application_factory_exposes_versioned_openapi_contract():
     assert document["info"]["version"] == "2.0-test"
     assert "/api/v1/health/live" in document["paths"]
     assert "/api/v1/health/ready" in document["paths"]
+
+
+def test_application_shutdown_closes_provider_executor():
+    application = create_app(Settings(_env_file=None))
+    discovery = Mock()
+    application.state.job_discovery_service = discovery
+
+    with TestClient(application) as client:
+        assert client.get("/api/v1/health/live").status_code == 200
+
+    discovery.close.assert_called_once_with()
 
 
 def test_liveness_endpoint_does_not_require_external_credentials():

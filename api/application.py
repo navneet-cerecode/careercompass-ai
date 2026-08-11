@@ -22,6 +22,9 @@ from core.observability import RequestTelemetryMiddleware, build_product_analyti
 @asynccontextmanager
 async def application_lifespan(application: FastAPI) -> AsyncIterator[None]:
     yield
+    discovery = application.state.job_discovery_service
+    if discovery is not None:
+        discovery.close()
     database = application.state.database
     if database is not None:
         database.dispose()
@@ -44,6 +47,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     application.state.database_lock = Lock()
     application.state.task_broker = None
     application.state.task_broker_lock = Lock()
+    application.state.job_discovery_service = None
     configured_secret = (
         active_settings.task_token_secret.get_secret_value().encode()
         if active_settings.task_token_secret is not None

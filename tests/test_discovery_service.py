@@ -1,4 +1,8 @@
+import json
+import logging
 import requests
+from threading import Barrier, Event
+from time import perf_counter
 
 from models.job import Job
 from models.job_discovery_task import ProviderFailureCode
@@ -66,6 +70,37 @@ class RateLimitedProvider(RecordingProvider):
             response.headers["Retry-After"] = "10"
             raise requests.HTTPError(response=response)
         return self.jobs
+
+
+class BarrierProvider(RecordingProvider):
+    def __init__(self, name, jobs, barrier):
+        super().__init__(jobs)
+        self._name = name
+        self.barrier = barrier
+
+    @property
+    def provider_name(self):
+        return self._name
+
+    def search_jobs(self, query):
+        self.queries.append(query)
+        self.barrier.wait(timeout=1)
+        return self.jobs
+
+
+class WaitingProvider(RecordingProvider):
+    @property
+    def provider_name(self):
+        return "waiting"
+
+    def __init__(self, release):
+        super().__init__([])
+        self.release = release
+
+    def search_jobs(self, query):
+        self.queries.append(query)
+        self.release.wait(timeout=1)
+        return []
 
 
 def make_job(*, location="India"):
@@ -150,3 +185,68 @@ def test_discovery_service_does_not_retry_invalid_payload(monkeypatch):
     assert len(provider.queries) == 1
     assert result.failures[0].code == ProviderFailureCode.INVALID_RESPONSE
     assert result.failures[0].attempts == 1
+
+
+def test_discovery_service_runs_providers_concurrently():
+    barrier = Barrier(2)
+    service = JobDiscoveryService(
+        providers=[
+            BarrierProvider("first", [make_job()], barrier),
+            BarrierProvider("second", [make_job(location="Pune")], barrier),
+        ],
+        max_workers=2,
+        search_timeout_seconds=1,
+    )
+
+    result = service.discover_jobs_with_status(
+        JobSearchQuery(role="Data Engineer", location="India")
+    )
+    service.close()
+
+    assert result.providers_succeeded == 2
+    assert len(result.jobs) == 2
+
+
+def test_discovery_service_returns_completed_results_at_search_budget():
+    release = Event()
+    service = JobDiscoveryService(
+        providers=[WaitingProvider(release), RecordingProvider([make_job()])],
+        max_workers=2,
+        search_timeout_seconds=0.02,
+    )
+
+    started = perf_counter()
+    result = service.discover_jobs_with_status(
+        JobSearchQuery(role="Data Engineer", location="India")
+    )
+    elapsed = perf_counter() - started
+    release.set()
+    service.close()
+
+    assert elapsed < 0.2
+    assert len(result.jobs) == 1
+    assert result.providers_succeeded == 1
+    assert result.failures[0].provider_name == "waiting"
+    assert result.failures[0].error_type == "SearchBudgetExceeded"
+    assert result.failures[0].code == ProviderFailureCode.TIMEOUT
+
+
+def test_discovery_service_logs_privacy_bounded_provider_latency(caplog):
+    logging.getLogger("solarahire.providers").disabled = False
+    service = JobDiscoveryService(providers=[RecordingProvider([make_job()])])
+
+    with caplog.at_level(logging.INFO, logger="solarahire.providers"):
+        service.discover_jobs_with_status(
+            JobSearchQuery(role="Private Role", location="Private Location")
+        )
+    service.close()
+
+    event = json.loads(caplog.records[-1].message)
+    assert event["kind"] == "provider_search"
+    assert event["provider"] == "recording"
+    assert event["outcome"] == "healthy"
+    assert event["job_count"] == 1
+    assert event["attempts"] == 1
+    assert event["duration_ms"] >= 0
+    assert "Private Role" not in caplog.records[-1].message
+    assert "Private Location" not in caplog.records[-1].message

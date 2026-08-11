@@ -24,7 +24,8 @@ database = Database(
     pool_size=settings.database_pool_size,
     pool_timeout_seconds=settings.database_pool_timeout_seconds,
 )
-broker.add_middleware(DatabaseDisposalMiddleware(database))
+job_discovery_service = JobDiscoveryService()
+broker.add_middleware(DatabaseDisposalMiddleware(database, job_discovery_service))
 dramatiq.set_broker(broker)
 
 task_runner = BackgroundTaskRunner(
@@ -39,7 +40,7 @@ system_probe = build_system_probe_actor(
 job_discovery = build_job_discovery_actor(
     broker=broker,
     runner=task_runner,
-    operation=RunJobDiscovery(database, JobDiscoveryService()),
+    operation=RunJobDiscovery(database, job_discovery_service),
     app_settings=settings,
 )
 task_publisher = BackgroundTaskPublisher(
