@@ -43,6 +43,10 @@ Configured providers run concurrently through a process-bounded executor. Search
 source completed within a 45-second budget and emit privacy-safe provider latency records containing
 only provider identity, outcome, duration, attempts, and result count.
 
+Read-only HTTP and isolated worker load gates are documented in
+[`docs/operations/load-testing.md`](docs/operations/load-testing.md). They use the standard library
+and synthetic probe tasks, so normal validation consumes no job-provider quota or user data.
+
 ## Requirements
 
 - Python 3.13

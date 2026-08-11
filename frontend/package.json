@@ -13,7 +13,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=4",
     "test:watch": "vitest",
     "contract:export": "python ../scripts/export_openapi.py --output src/lib/api/openapi.json",
     "contract:types": "openapi-typescript src/lib/api/openapi.json -o src/lib/api/schema.d.ts",

@@ -3,6 +3,7 @@
 import logging
 from typing import Annotated
 
+from dramatiq.brokers.redis import RedisBroker
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -84,6 +85,24 @@ def get_database(request: Request) -> Database:
     return database
 
 
+def get_task_broker(request: Request) -> RedisBroker:
+    broker = request.app.state.task_broker
+    if broker is None:
+        with request.app.state.task_broker_lock:
+            broker = request.app.state.task_broker
+            if broker is None:
+                try:
+                    broker = build_broker(get_settings(request))
+                except ValueError as error:
+                    raise APIError(
+                        503,
+                        "worker_not_configured",
+                        "Asynchronous job discovery is not configured.",
+                    ) from error
+                request.app.state.task_broker = broker
+    return broker
+
+
 def get_job_catalog(database: Annotated[Database, Depends(get_database)]) -> JobCatalog:
     return JobCatalog(database)
 
@@ -160,20 +179,7 @@ def get_job_discovery_task_service(
     request: Request,
     database: Annotated[Database, Depends(get_database)],
 ) -> JobDiscoveryTaskService:
-    broker = request.app.state.task_broker
-    if broker is None:
-        with request.app.state.task_broker_lock:
-            broker = request.app.state.task_broker
-            if broker is None:
-                try:
-                    broker = build_broker(get_settings(request))
-                except ValueError as error:
-                    raise APIError(
-                        503,
-                        "worker_not_configured",
-                        "Asynchronous job discovery is not configured.",
-                    ) from error
-                request.app.state.task_broker = broker
+    broker = get_task_broker(request)
     settings = get_settings(request)
     return JobDiscoveryTaskService(
         database=database,

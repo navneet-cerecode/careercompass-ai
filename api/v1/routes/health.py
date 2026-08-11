@@ -2,13 +2,11 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 
-from api.dependencies import get_settings
+from api.dependencies import get_database, get_settings, get_task_broker
 from api.schemas.health import HealthResponse, HealthStatus
 from core.config import Settings
-from database.session import Database
-from workers.broker import build_broker
 
 router = APIRouter()
 SettingsDependency = Annotated[Settings, Depends(get_settings)]
@@ -24,7 +22,11 @@ def liveness(settings: SettingsDependency) -> HealthResponse:
 
 
 @router.get("/ready", response_model=HealthResponse, summary="Check API readiness")
-def readiness(response: Response, settings: SettingsDependency) -> HealthResponse:
+def readiness(
+    request: Request,
+    response: Response,
+    settings: SettingsDependency,
+) -> HealthResponse:
     checks: dict[str, str] = {}
     ready = True
 
@@ -32,33 +34,25 @@ def readiness(response: Response, settings: SettingsDependency) -> HealthRespons
         checks["database"] = "not_configured"
         ready = False
     else:
-        database = Database(
-            settings.require_database_url(),
-            pool_size=1,
-            pool_timeout_seconds=settings.database_pool_timeout_seconds,
-        )
         try:
+            database = get_database(request)
             checks["database"] = "ok" if database.check_connection() else "unavailable"
             ready = ready and checks["database"] == "ok"
         except Exception:
             checks["database"] = "unavailable"
             ready = False
-        finally:
-            database.dispose()
 
     if settings.redis_url is None:
         checks["broker"] = "not_configured"
         ready = False
     else:
-        broker = build_broker(settings)
         try:
+            broker = get_task_broker(request)
             checks["broker"] = "ok" if broker.client.ping() else "unavailable"
             ready = ready and checks["broker"] == "ok"
         except Exception:
             checks["broker"] = "unavailable"
             ready = False
-        finally:
-            broker.close()
 
     checks["task_capability"] = "shared" if settings.task_token_secret is not None else "ephemeral"
     checks["authentication"] = (

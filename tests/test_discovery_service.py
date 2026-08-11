@@ -1,8 +1,10 @@
+from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
-import requests
 from threading import Barrier, Event
-from time import perf_counter
+from time import perf_counter, sleep
+
+import requests
 
 from models.job import Job
 from models.job_discovery_task import ProviderFailureCode
@@ -101,6 +103,21 @@ class WaitingProvider(RecordingProvider):
         self.queries.append(query)
         self.release.wait(timeout=1)
         return []
+
+
+class DelayedProvider(RecordingProvider):
+    def __init__(self, name, jobs):
+        super().__init__(jobs)
+        self._name = name
+
+    @property
+    def provider_name(self):
+        return self._name
+
+    def search_jobs(self, query):
+        self.queries.append(query)
+        sleep(0.01)
+        return self.jobs
 
 
 def make_job(*, location="India"):
@@ -250,3 +267,22 @@ def test_discovery_service_logs_privacy_bounded_provider_latency(caplog):
     assert event["duration_ms"] >= 0
     assert "Private Role" not in caplog.records[-1].message
     assert "Private Location" not in caplog.records[-1].message
+
+
+def test_discovery_service_handles_simultaneous_searches_with_shared_executor():
+    service = JobDiscoveryService(
+        providers=[
+            DelayedProvider("first", [make_job()]),
+            DelayedProvider("second", [make_job(location="Pune")]),
+        ],
+        max_workers=8,
+        search_timeout_seconds=1,
+    )
+    query = JobSearchQuery(role="Data Engineer", location="India")
+
+    with ThreadPoolExecutor(max_workers=12) as executor:
+        results = tuple(executor.map(lambda _: service.discover_jobs_with_status(query), range(12)))
+    service.close()
+
+    assert all(result.providers_succeeded == 2 for result in results)
+    assert all(not result.failures for result in results)

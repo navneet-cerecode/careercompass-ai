@@ -82,6 +82,28 @@ def test_readiness_endpoint_reports_missing_required_dependencies():
     }
 
 
+def test_readiness_reuses_application_owned_connections(monkeypatch):
+    broker = Mock()
+    broker.client.ping.return_value = True
+    monkeypatch.setattr("api.dependencies.build_broker", lambda settings: broker)
+    application = create_app(
+        Settings(
+            _env_file=None,
+            database_url="sqlite+pysqlite:///:memory:",
+            redis_url="redis://unused.test/0",
+        )
+    )
+
+    with TestClient(application) as client:
+        assert client.get("/api/v1/health/ready").status_code == 200
+        database = application.state.database
+        assert client.get("/api/v1/health/ready").status_code == 200
+        assert application.state.database is database
+        assert application.state.task_broker is broker
+
+    broker.close.assert_called_once_with()
+
+
 def test_unversioned_health_path_is_not_part_of_public_contract():
     response = make_client().get("/health")
 
