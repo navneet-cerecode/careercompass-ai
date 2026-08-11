@@ -79,4 +79,22 @@ COMPANIES: list[ProviderConfig] = [
         "country": "in",
         "company_identifier": "Kredx",
     },
+    {
+        "id": "aspora",
+        "name": "Aspora",
+        "platform": "ashby",
+        "enabled": True,
+        "priority": 40,
+        "country": "in",
+        "job_board_name": "Aspora",
+    },
+    {
+        "id": "riveron",
+        "name": "Riveron",
+        "platform": "ashby",
+        "enabled": True,
+        "priority": 40,
+        "country": "in",
+        "job_board_name": "riveron",
+    },
 ]

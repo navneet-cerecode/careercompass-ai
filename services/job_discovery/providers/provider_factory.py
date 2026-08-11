@@ -3,6 +3,7 @@
 from services.job_discovery.providers.base_provider import BaseProvider
 from services.job_discovery.providers.adzuna_provider import AdzunaProvider
 from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvider
+from services.job_discovery.providers.ashby_provider import AshbyProvider
 from services.job_discovery.providers.contracts import ProviderConfig
 from services.job_discovery.providers.errors import ProviderConfigurationError
 from services.job_discovery.providers.greenhouse_provider import GreenhouseProvider
@@ -18,6 +19,7 @@ class ProviderFactory:
     PROVIDERS = {
         "adzuna": AdzunaProvider,
         "arbeitnow": ArbeitnowProvider,
+        "ashby": AshbyProvider,
         "workday": WorkdayProvider,
         "jsearch": JSearchProvider,
         "the_muse": TheMuseProvider,

@@ -4,6 +4,7 @@ from pydantic import SecretStr
 from services.job_discovery.providers.api_provider import APIProvider
 from services.job_discovery.providers.adzuna_provider import AdzunaProvider
 from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvider
+from services.job_discovery.providers.ashby_provider import AshbyProvider
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
 from services.job_discovery.providers.greenhouse_provider import GreenhouseProvider
 from services.job_discovery.providers.provider_factory import ProviderFactory
@@ -89,6 +90,20 @@ def test_provider_factory_creates_smartrecruiters_provider():
     provider = ProviderFactory.create(company)
 
     assert isinstance(provider, SmartRecruitersProvider)
+    assert provider.company is company
+
+
+def test_provider_factory_creates_ashby_provider():
+    company = {
+        "id": "example",
+        "name": "Example",
+        "platform": "ashby",
+        "job_board_name": "Example",
+    }
+
+    provider = ProviderFactory.create(company)
+
+    assert isinstance(provider, AshbyProvider)
     assert provider.company is company
 
 

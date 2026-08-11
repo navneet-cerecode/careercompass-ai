@@ -3,6 +3,7 @@
 from services.job_discovery.providers.base_provider import BaseProvider
 from services.job_discovery.providers.adzuna_provider import AdzunaProvider
 from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvider
+from services.job_discovery.providers.ashby_provider import AshbyProvider
 from services.job_discovery.providers.contracts import (
     DatePosted,
     JobSearchQuery,
@@ -21,6 +22,7 @@ __all__ = [
     "BaseProvider",
     "AdzunaProvider",
     "ArbeitnowProvider",
+    "AshbyProvider",
     "DatePosted",
     "JobSearchQuery",
     "JSearchProvider",
