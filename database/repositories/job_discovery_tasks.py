@@ -18,7 +18,11 @@ from database.repositories.tasks import BackgroundTaskRepository, IdempotencyCon
 from database.repositories.task_outbox import TaskOutboxRepository
 from models.background_task import BackgroundTask
 from models.job import Job
-from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
+from models.job_discovery_task import (
+    JobDiscoveryOutcome,
+    JobDiscoveryOutcomeStatus,
+    ProviderFailureDetail,
+)
 
 
 class JobHistoryObservation(NamedTuple):
@@ -178,6 +182,9 @@ class JobDiscoveryTaskRepository:
         )
         record.result_status = outcome.status.value
         record.provider_names_failed = list(outcome.provider_names_failed)
+        record.provider_failures = [
+            failure.model_dump(mode="json") for failure in outcome.provider_failures
+        ]
         record.providers_attempted = outcome.providers_attempted
         record.providers_succeeded = outcome.providers_succeeded
         self.session.flush()
@@ -200,10 +207,17 @@ class JobDiscoveryTaskRepository:
         jobs = JobRepository(self.session).get_many(job_ids) if job_ids else ()
         if jobs is None:
             raise ValueError("A discovery result references an unavailable job.")
+        provider_failures = tuple(
+            ProviderFailureDetail.model_validate(failure) for failure in record.provider_failures
+        )
+        if not provider_failures:
+            provider_failures = tuple(
+                ProviderFailureDetail(provider_name=name) for name in record.provider_names_failed
+            )
         return (
             JobDiscoveryOutcome(
                 status=JobDiscoveryOutcomeStatus(record.result_status),
-                provider_names_failed=tuple(record.provider_names_failed),
+                provider_failures=provider_failures,
                 providers_attempted=record.providers_attempted or 0,
                 providers_succeeded=record.providers_succeeded or 0,
             ),

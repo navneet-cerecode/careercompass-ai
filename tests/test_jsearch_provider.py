@@ -124,30 +124,3 @@ def test_jsearch_rejects_job_without_apply_url():
                 "job_title": "Data Engineer",
             }
         )
-
-
-def test_jsearch_retries_transient_provider_failure(monkeypatch):
-    responses = [
-        FakeResponse({}, status_code=500),
-        FakeResponse({"data": {"jobs": []}}),
-    ]
-    calls = []
-
-    def fake_get(*args, **kwargs):
-        calls.append((args, kwargs))
-        return responses.pop(0)
-
-    monkeypatch.setattr(
-        "services.job_discovery.providers.jsearch_provider.requests.get",
-        fake_get,
-    )
-    monkeypatch.setattr(
-        "services.job_discovery.providers.jsearch_provider.time.sleep",
-        lambda _: None,
-    )
-    provider = JSearchProvider({"name": "JSearch"}, api_key="test-key")
-
-    jobs = provider.search_jobs(JobSearchQuery(role="Chef", location="India"))
-
-    assert jobs == []
-    assert len(calls) == 2

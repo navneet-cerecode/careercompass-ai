@@ -185,7 +185,12 @@ describe("RecommendationResults saved jobs", () => {
           status: "partial",
           jobs: [job],
           provider_failures: [
-            { provider_name: "jsearch", code: "provider_failed" },
+            {
+              provider_name: "jsearch",
+              code: "provider_rate_limited",
+              attempts: 2,
+              health_status: "unavailable",
+            },
           ],
           providers_attempted: 4,
           providers_succeeded: 3,
@@ -197,7 +202,7 @@ describe("RecommendationResults saved jobs", () => {
     );
 
     expect(
-      screen.getByText(/JSearch did not respond after safe retries/),
+      screen.getByText(/JSearch \(rate limited\) could not be used/),
     ).toBeVisible();
     expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
   });

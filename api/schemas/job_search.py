@@ -10,6 +10,8 @@ from api.schemas.common import APIModel
 from api.schemas.jobs import JobResponse
 from models.enums import EmploymentType
 from models.enums import BackgroundTaskStatus
+from models.job_discovery_task import ProviderFailureCode
+from services.job_discovery.providers.contracts import ProviderHealthStatus
 from services.job_discovery.providers.contracts import DatePosted
 
 
@@ -32,7 +34,9 @@ class JobSearchStatus(StrEnum):
 
 class ProviderFailureResponse(APIModel):
     provider_name: str
-    code: str = "provider_failed"
+    code: ProviderFailureCode = ProviderFailureCode.FAILED
+    attempts: int = Field(default=1, ge=0)
+    health_status: ProviderHealthStatus = ProviderHealthStatus.DEGRADED
 
 
 class JobSearchResponse(APIModel):

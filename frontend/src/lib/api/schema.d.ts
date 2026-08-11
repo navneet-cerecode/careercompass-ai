@@ -1410,16 +1410,31 @@ export interface components {
             raw_text: string;
             resume: components["schemas"]["ResumeResponse"];
         };
+        /**
+         * ProviderFailureCode
+         * @enum {string}
+         */
+        ProviderFailureCode: "provider_timeout" | "provider_rate_limited" | "provider_unavailable" | "provider_invalid_response" | "provider_misconfigured" | "provider_failed";
         /** ProviderFailureResponse */
         ProviderFailureResponse: {
             /**
-             * Code
-             * @default provider_failed
+             * Attempts
+             * @default 1
              */
-            code: string;
+            attempts: number;
+            /** @default provider_failed */
+            code: components["schemas"]["ProviderFailureCode"];
+            /** @default degraded */
+            health_status: components["schemas"]["ProviderHealthStatus"];
             /** Provider Name */
             provider_name: string;
         };
+        /**
+         * ProviderHealthStatus
+         * @description Normalized provider health states.
+         * @enum {string}
+         */
+        ProviderHealthStatus: "unknown" | "healthy" | "degraded" | "unavailable";
         /** RecommendationBatchResponse */
         RecommendationBatchResponse: {
             /** Recommendations */

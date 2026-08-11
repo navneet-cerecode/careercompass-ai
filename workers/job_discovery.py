@@ -3,7 +3,11 @@
 from database.repositories.job_discovery_tasks import JobDiscoveryTaskRepository
 from database.session import Database
 from models.background_task import BackgroundTask
-from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
+from models.job_discovery_task import (
+    JobDiscoveryOutcome,
+    JobDiscoveryOutcomeStatus,
+    ProviderFailureDetail,
+)
 from services.job_discovery.discovery_service import JobDiscoveryService
 from services.job_discovery.providers.contracts import JobSearchQuery
 from workers.execution import TaskOperationError
@@ -51,8 +55,13 @@ class RunJobDiscovery:
                 jobs=result.jobs,
                 outcome=JobDiscoveryOutcome(
                     status=status,
-                    provider_names_failed=tuple(
-                        failure.provider_name for failure in result.failures
+                    provider_failures=tuple(
+                        ProviderFailureDetail(
+                            provider_name=failure.provider_name,
+                            code=failure.code,
+                            attempts=failure.attempts,
+                        )
+                        for failure in result.failures
                     ),
                     providers_attempted=result.providers_attempted,
                     providers_succeeded=result.providers_succeeded,

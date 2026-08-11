@@ -214,9 +214,9 @@ def test_application_packet_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'application-packets.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0015")
     engine = create_engine(database_url)
-    assert current_revision(database_url) == "0016"
+    assert current_revision(database_url) == "0015"
     assert "application_packets" in inspect(engine).get_table_names()
 
     command.downgrade(config, "0014")
@@ -227,10 +227,27 @@ def test_interview_kit_schema_migration_is_reversible(tmp_path):
     database_url = f"sqlite+pysqlite:///{tmp_path / 'interview-kits.db'}"
     config = build_alembic_config(database_url)
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "0016")
     engine = create_engine(database_url)
     assert current_revision(database_url) == "0016"
     assert "interview_kits" in inspect(engine).get_table_names()
 
     command.downgrade(config, "0015")
     assert "interview_kits" not in inspect(engine).get_table_names()
+
+
+def test_provider_failure_detail_migration_is_reversible(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'provider-failures.db'}"
+    config = build_alembic_config(database_url)
+
+    command.upgrade(config, "0017")
+    engine = create_engine(database_url)
+    assert current_revision(database_url) == "0017"
+    assert "provider_failures" in {
+        column["name"] for column in inspect(engine).get_columns("job_discovery_tasks")
+    }
+
+    command.downgrade(config, "0016")
+    assert "provider_failures" not in {
+        column["name"] for column in inspect(engine).get_columns("job_discovery_tasks")
+    }

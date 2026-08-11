@@ -25,6 +25,7 @@ class JobDiscoveryTaskRecord(Base):
     date_posted: Mapped[str] = mapped_column(String(20))
     result_status: Mapped[str | None] = mapped_column(String(20))
     provider_names_failed: Mapped[list[str]] = mapped_column(JSON, default=list)
+    provider_failures: Mapped[list[dict]] = mapped_column(JSON, default=list)
     providers_attempted: Mapped[int | None] = mapped_column(Integer)
     providers_succeeded: Mapped[int | None] = mapped_column(Integer)
 

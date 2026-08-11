@@ -16,6 +16,7 @@ from models.job import Job
 from models.background_task import BackgroundTask
 from models.enums import BackgroundTaskStatus
 from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
+from models.job_discovery_task import ProviderFailureCode
 from services.job_discovery.discovery_service import (
     JobDiscoveryResult,
     ProviderFailure,
@@ -51,7 +52,14 @@ def test_job_search_returns_partial_results_and_provider_metadata():
     job = make_job()
     result = JobDiscoveryResult(
         jobs=(job,),
-        failures=(ProviderFailure("jsearch", "TimeoutError"),),
+        failures=(
+            ProviderFailure(
+                "jsearch",
+                "TimeoutError",
+                ProviderFailureCode.TIMEOUT,
+                2,
+            ),
+        ),
         providers_attempted=2,
         providers_succeeded=1,
     )
@@ -66,7 +74,14 @@ def test_job_search_returns_partial_results_and_provider_metadata():
     payload = response.json()
     assert payload["status"] == "partial"
     assert payload["jobs"][0]["id"] == str(job.id)
-    assert payload["provider_failures"] == [{"provider_name": "jsearch", "code": "provider_failed"}]
+    assert payload["provider_failures"] == [
+        {
+            "provider_name": "jsearch",
+            "code": "provider_timeout",
+            "attempts": 2,
+            "health_status": "unavailable",
+        }
+    ]
 
     detail_response = client.get(f"/api/v1/jobs/{job.id}")
     assert detail_response.status_code == 200

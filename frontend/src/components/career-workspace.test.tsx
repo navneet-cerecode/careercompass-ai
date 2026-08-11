@@ -39,7 +39,14 @@ const parsedProfile = {
 const searchResponse = {
   status: "partial",
   jobs: [job],
-  provider_failures: [{ provider_name: "Adzuna", code: "provider_failed" }],
+  provider_failures: [
+    {
+      provider_name: "Adzuna",
+      code: "provider_timeout",
+      attempts: 2,
+      health_status: "unavailable",
+    },
+  ],
   providers_attempted: 4,
   providers_succeeded: 3,
 };
@@ -160,7 +167,7 @@ describe("CareerWorkspace", () => {
     expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
     expect(screen.getByText("MLOps")).toBeVisible();
     expect(
-      screen.getByText(/Adzuna did not respond after safe retries/),
+      screen.getByText(/Adzuna \(timed out\) could not be used/),
     ).toBeVisible();
     expect(
       screen.getByRole("link", {

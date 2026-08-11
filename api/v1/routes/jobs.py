@@ -30,7 +30,11 @@ from database.repositories.tasks import IdempotencyConflict
 from models.identity import AuthenticatedPrincipal
 from core.observability import ProductAnalytics, ProductEventName
 from services.job_discovery.discovery_service import JobDiscoveryService
-from services.job_discovery.providers.contracts import JobSearchQuery
+from models.job_discovery_task import ProviderFailureCode
+from services.job_discovery.providers.contracts import (
+    JobSearchQuery,
+    ProviderHealthStatus,
+)
 
 router = APIRouter()
 DiscoveryDependency = Annotated[
@@ -49,6 +53,29 @@ OptionalPrincipalDependency = Annotated[
 AnalyticsDependency = Annotated[ProductAnalytics, Depends(get_product_analytics)]
 
 
+def _map_provider_failure(
+    provider_name: str,
+    code: ProviderFailureCode,
+    attempts: int,
+) -> ProviderFailureResponse:
+    unavailable_codes = {
+        ProviderFailureCode.TIMEOUT,
+        ProviderFailureCode.RATE_LIMITED,
+        ProviderFailureCode.UNAVAILABLE,
+        ProviderFailureCode.MISCONFIGURED,
+    }
+    return ProviderFailureResponse(
+        provider_name=provider_name,
+        code=code,
+        attempts=attempts,
+        health_status=(
+            ProviderHealthStatus.UNAVAILABLE
+            if code in unavailable_codes
+            else ProviderHealthStatus.DEGRADED
+        ),
+    )
+
+
 def _map_search_result(snapshot) -> JobSearchResponse | None:
     if snapshot.outcome is None:
         return None
@@ -56,8 +83,12 @@ def _map_search_result(snapshot) -> JobSearchResponse | None:
         status=JobSearchStatus(snapshot.outcome.status.value),
         jobs=tuple(map_job(job) for job in snapshot.jobs),
         provider_failures=tuple(
-            ProviderFailureResponse(provider_name=name)
-            for name in snapshot.outcome.provider_names_failed
+            _map_provider_failure(
+                failure.provider_name,
+                failure.code,
+                failure.attempts,
+            )
+            for failure in snapshot.outcome.provider_failures
         ),
         providers_attempted=snapshot.outcome.providers_attempted,
         providers_succeeded=snapshot.outcome.providers_succeeded,
@@ -201,7 +232,11 @@ async def search_jobs(
         status=status,
         jobs=tuple(map_job(job) for job in persisted_jobs),
         provider_failures=tuple(
-            ProviderFailureResponse(provider_name=failure.provider_name)
+            _map_provider_failure(
+                failure.provider_name,
+                failure.code,
+                failure.attempts,
+            )
             for failure in result.failures
         ),
         providers_attempted=result.providers_attempted,

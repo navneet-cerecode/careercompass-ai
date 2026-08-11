@@ -1,7 +1,6 @@
 """JSearch job provider."""
 
 from collections.abc import Mapping
-import time
 from typing import Any
 
 import requests
@@ -26,7 +25,6 @@ class JSearchProvider(BaseProvider):
     """JSearch adapter backed by RapidAPI."""
 
     BASE_URL = "https://jsearch.p.rapidapi.com/search-v2"
-    RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
     CAPABILITIES = ProviderCapabilities(
         location_filter=True,
         country_filter=True,
@@ -76,7 +74,12 @@ class JSearchProvider(BaseProvider):
         if country:
             params["country"] = country
 
-        response = self._get_with_retry(headers=headers, params=params)
+        response = requests.get(
+            self.BASE_URL,
+            headers=headers,
+            params=params,
+            timeout=30,
+        )
         response.raise_for_status()
 
         payload = response.json()
@@ -90,19 +93,6 @@ class JSearchProvider(BaseProvider):
             raise ProviderPayloadError("JSearch returned an invalid jobs collection.")
 
         return [self.normalize_job(item) for item in raw_jobs]
-
-    def _get_with_retry(self, *, headers: dict[str, str], params: dict[str, str]):
-        for attempt in range(3):
-            response = requests.get(
-                self.BASE_URL,
-                headers=headers,
-                params=params,
-                timeout=30,
-            )
-            if response.status_code not in self.RETRYABLE_STATUS_CODES or attempt == 2:
-                return response
-            time.sleep(0.25 * (2**attempt))
-        raise AssertionError("JSearch retry loop did not return a response.")
 
     def normalize_job(
         self,

@@ -8,7 +8,12 @@ from database.repositories.tasks import IdempotencyConflict
 from database.repositories.users import UserRepository
 from database.session import Database
 from models.job import Job
-from models.job_discovery_task import JobDiscoveryOutcome, JobDiscoveryOutcomeStatus
+from models.job_discovery_task import (
+    JobDiscoveryOutcome,
+    JobDiscoveryOutcomeStatus,
+    ProviderFailureCode,
+    ProviderFailureDetail,
+)
 
 
 def test_discovery_request_is_idempotent_and_results_keep_rank_order():
@@ -49,7 +54,13 @@ def test_discovery_request_is_idempotent_and_results_keep_rank_order():
             jobs=jobs,
             outcome=JobDiscoveryOutcome(
                 status=JobDiscoveryOutcomeStatus.PARTIAL,
-                provider_names_failed=("adzuna",),
+                provider_failures=(
+                    ProviderFailureDetail(
+                        provider_name="adzuna",
+                        code=ProviderFailureCode.RATE_LIMITED,
+                        attempts=2,
+                    ),
+                ),
                 providers_attempted=4,
                 providers_succeeded=3,
             ),
@@ -67,6 +78,8 @@ def test_discovery_request_is_idempotent_and_results_keep_rank_order():
     assert loaded_jobs == persisted
     assert [job.company for job in loaded_jobs] == ["First", "Second"]
     assert outcome.provider_names_failed == ("adzuna",)
+    assert outcome.provider_failures[0].code == ProviderFailureCode.RATE_LIMITED
+    assert outcome.provider_failures[0].attempts == 2
 
 
 def test_discovery_idempotency_key_rejects_changed_inputs():

@@ -42,6 +42,15 @@ function providerLabel(providerName: string) {
   return providerName;
 }
 
+function providerFailureReason(code: string) {
+  if (code === "provider_timeout") return "timed out";
+  if (code === "provider_rate_limited") return "rate limited";
+  if (code === "provider_unavailable") return "temporarily unavailable";
+  if (code === "provider_invalid_response") return "returned an invalid response";
+  if (code === "provider_misconfigured") return "is not configured";
+  return "could not be reached";
+}
+
 function isSavedJobList(value: unknown): value is SavedJobListResponse {
   return (
     typeof value === "object" &&
@@ -75,8 +84,9 @@ export function RecommendationResults({
     style: "long",
     type: "conjunction",
   }).format(
-    search.provider_failures.map((failure) =>
-      providerLabel(failure.provider_name),
+    search.provider_failures.map(
+      (failure) =>
+        `${providerLabel(failure.provider_name)} (${providerFailureReason(failure.code)})`,
     ),
   );
 
@@ -217,9 +227,10 @@ export function RecommendationResults({
                 : `${search.provider_failures.length} sources need another pass.`}
             </strong>
             <span>
-              {unavailableProviders || "A job source"} did not respond after
-              safe retries. These rankings use only the verified jobs returned
-              by the other {search.providers_succeeded} source
+              {unavailableProviders || "A job source"} could not be used for
+              this search. Safe transient failures were retried. These rankings
+              use only the verified jobs returned by the other{" "}
+              {search.providers_succeeded} source
               {search.providers_succeeded === 1 ? "" : "s"}.
             </span>
           </div>

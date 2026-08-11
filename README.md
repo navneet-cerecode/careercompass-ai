@@ -36,6 +36,9 @@ public API has no general keyword filter.
 Greenhouse currently covers Appian and Blenheim Chalcot India; SmartRecruiters covers Bosch Group
 and KredX India; Ashby covers Aspora and Riveron; Lever covers Dun & Bradstreet India and Fam.
 These integrations are discovery-only and perform no application submission.
+Transient provider timeouts, connection failures, rate limits, and selected server errors receive
+one bounded retry. Partial results preserve healthy sources and expose sanitized failure reasons,
+attempt counts, and observed source health without issuing separate quota-consuming probes.
 
 ## Requirements
 

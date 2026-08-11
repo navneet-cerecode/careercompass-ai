@@ -1761,12 +1761,33 @@
         "title": "ParsedResumeResponse",
         "type": "object"
       },
+      "ProviderFailureCode": {
+        "enum": [
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_invalid_response",
+          "provider_misconfigured",
+          "provider_failed"
+        ],
+        "title": "ProviderFailureCode",
+        "type": "string"
+      },
       "ProviderFailureResponse": {
         "properties": {
+          "attempts": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
           "code": {
-            "default": "provider_failed",
-            "title": "Code",
-            "type": "string"
+            "$ref": "#/components/schemas/ProviderFailureCode",
+            "default": "provider_failed"
+          },
+          "health_status": {
+            "$ref": "#/components/schemas/ProviderHealthStatus",
+            "default": "degraded"
           },
           "provider_name": {
             "title": "Provider Name",
@@ -1778,6 +1799,17 @@
         ],
         "title": "ProviderFailureResponse",
         "type": "object"
+      },
+      "ProviderHealthStatus": {
+        "description": "Normalized provider health states.",
+        "enum": [
+          "unknown",
+          "healthy",
+          "degraded",
+          "unavailable"
+        ],
+        "title": "ProviderHealthStatus",
+        "type": "string"
       },
       "RecommendationBatchResponse": {
         "properties": {
