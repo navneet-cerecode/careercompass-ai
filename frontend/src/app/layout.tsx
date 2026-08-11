@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
-import { Source_Serif_4 } from "next/font/google";
+import "@fontsource-variable/source-serif-4/wght.css";
 import "./globals.css";
-
-const editorial = Source_Serif_4({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-editorial",
-});
 
 const siteUrl =
   process.env.SOLARAHIRE_SITE_URL ??
@@ -39,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={editorial.variable}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

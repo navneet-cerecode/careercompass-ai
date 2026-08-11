@@ -30,6 +30,21 @@ The diagnostic prints only missing or invalid variable names, never values.
 Production startup additionally requires explicit API hostnames and HTTPS Auth0
 issuer/JWKS endpoints.
 
+The gate also requires browser and API audiences to match, the Auth0 domain to
+match the issuer and signing-key hosts, and the public application and canonical
+URLs to share one HTTPS origin. `SOLARAHIRE_API_URL` is the server-only route from
+Next.js to FastAPI; in Compose it is `http://api:8000` and is never exposed to
+browser code.
+
+Validate the release graph without starting containers:
+
+```powershell
+$env:SOLARAHIRE_ENV_FILE = ".env.production"
+docker compose --env-file .env.production -f compose.production.yaml --profile operations config --quiet
+docker build --check -f Dockerfile.api .
+docker build --check -f frontend/Dockerfile frontend
+```
+
 ## Build and release
 
 ```powershell
@@ -46,10 +61,16 @@ traffic is allowed.
 The reverse proxy or edge platform must terminate TLS, cap request bodies,
 rate-limit authentication, upload, and search endpoints, and forward only known
 hostnames. Keep the API private whenever the frontend proxy is its only caller.
-The semantic matcher downloads its model into the container's temporary cache on
-first use, so either permit that outbound request or bake an approved model into a
-derived image. Temporary model caches are discarded whenever a container is
-replaced.
+The API image bakes the approved semantic model at a fixed repository revision and
+runs Hugging Face/Transformers in offline mode. A release therefore fails during
+the controlled image build if that model cannot be resolved, instead of failing on
+a user's first recommendation request. Review model provenance and license before
+changing the pinned revision.
+
+The API container reports healthy only when PostgreSQL and Redis are ready. API,
+worker, and frontend processes run behind an init process and receive bounded
+graceful shutdown windows. Keep the worker grace period longer than
+`WORKER_TIME_LIMIT_MS` so a normal rollout does not interrupt accepted work.
 
 ## Scheduled maintenance
 
@@ -58,6 +79,13 @@ scheduler. Overlapping runs are safe, but should still be avoided operationally.
 
 ```powershell
 python -m workers.enqueue_maintenance
+```
+
+The Compose topology exposes the same one-shot operation for rehearsal and
+schedulers that can execute container jobs:
+
+```powershell
+docker compose --env-file .env.production -f compose.production.yaml --profile operations run --rm maintenance
 ```
 
 This reconciles task delivery, expires stale work, purges retained task history,
@@ -77,5 +105,32 @@ Before routing traffic:
 7. Confirm Auth0 callback/logout URLs use the exact public HTTPS origin.
 8. Confirm backups, alert routing, retention, and rollback ownership.
 
-Rollback the application images together. Do not downgrade the database unless a
-reviewed migration-specific rollback procedure exists.
+Confirm the migration graph without changing it:
+
+```powershell
+docker compose --env-file .env.production -f compose.production.yaml run --rm migrate alembic current --check-heads
+```
+
+## Backup and restore rehearsal
+
+Before a schema-changing release, create a managed PostgreSQL snapshot and record
+its identifier in the release ticket. At least quarterly, restore a recent backup
+into an isolated, access-restricted database and verify:
+
+1. `alembic current --check-heads` succeeds against the restored database.
+2. Row counts for users, resumes, jobs, applications, and background tasks are plausible.
+3. A read-only API smoke test succeeds with outbound provider calls disabled.
+4. The measured recovery time and recovery point meet the agreed RTO and RPO.
+5. The isolated restore and temporary credentials are destroyed after evidence is retained.
+
+Redis is not the durable source of truth and is not restored as application data.
+Queued work is reconciled from PostgreSQL through the maintenance operation.
+
+## Rollback
+
+Record immutable API and frontend image digests before release. Roll back API,
+worker, and frontend images together, then rerun liveness, readiness, Auth0, and
+authenticated workflow smoke checks. Do not downgrade the database unless that
+specific migration has a reviewed rollback procedure. Prefer backward-compatible
+expand/contract migrations; database restore is an incident operation requiring
+explicit approval because it can discard writes made after the recovery point.

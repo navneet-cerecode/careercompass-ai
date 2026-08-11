@@ -7,6 +7,9 @@ similarity computations.
 
 from sentence_transformers import SentenceTransformer
 
+EMBEDDING_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+
 
 class EmbeddingService:
     """
@@ -16,7 +19,8 @@ class EmbeddingService:
     def __init__(self):
 
         self.model = SentenceTransformer(
-            "all-MiniLM-L6-v2"
+            EMBEDDING_MODEL_ID,
+            revision=EMBEDDING_MODEL_REVISION,
         )
 
     def encode(

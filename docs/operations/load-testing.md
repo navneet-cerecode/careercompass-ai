@@ -52,6 +52,13 @@ On 2026-08-12, the production-mode local stack completed every request and task 
 | Next.js workspace | 200 requests, concurrency 20 | 81.3 req/s | 337.3 ms |
 | Worker probe | 100 tasks, 4 threads | 96.3 tasks/s | n/a |
 
+The 2026-08-12 container rehearsal repeated the read-only boundary gate against the isolated
+production Compose stack: 200/200 requests succeeded for each target, with p95 values of 31.6 ms
+for API liveness, 116.6 ms for readiness, 173.0 ms for the home page, and 149.9 ms for the
+workspace. The worker completed 100/100 synthetic tasks at 167.1 tasks/s. The same rehearsal
+verified a PostgreSQL backup restored at migration revision 0017, scheduled maintenance was
+consumed, and the worker handled SIGTERM gracefully.
+
 These laptop-local values are regression references, not production capacity guarantees. The
 readiness implementation reuses application-owned PostgreSQL and Redis clients; before that change,
 the same 500-request profile achieved 65.5 req/s with a 929.0 ms p95.

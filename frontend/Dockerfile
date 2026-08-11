@@ -1,9 +1,11 @@
-FROM node:24-alpine AS dependencies
+ARG NODE_VERSION=24.12.0
+
+FROM node:${NODE_VERSION}-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:24-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
 WORKDIR /app
 ARG SOLARAHIRE_SITE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -12,7 +14,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-FROM node:24-alpine AS runtime
+FROM node:${NODE_VERSION}-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \

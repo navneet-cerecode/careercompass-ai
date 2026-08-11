@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile.api
     env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
     command: ["alembic", "upgrade", "head"]
+    init: true
     restart: "no"
 
   api:
@@ -19,7 +20,9 @@ services:
         condition: service_completed_successfully
     expose:
       - "8000"
+    init: true
     restart: unless-stopped
+    stop_grace_period: 30s
     read_only: true
     tmpfs:
       - /tmp
@@ -35,7 +38,15 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    init: true
     restart: unless-stopped
+    stop_grace_period: 6m
+    healthcheck:
+      test: ["CMD", "python", "-m", "workers.healthcheck"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
     read_only: true
     tmpfs:
       - /tmp
@@ -50,13 +61,33 @@ services:
         SOLARAHIRE_SITE_URL: ${SOLARAHIRE_SITE_URL:?SOLARAHIRE_SITE_URL must be configured}
     env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
     environment:
-      API_BASE_URL: http://api:8000
+      SOLARAHIRE_API_URL: http://api:8000
     depends_on:
       api:
         condition: service_healthy
     ports:
       - "127.0.0.1:3000:3000"
+    init: true
     restart: unless-stopped
+    stop_grace_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  maintenance:
+    profiles: ["operations"]
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: ${SOLARAHIRE_ENV_FILE:-.env.production}
+    command: ["python", "-m", "workers.enqueue_maintenance"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    init: true
+    restart: "no"
     read_only: true
     tmpfs:
       - /tmp

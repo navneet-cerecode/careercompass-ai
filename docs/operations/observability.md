@@ -53,3 +53,22 @@ An external analytics provider must implement the `AnalyticsSink` boundary. It
 must not receive arbitrary request objects or domain models. Provider outages
 must remain non-blocking for product operations, and the sink failure log must
 not include event properties or actor identifiers.
+
+## Starting alert thresholds
+
+Tune these after production traffic establishes a stable baseline. They are initial
+operator signals, not contractual service-level objectives:
+
+| Signal | Starting condition | Response |
+| --- | --- | --- |
+| API readiness | Any failure for 2 consecutive minutes | Page the on-call operator; check PostgreSQL and Redis first. |
+| API server errors | More than 1% HTTP 5xx for 5 minutes | Page and correlate by route template and request ID. |
+| API latency | p95 above 1 second for 10 minutes | Investigate saturation, database waits, and downstream latency. |
+| Worker backlog | Oldest queued task above 5 minutes | Check worker health, Redis delivery, and database pool pressure. |
+| Worker failures | More than 5% terminal failures for 10 minutes | Inspect sanitized error codes; never attach task payloads. |
+| Provider health | One source unavailable in 3 consecutive search windows | Warn; inspect that provider's latency records. |
+| Authentication | Identity-provider-unavailable responses for 2 minutes | Page; distinguish provider failure from invalid-token 401 responses. |
+
+Alert payloads may contain request IDs, route templates, provider identifiers, statuses,
+durations, counts, and sanitized error codes only. Do not forward tokens, query strings,
+resume data, job payloads, emails, notes, or exception messages.

@@ -70,6 +70,7 @@ Install runtime and development dependencies:
 ```powershell
 python -m pip install --upgrade pip
 python -m pip install -r requirements-worker.txt
+python -m pip install -r requirements.txt
 python -m pip install -r requirements-dev.txt
 ```
 
@@ -111,6 +112,7 @@ Install the complete development dependency layers:
 
 ```powershell
 python -m pip install -r requirements-worker.txt
+python -m pip install -r requirements.txt
 python -m pip install -r requirements-dev.txt
 Set-Location frontend
 npm.cmd install
