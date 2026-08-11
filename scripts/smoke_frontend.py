@@ -3,16 +3,27 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
+from dotenv import dotenv_values
+
 MAX_RESPONSE_BYTES = 512 * 1024
 DEFAULT_TIMEOUT_SECONDS = 10.0
+
+
+def configured_auth_jwks_url() -> str | None:
+    value = os.getenv("AUTH_JWKS_URL") or dotenv_values(
+        Path(__file__).resolve().parents[1] / ".env"
+    ).get("AUTH_JWKS_URL")
+    return value if isinstance(value, str) and value.strip() else None
 
 
 class ResponseHeaders(Protocol):
@@ -57,12 +68,16 @@ def normalize_base_url(value: str, *, setting_name: str) -> str:
     return normalized
 
 
-def build_checks(api_url: str, frontend_url: str) -> tuple[EndpointCheck, ...]:
+def build_checks(
+    api_url: str,
+    frontend_url: str,
+    auth_jwks_url: str | None = None,
+) -> tuple[EndpointCheck, ...]:
     """Build the fixed, non-mutating cutover checks."""
 
     api_base = normalize_base_url(api_url, setting_name="--api-url")
     frontend_base = normalize_base_url(frontend_url, setting_name="--frontend-url")
-    return (
+    checks = [
         EndpointCheck(
             name="FastAPI liveness",
             url=f"{api_base}/api/v1/health/live",
@@ -87,7 +102,17 @@ def build_checks(api_url: str, frontend_url: str) -> tuple[EndpointCheck, ...]:
             content_type="text/html",
             marker=b"Drop your resume here.",
         ),
-    )
+    ]
+    if auth_jwks_url:
+        checks.append(
+            EndpointCheck(
+                name="OIDC signing keys",
+                url=normalize_base_url(auth_jwks_url, setting_name="--auth-jwks-url"),
+                content_type="application/json",
+                marker=b'"keys"',
+            )
+        )
+    return tuple(checks)
 
 
 def run_check(
@@ -139,6 +164,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--api-url", default="http://127.0.0.1:8000")
     parser.add_argument("--frontend-url", default="http://127.0.0.1:3000")
+    parser.add_argument("--auth-jwks-url", default=configured_auth_jwks_url())
     parser.add_argument(
         "--timeout-seconds",
         type=float,
@@ -155,7 +181,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     try:
-        checks = build_checks(args.api_url, args.frontend_url)
+        checks = build_checks(args.api_url, args.frontend_url, args.auth_jwks_url)
         for check in checks:
             run_check(check, timeout_seconds=args.timeout_seconds)
             print(f"PASS {check.name}")

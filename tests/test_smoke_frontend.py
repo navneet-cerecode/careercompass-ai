@@ -48,6 +48,21 @@ def test_build_checks_targets_only_read_only_canonical_routes():
     ]
 
 
+def test_build_checks_can_verify_oidc_signing_key_connectivity():
+    checks = build_checks(
+        "http://127.0.0.1:8000/",
+        "http://localhost:3000/",
+        "https://identity.example.test/.well-known/jwks.json",
+    )
+
+    assert checks[-1] == EndpointCheck(
+        name="OIDC signing keys",
+        url="https://identity.example.test/.well-known/jwks.json",
+        content_type="application/json",
+        marker=b'"keys"',
+    )
+
+
 def test_normalize_base_url_rejects_non_http_origins():
     with pytest.raises(ValueError, match="absolute HTTP"):
         normalize_base_url("file:///tmp/app", setting_name="--frontend-url")
