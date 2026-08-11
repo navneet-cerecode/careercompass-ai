@@ -22,6 +22,7 @@ class ProviderConfig(TypedDict, total=False):
     board_token: str
     company_identifier: str
     job_board_name: str
+    site_name: str
 
 
 class DatePosted(str, Enum):

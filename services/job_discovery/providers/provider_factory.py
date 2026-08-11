@@ -8,6 +8,7 @@ from services.job_discovery.providers.contracts import ProviderConfig
 from services.job_discovery.providers.errors import ProviderConfigurationError
 from services.job_discovery.providers.greenhouse_provider import GreenhouseProvider
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
+from services.job_discovery.providers.lever_provider import LeverProvider
 from services.job_discovery.providers.smartrecruiters_provider import SmartRecruitersProvider
 from services.job_discovery.providers.the_muse_provider import TheMuseProvider
 from services.job_discovery.providers.workday_provider import WorkdayProvider
@@ -22,6 +23,7 @@ class ProviderFactory:
         "ashby": AshbyProvider,
         "workday": WorkdayProvider,
         "jsearch": JSearchProvider,
+        "lever": LeverProvider,
         "the_muse": TheMuseProvider,
         "greenhouse": GreenhouseProvider,
         "smartrecruiters": SmartRecruitersProvider,

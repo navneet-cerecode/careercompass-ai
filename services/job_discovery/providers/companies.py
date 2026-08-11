@@ -97,4 +97,22 @@ COMPANIES: list[ProviderConfig] = [
         "country": "in",
         "job_board_name": "riveron",
     },
+    {
+        "id": "dnb-india",
+        "name": "Dun & Bradstreet",
+        "platform": "lever",
+        "enabled": True,
+        "priority": 40,
+        "country": "in",
+        "site_name": "dnb",
+    },
+    {
+        "id": "fam",
+        "name": "Fam",
+        "platform": "lever",
+        "enabled": True,
+        "priority": 40,
+        "country": "in",
+        "site_name": "fampay",
+    },
 ]

@@ -29,13 +29,13 @@ the frontend cutover.
   sample as market-wide demand.
 
 The built-in provider set includes Adzuna, Arbeitnow, JSearch, The Muse, NVIDIA Workday, and
-curated Greenhouse, SmartRecruiters, and Ashby employer boards.
+curated Greenhouse, SmartRecruiters, Ashby, and Lever employer boards.
 Adzuna and The Muse are enabled only when their credentials are configured. Arbeitnow serves its
 supported Germany and UK feeds. The Muse locally enforces title and location relevance because its
 public API has no general keyword filter.
 Greenhouse currently covers Appian and Blenheim Chalcot India; SmartRecruiters covers Bosch Group
-and KredX India; Ashby covers Aspora and Riveron. These integrations are discovery-only and
-perform no application submission.
+and KredX India; Ashby covers Aspora and Riveron; Lever covers Dun & Bradstreet India and Fam.
+These integrations are discovery-only and perform no application submission.
 
 ## Requirements
 

@@ -6,6 +6,7 @@ from services.job_discovery.providers.adzuna_provider import AdzunaProvider
 from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvider
 from services.job_discovery.providers.ashby_provider import AshbyProvider
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
+from services.job_discovery.providers.lever_provider import LeverProvider
 from services.job_discovery.providers.greenhouse_provider import GreenhouseProvider
 from services.job_discovery.providers.provider_factory import ProviderFactory
 from services.job_discovery.providers.smartrecruiters_provider import SmartRecruitersProvider
@@ -104,6 +105,20 @@ def test_provider_factory_creates_ashby_provider():
     provider = ProviderFactory.create(company)
 
     assert isinstance(provider, AshbyProvider)
+    assert provider.company is company
+
+
+def test_provider_factory_creates_lever_provider():
+    company = {
+        "id": "example",
+        "name": "Example",
+        "platform": "lever",
+        "site_name": "example",
+    }
+
+    provider = ProviderFactory.create(company)
+
+    assert isinstance(provider, LeverProvider)
     assert provider.company is company
 
 
