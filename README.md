@@ -28,11 +28,13 @@ the frontend cutover.
   tracked roles using disclosed exact or curated high-confidence aliases, without presenting the
   sample as market-wide demand.
 
-The built-in provider set includes Adzuna, Arbeitnow, JSearch, The Muse, and NVIDIA Workday.
+The built-in provider set includes Adzuna, Arbeitnow, JSearch, The Muse, NVIDIA Workday, and
+curated Greenhouse employer boards.
 Adzuna and The Muse are enabled only when their credentials are configured. Arbeitnow serves its
 supported Germany and UK feeds. The Muse locally enforces title and location relevance because its
-public API has no general keyword filter. Greenhouse, SmartRecruiters, and Ashby remain roadmap
-sources, not active adapters.
+public API has no general keyword filter. SmartRecruiters and Ashby remain roadmap sources, not
+active adapters. Greenhouse currently covers the live-verified Appian and Blenheim Chalcot India
+boards and performs no application submission.
 
 ## Requirements
 
@@ -166,6 +168,9 @@ In a third terminal, verify the running cutover surface:
 ```powershell
 .\venv\Scripts\python.exe scripts\smoke_frontend.py
 ```
+
+This gate also verifies the configured public OIDC signing-key endpoint. Do not continue local
+testing if that check fails: the UI can still load, but signed-in API requests cannot be verified.
 
 FastAPI remains the source of truth for HTTP contracts. Regenerate the committed OpenAPI
 document and TypeScript declarations after changing an API schema from `frontend/`:

@@ -38,6 +38,22 @@ COMPANIES: list[ProviderConfig] = [
         "api_url": "https://nvidia.wd5.myworkdayjobs.com/wday/cxs/nvidia/NVIDIAExternalCareerSite/jobs",
     },
     {
+        "id": "appian",
+        "name": "Appian",
+        "platform": "greenhouse",
+        "enabled": True,
+        "priority": 40,
+        "board_token": "appian",
+    },
+    {
+        "id": "blenheim-chalcot-india",
+        "name": "Blenheim Chalcot India",
+        "platform": "greenhouse",
+        "enabled": True,
+        "priority": 40,
+        "board_token": "blenheimchalcotindia",
+    },
+    {
         "id": "jsearch",
         "name": "JSearch",
         "platform": "jsearch",

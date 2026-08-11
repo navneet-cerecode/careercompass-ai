@@ -19,6 +19,7 @@ class ProviderConfig(TypedDict, total=False):
     country: str
     api_url: str
     careers_url: str
+    board_token: str
 
 
 class DatePosted(str, Enum):

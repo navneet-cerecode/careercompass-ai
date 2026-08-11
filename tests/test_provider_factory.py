@@ -5,6 +5,7 @@ from services.job_discovery.providers.api_provider import APIProvider
 from services.job_discovery.providers.adzuna_provider import AdzunaProvider
 from services.job_discovery.providers.arbeitnow_provider import ArbeitnowProvider
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
+from services.job_discovery.providers.greenhouse_provider import GreenhouseProvider
 from services.job_discovery.providers.provider_factory import ProviderFactory
 from services.job_discovery.providers.the_muse_provider import TheMuseProvider
 from services.job_discovery.providers.workday_provider import WorkdayProvider
@@ -59,6 +60,20 @@ def test_provider_factory_creates_the_muse_provider(monkeypatch):
     provider = ProviderFactory.create(company)
 
     assert isinstance(provider, TheMuseProvider)
+    assert provider.company is company
+
+
+def test_provider_factory_creates_greenhouse_provider():
+    company = {
+        "id": "example",
+        "name": "Example",
+        "platform": "greenhouse",
+        "board_token": "example",
+    }
+
+    provider = ProviderFactory.create(company)
+
+    assert isinstance(provider, GreenhouseProvider)
     assert provider.company is company
 
 
