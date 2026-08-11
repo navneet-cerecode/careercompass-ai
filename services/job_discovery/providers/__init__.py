@@ -13,6 +13,7 @@ from services.job_discovery.providers.contracts import (
 )
 from services.job_discovery.providers.jsearch_provider import JSearchProvider
 from services.job_discovery.providers.greenhouse_provider import GreenhouseProvider
+from services.job_discovery.providers.smartrecruiters_provider import SmartRecruitersProvider
 from services.job_discovery.providers.the_muse_provider import TheMuseProvider
 from services.job_discovery.providers.workday_provider import WorkdayProvider
 
@@ -24,6 +25,7 @@ __all__ = [
     "JobSearchQuery",
     "JSearchProvider",
     "GreenhouseProvider",
+    "SmartRecruitersProvider",
     "TheMuseProvider",
     "ProviderCapabilities",
     "ProviderConfig",

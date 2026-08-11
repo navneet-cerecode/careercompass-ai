@@ -61,4 +61,22 @@ COMPANIES: list[ProviderConfig] = [
         "priority": 1,
         "country": "in",
     },
+    {
+        "id": "bosch-india",
+        "name": "Bosch Group",
+        "platform": "smartrecruiters",
+        "enabled": True,
+        "priority": 40,
+        "country": "in",
+        "company_identifier": "BoschGroup",
+    },
+    {
+        "id": "kredx",
+        "name": "KredX",
+        "platform": "smartrecruiters",
+        "enabled": True,
+        "priority": 40,
+        "country": "in",
+        "company_identifier": "Kredx",
+    },
 ]

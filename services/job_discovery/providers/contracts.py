@@ -20,6 +20,7 @@ class ProviderConfig(TypedDict, total=False):
     api_url: str
     careers_url: str
     board_token: str
+    company_identifier: str
 
 
 class DatePosted(str, Enum):
