@@ -206,4 +206,55 @@ describe("RecommendationResults saved jobs", () => {
     ).toBeVisible();
     expect(screen.getByRole("heading", { name: "AI Engineer" })).toBeVisible();
   });
+
+  it("distinguishes unavailable evidence from a zero component score", async () => {
+    const user = userEvent.setup();
+    render(
+      <RecommendationResults
+        preferences={{
+          role: "AI Engineer",
+          location: "India",
+          remoteOnly: false,
+          employmentTypes: ["Full Time"],
+          datePosted: "month",
+        }}
+        search={{
+          status: "complete",
+          jobs: [job],
+          provider_failures: [],
+          providers_attempted: 2,
+          providers_succeeded: 2,
+        }}
+        results={{
+          recommendations: [
+            {
+              ...results.recommendations[0],
+              assessment: {
+                ...results.recommendations[0].assessment,
+                confidence: 0.6,
+                algorithm_version: "hybrid-v2",
+                components: [
+                  {
+                    name: "Skill Signal",
+                    score: 50,
+                    explanation:
+                      "This source did not provide structured skill requirements, so skill evidence was not scored.",
+                    evidence_available: false,
+                    matched_skills: [],
+                    missing_skills: [],
+                  },
+                ],
+              },
+            },
+          ],
+        }}
+        onRefine={() => undefined}
+        saveAccess="sign-in"
+      />,
+    );
+
+    expect(screen.getByText("Evidence 60%")).toBeVisible();
+    await user.click(screen.getByText("Why this role ranks here"));
+    expect(screen.getByText("Not scored")).toBeVisible();
+  });
 });

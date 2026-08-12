@@ -86,6 +86,7 @@ def map_score_component(component: ScoreComponent) -> ScoreComponentResponse:
         name=component.name,
         score=component.score,
         explanation=component.explanation,
+        evidence_available=component.evidence_available,
         matched_skills=tuple(map_skill(skill) for skill in component.matched_skills),
         missing_skills=tuple(map_skill(skill) for skill in component.missing_skills),
     )

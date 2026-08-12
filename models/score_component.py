@@ -22,6 +22,7 @@ class ScoreComponent(BaseModel):
         default="",
         validation_alias=AliasChoices("explanation", "reason"),
     )
+    evidence_available: bool = True
     matched_skills: list[Skill] = Field(default_factory=list)
     missing_skills: list[Skill] = Field(default_factory=list)
 

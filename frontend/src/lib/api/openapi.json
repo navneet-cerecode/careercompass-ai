@@ -2235,6 +2235,10 @@
       },
       "ScoreComponentResponse": {
         "properties": {
+          "evidence_available": {
+            "title": "Evidence Available",
+            "type": "boolean"
+          },
           "explanation": {
             "title": "Explanation",
             "type": "string"
@@ -2267,7 +2271,8 @@
         "required": [
           "name",
           "score",
-          "explanation"
+          "explanation",
+          "evidence_available"
         ],
         "title": "ScoreComponentResponse",
         "type": "object"

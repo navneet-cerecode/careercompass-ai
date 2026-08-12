@@ -1608,6 +1608,8 @@ export interface components {
         };
         /** ScoreComponentResponse */
         ScoreComponentResponse: {
+            /** Evidence Available */
+            evidence_available: boolean;
             /** Explanation */
             explanation: string;
             /**

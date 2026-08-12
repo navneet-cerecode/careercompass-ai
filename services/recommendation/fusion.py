@@ -26,13 +26,14 @@ class ScoreFusion:
         Compute the weighted average score.
         """
 
-        if not signals:
+        available_signals = [signal for signal in signals if signal.evidence_available]
+        if not available_signals:
             return 0.0
 
         weighted_sum = 0.0
         total_weight = 0.0
 
-        for signal in signals:
+        for signal in available_signals:
             weight = self.DEFAULT_WEIGHTS.get(
                 signal.name,
                 1.0,
@@ -49,3 +50,15 @@ class ScoreFusion:
             weighted_sum / total_weight,
             2,
         )
+
+    def evidence_coverage(self, signals: list[ScoreComponent]) -> float:
+        """Return the share of configured signal weight backed by evidence."""
+        expected_weight = sum(self.DEFAULT_WEIGHTS.values())
+        if expected_weight == 0:
+            return 0.0
+        available_weight = sum(
+            self.DEFAULT_WEIGHTS.get(signal.name, 1.0)
+            for signal in signals
+            if signal.evidence_available
+        )
+        return round(min(available_weight / expected_weight, 1.0), 2)

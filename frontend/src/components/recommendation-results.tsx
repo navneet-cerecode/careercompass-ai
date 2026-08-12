@@ -276,6 +276,11 @@ export function RecommendationResults({
                 <div className="job-facts">
                   <span>{job.employment_type}</span>
                   <span>{job.experience_level}</span>
+                  {assessment.confidence != null && (
+                    <span>
+                      Evidence {Math.round(assessment.confidence * 100)}%
+                    </span>
+                  )}
                   <span>Model {assessment.algorithm_version}</span>
                 </div>
 
@@ -319,11 +324,17 @@ export function RecommendationResults({
                         <div className="component-row" key={component.name}>
                           <div>
                             <strong>{component.name}</strong>
-                            <span>{componentScore}</span>
+                            <span>
+                              {component.evidence_available
+                                ? componentScore
+                                : "Not scored"}
+                            </span>
                           </div>
-                          <div className="component-track">
-                            <span style={{ width: `${componentScore}%` }} />
-                          </div>
+                          {component.evidence_available && (
+                            <div className="component-track">
+                              <span style={{ width: `${componentScore}%` }} />
+                            </div>
+                          )}
                           <p>{component.explanation}</p>
                         </div>
                       );

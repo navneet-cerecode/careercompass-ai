@@ -12,6 +12,7 @@ class ScoreComponentResponse(APIModel):
     name: str
     score: float
     explanation: str
+    evidence_available: bool
     matched_skills: tuple[SkillResponse, ...] = ()
     missing_skills: tuple[SkillResponse, ...] = ()
 
