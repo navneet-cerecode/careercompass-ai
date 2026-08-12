@@ -13,6 +13,18 @@ PostgreSQL and Redis should be managed services with encrypted connections,
 backups, access controls, and private networking. `compose.production.yaml` is a
 single-host validation topology, not a substitute for managed infrastructure.
 
+The first shared staging environment is defined by `render.yaml`. It uses Render's
+Singapore region, paid starter compute, a persistent Key Value queue, and a small
+paid PostgreSQL instance. Creating the Blueprint provisions billable resources, so
+review the current Render estimate before applying it. Render prompts for every
+`sync: false` identity and provider credential; do not replace those declarations
+with committed values.
+
+After the first Blueprint sync, add the assigned frontend HTTPS origin to Auth0's
+Allowed Callback URLs as `<origin>/auth/callback`, Allowed Logout URLs as `<origin>`,
+and Allowed Web Origins as `<origin>`. Then rerun the production environment gate
+inside the API and frontend services and complete the release gate below.
+
 ## Secrets and configuration
 
 Copy `.env.production.example` to `.env.production` outside version control and

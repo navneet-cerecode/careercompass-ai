@@ -80,3 +80,40 @@ def test_frontend_self_hosts_the_editorial_font():
     assert "@fontsource-variable/source-serif-4/wght.css" in layout
     assert "next/font/google" not in layout
     assert '"@fontsource-variable/source-serif-4": "5.3.0"' in package
+
+
+def test_render_staging_blueprint_wires_the_complete_runtime_without_secrets():
+    blueprint_text = Path("render.yaml").read_text(encoding="utf-8")
+    blueprint = yaml.safe_load(blueprint_text)
+    services = {service["name"]: service for service in blueprint["services"]}
+
+    assert {
+        "solara-hire-staging-redis",
+        "solara-hire-staging-api",
+        "solara-hire-staging-worker",
+        "solara-hire-staging-maintenance",
+        "solara-hire-staging-web",
+    } == set(services)
+    assert blueprint["databases"][0]["name"] == "solara-hire-staging-postgres"
+    assert services["solara-hire-staging-api"]["preDeployCommand"] == ("alembic upgrade head")
+    assert services["solara-hire-staging-maintenance"]["schedule"] == "*/2 * * * *"
+    assert services["solara-hire-staging-worker"]["dockerCommand"].startswith("python -m dramatiq")
+    assert services["solara-hire-staging-web"]["healthCheckPath"] == "/"
+
+    secret_keys = {
+        "GROQ_API_KEY",
+        "RAPIDAPI_KEY",
+        "ADZUNA_APP_ID",
+        "ADZUNA_APP_KEY",
+        "THE_MUSE_API_KEY",
+        "AUTH0_CLIENT_SECRET",
+    }
+    declared_secrets = {
+        variable["key"]: variable
+        for service in services.values()
+        for variable in service.get("envVars", [])
+        if variable.get("key") in secret_keys
+    }
+    assert secret_keys <= set(declared_secrets)
+    for key, variable in declared_secrets.items():
+        assert "value" not in variable, f"{key} must not be committed in render.yaml"

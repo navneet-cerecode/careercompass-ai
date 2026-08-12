@@ -7,6 +7,8 @@ from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from database.url import sqlalchemy_database_url
+
 
 class Database:
     """Own one SQLAlchemy engine and provide transaction-scoped sessions."""
@@ -18,6 +20,7 @@ class Database:
         pool_size: int = 5,
         pool_timeout_seconds: int = 10,
     ) -> None:
+        database_url = sqlalchemy_database_url(database_url)
         engine_options: dict[str, object] = {"pool_pre_ping": True}
         if database_url.startswith("sqlite") and ":memory:" in database_url:
             engine_options.update(

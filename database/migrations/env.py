@@ -8,6 +8,7 @@ from sqlalchemy import engine_from_config, pool
 from core.config import settings
 from database.base import Base
 from database import models as persistence_models  # noqa: F401
+from database.url import sqlalchemy_database_url
 
 config = context.config
 
@@ -19,7 +20,7 @@ target_metadata = Base.metadata
 
 def get_database_url() -> str:
     configured_url = config.get_main_option("sqlalchemy.url")
-    return configured_url or settings.require_database_url()
+    return sqlalchemy_database_url(configured_url or settings.require_database_url())
 
 
 def run_migrations_offline() -> None:
