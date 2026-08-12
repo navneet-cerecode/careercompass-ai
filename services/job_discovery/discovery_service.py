@@ -3,6 +3,7 @@
 import logging
 import time
 import json
+from collections import Counter
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from models.job_discovery_task import ProviderFailureCode
 from models.job import Job
 
 from services.job_discovery.pipeline.job_pipeline import JobPipeline
+from services.job_discovery.quality import JobRejectionReason, rejection_reason
 from services.job_discovery.pipeline.stages.deduplicate_stage import (
     DeduplicateStage,
 )
@@ -45,6 +47,14 @@ class JobDiscoveryResult:
     failures: tuple[ProviderFailure, ...]
     providers_attempted: int
     providers_succeeded: int
+    quality_rejections: tuple["ProviderQualityRejection", ...] = ()
+
+
+@dataclass(frozen=True)
+class ProviderQualityRejection:
+    provider_name: str
+    reason: JobRejectionReason
+    count: int
 
 
 class JobDiscoveryService:
@@ -134,6 +144,7 @@ class JobDiscoveryService:
         """Search all providers and retain bounded partial-failure metadata."""
         jobs = []
         failures = list(self.initialization_failures)
+        quality_rejections = []
         providers_succeeded = 0
         futures = [
             (provider, self.executor.submit(self._search_provider, provider, query))
@@ -163,7 +174,7 @@ class JobDiscoveryService:
                 )
                 continue
 
-            provider_jobs, failure, duration_ms, attempts = future.result()
+            provider_jobs, failure, duration_ms, attempts, rejection_counts = future.result()
             if failure is not None:
                 failures.append(failure)
                 self._log_attempt(
@@ -176,6 +187,10 @@ class JobDiscoveryService:
                 continue
 
             jobs.extend(provider_jobs)
+            quality_rejections.extend(
+                ProviderQualityRejection(provider.provider_name, reason, count)
+                for reason, count in rejection_counts.items()
+            )
             providers_succeeded += 1
             self._log_attempt(
                 provider_name=provider.provider_name,
@@ -183,6 +198,7 @@ class JobDiscoveryService:
                 duration_ms=duration_ms,
                 attempts=attempts,
                 job_count=len(provider_jobs),
+                rejection_counts=rejection_counts,
             )
 
         processed_jobs = self.pipeline.process(jobs)
@@ -191,13 +207,20 @@ class JobDiscoveryService:
             failures=tuple(failures),
             providers_attempted=len(self.providers) + len(self.initialization_failures),
             providers_succeeded=providers_succeeded,
+            quality_rejections=tuple(quality_rejections),
         )
 
     def _search_provider(
         self,
         provider: BaseProvider,
         query: JobSearchQuery,
-    ) -> tuple[list[Job], ProviderFailure | None, float, int]:
+    ) -> tuple[
+        list[Job],
+        ProviderFailure | None,
+        float,
+        int,
+        Counter[JobRejectionReason],
+    ]:
         started = perf_counter()
         attempts = 0
         try:
@@ -205,7 +228,21 @@ class JobDiscoveryService:
                 attempts += 1
                 try:
                     jobs = provider.search_jobs(query)
-                    return jobs, None, (perf_counter() - started) * 1000, attempts
+                    accepted_jobs = []
+                    rejection_counts = Counter()
+                    for job in jobs:
+                        reason = rejection_reason(job, query.role)
+                        if reason is None:
+                            accepted_jobs.append(job)
+                        else:
+                            rejection_counts[reason] += 1
+                    return (
+                        accepted_jobs,
+                        None,
+                        (perf_counter() - started) * 1000,
+                        attempts,
+                        rejection_counts,
+                    )
                 except Exception as error:
                     if attempts >= self.MAX_PROVIDER_ATTEMPTS or not self._is_retryable(error):
                         raise
@@ -226,6 +263,7 @@ class JobDiscoveryService:
                 ),
                 (perf_counter() - started) * 1000,
                 attempts,
+                Counter(),
             )
 
     @staticmethod
@@ -237,6 +275,7 @@ class JobDiscoveryService:
         attempts: int,
         job_count: int = 0,
         failure_code: ProviderFailureCode | None = None,
+        rejection_counts: Counter[JobRejectionReason] | None = None,
     ) -> None:
         event = {
             "schema_version": 1,
@@ -249,6 +288,11 @@ class JobDiscoveryService:
         }
         if failure_code is not None:
             event["failure_code"] = failure_code.value
+        if rejection_counts:
+            event["rejected_job_count"] = sum(rejection_counts.values())
+            event["rejection_reasons"] = {
+                reason.value: count for reason, count in sorted(rejection_counts.items())
+            }
         provider_logger.info(json.dumps(event, separators=(",", ":"), sort_keys=True))
 
     @classmethod

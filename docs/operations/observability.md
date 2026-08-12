@@ -66,6 +66,7 @@ operator signals, not contractual service-level objectives:
 | API latency | p95 above 1 second for 10 minutes | Investigate saturation, database waits, and downstream latency. |
 | Worker backlog | Oldest queued task above 5 minutes | Check worker health, Redis delivery, and database pool pressure. |
 | Worker failures | More than 5% terminal failures for 10 minutes | Inspect sanitized error codes; never attach task payloads. |
+| Provider quality rejections | Sustained increase for one provider | Inspect provider contract changes using reason counts; never log rejected job contents. |
 | Provider health | One source unavailable in 3 consecutive search windows | Warn; inspect that provider's latency records. |
 | Authentication | Identity-provider-unavailable responses for 2 minutes | Page; distinguish provider failure from invalid-token 401 responses. |
 

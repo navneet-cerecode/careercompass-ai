@@ -9,6 +9,7 @@ import requests
 from models.job import Job
 from models.job_discovery_task import ProviderFailureCode
 from services.job_discovery.discovery_service import JobDiscoveryService
+from services.job_discovery.quality import JobRejectionReason
 from services.job_discovery.providers.base_provider import BaseProvider
 from services.job_discovery.providers.contracts import (
     JobSearchQuery,
@@ -120,12 +121,18 @@ class DelayedProvider(RecordingProvider):
         return self.jobs
 
 
-def make_job(*, location="India"):
+def make_job(
+    *,
+    title="Data Engineer",
+    location="India",
+    company="Example Corp",
+    description="Python and SQL",
+):
     return Job(
-        title="Data Engineer",
-        company="Example Corp",
+        title=title,
+        company=company,
         location=location,
-        description="Python and SQL",
+        description=description,
         url=f"https://example.com/jobs/{location.lower()}",
     )
 
@@ -250,7 +257,7 @@ def test_discovery_service_returns_completed_results_at_search_budget():
 
 def test_discovery_service_logs_privacy_bounded_provider_latency(caplog):
     logging.getLogger("solarahire.providers").disabled = False
-    service = JobDiscoveryService(providers=[RecordingProvider([make_job()])])
+    service = JobDiscoveryService(providers=[RecordingProvider([make_job(title="Private Role")])])
 
     with caplog.at_level(logging.INFO, logger="solarahire.providers"):
         service.discover_jobs_with_status(
@@ -267,6 +274,41 @@ def test_discovery_service_logs_privacy_bounded_provider_latency(caplog):
     assert event["duration_ms"] >= 0
     assert "Private Role" not in caplog.records[-1].message
     assert "Private Location" not in caplog.records[-1].message
+
+
+def test_discovery_service_rejects_objectively_unusable_jobs_and_counts_reasons(caplog):
+    logging.getLogger("solarahire.providers").disabled = False
+    provider = RecordingProvider(
+        [
+            make_job(location="Pune"),
+            make_job(location="Mumbai", company="TestCompany123Blr2023"),
+            make_job(location="Delhi", description=""),
+            make_job(location="Chennai", company="Unknown"),
+        ]
+    )
+    service = JobDiscoveryService(providers=[provider])
+
+    with caplog.at_level(logging.INFO, logger="solarahire.providers"):
+        result = service.discover_jobs_with_status(
+            JobSearchQuery(role="Data Engineer", location="India")
+        )
+    service.close()
+
+    assert [job.location for job in result.jobs] == ["Pune"]
+    assert result.providers_succeeded == 1
+    assert {(item.reason, item.count) for item in result.quality_rejections} == {
+        (JobRejectionReason.SYNTHETIC_LISTING, 1),
+        (JobRejectionReason.EMPTY_DESCRIPTION, 1),
+        (JobRejectionReason.PLACEHOLDER_IDENTITY, 1),
+    }
+    event = json.loads(caplog.records[-1].message)
+    assert event["job_count"] == 1
+    assert event["rejected_job_count"] == 3
+    assert event["rejection_reasons"] == {
+        "empty_description": 1,
+        "placeholder_identity": 1,
+        "synthetic_listing": 1,
+    }
 
 
 def test_discovery_service_handles_simultaneous_searches_with_shared_executor():
