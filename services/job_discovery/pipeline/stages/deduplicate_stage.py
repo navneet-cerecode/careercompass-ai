@@ -5,6 +5,7 @@ Removes duplicate jobs.
 """
 
 from models.job import Job
+from services.job_discovery.fingerprint import job_fingerprint
 
 
 class DeduplicateStage:
@@ -18,11 +19,7 @@ class DeduplicateStage:
         unique_jobs = []
 
         for job in jobs:
-            key = (
-                job.company.lower(),
-                job.title.lower(),
-                job.location.lower(),
-            )
+            key = job_fingerprint(job)
 
             if key in seen:
                 continue

@@ -26,11 +26,13 @@ class JobRepository:
 
     def upsert(self, job: Job) -> Job:
         fingerprint = job_fingerprint(job)
-        record = self.session.scalar(
-            select(JobRecord)
-            .where(JobRecord.fingerprint == fingerprint)
-            .options(selectinload(JobRecord.sources))
-        )
+        record = self._find_by_source(job)
+        if record is None:
+            record = self.session.scalar(
+                select(JobRecord)
+                .where(JobRecord.fingerprint == fingerprint)
+                .options(selectinload(JobRecord.sources))
+            )
 
         if record is None:
             record = JobRecord(
@@ -65,6 +67,32 @@ class JobRepository:
         self._upsert_source(record, job)
         self.session.flush()
         return self._to_domain(record, preferred_job=job)
+
+    def _find_by_source(self, job: Job) -> JobRecord | None:
+        provider_name = job.source_name or job.source.value.casefold()
+        source_url = str(job.source_url or job.url)
+        query = (
+            select(JobRecord)
+            .join(JobSourceRecord)
+            .options(selectinload(JobRecord.sources))
+        )
+
+        if job.external_id is not None:
+            record = self.session.scalar(
+                query.where(
+                    JobSourceRecord.provider_name == provider_name,
+                    JobSourceRecord.external_id == job.external_id,
+                ).limit(1)
+            )
+            if record is not None:
+                return record
+
+        return self.session.scalar(
+            query.where(
+                JobSourceRecord.provider_name == provider_name,
+                JobSourceRecord.source_url == source_url,
+            ).limit(1)
+        )
 
     def get(self, job_id: UUID) -> Job | None:
         record = self.session.scalar(

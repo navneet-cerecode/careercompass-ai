@@ -35,3 +35,20 @@ def test_deduplicate_stage_keeps_first_matching_company_title_and_location():
     result = DeduplicateStage().process([first, duplicate, distinct])
 
     assert result == [first, distinct]
+
+
+def test_deduplicate_stage_uses_the_database_fingerprint_rules():
+    first = make_job(
+        title="Data Engineer",
+        company="Example Corp",
+        location="Bengaluru",
+        url="https://example.com/jobs/1",
+    )
+    duplicate = make_job(
+        title="  DATA   ENGINEER ",
+        company="EXAMPLE  CORP",
+        location=" BENGALURU ",
+        url="https://example.com/jobs/2",
+    )
+
+    assert DeduplicateStage().process([first, duplicate]) == [first]

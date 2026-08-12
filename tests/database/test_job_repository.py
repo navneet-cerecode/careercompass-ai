@@ -104,6 +104,27 @@ def test_repository_tracks_stable_provider_identity_when_source_url_changes():
         assert sources[0].source_url == "https://source.example/jobs/new"
 
 
+def test_repository_keeps_source_attached_when_provider_updates_job_identity():
+    first = make_job()
+    updated = make_job().model_copy(
+        update={
+            "title": "Senior Data Engineer",
+            "location": "Remote",
+        }
+    )
+
+    database = make_database()
+    with database.session() as session:
+        repository = JobRepository(session)
+        persisted_first = repository.upsert(first)
+        persisted_updated = repository.upsert(updated)
+
+    assert persisted_updated.id == persisted_first.id
+    with database.session() as session:
+        assert session.scalar(select(func.count()).select_from(JobRecord)) == 1
+        assert session.scalar(select(func.count()).select_from(JobSourceRecord)) == 1
+
+
 def test_repository_preserves_required_skills():
     database = make_database()
     job = make_job(required_skills=[Skill(name="Inventory Planning")])
